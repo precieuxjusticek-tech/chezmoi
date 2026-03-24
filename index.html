@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Chezmoi by Klippo</title>
+
+    <!-- Responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Logo dans l'onglet -->
+    <link rel="icon" type="image/png" sizes="64x64" href="image/logo_ChezMoi.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Manifest pour PWA -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- pour relier le toast -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- lien des icônes -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <h1>ChezMoi</h1>
+            <span class="brand">by Klippo</span>
+        </header>
+
+        <!-- ACCUEIL -->
+        <section class="page" id="accueil">
+            <div class="acl">
+                <h2 id="one">Trouve ton chez-toi !</h2>
+                <p>
+                    Une solution simple et rapide pour trouver un logement
+                    fiable et sécurisé adapté à ton budget.
+                </p>
+
+                <div class="buttons">
+                    <button data-page="inscription" class="btn">Créer un compte</button>
+                    <button class="secondary btn" data-page="connexion">Se connecter</button>
+                    <!---page-->
+                    <button data-page="home" class="btn">visite</button>
+                </div>
+            </div>
+            <!--pour l'imgae-->
+            <div class="img">
+                <img src="image/logo_ChezMoi.png" alt="image du site">
+            </div>
+
+        </section>
+
+        <!-- INSCRIPTION -->
+        <section class="page" id="inscription">
+            
+            <h2>Inscription</h2>
+
+            <form id="formInscription">
+                <input type="text" placeholder="Nom complet" required>
+                <input type="email" placeholder="Adresse email" required>
+                <small style="color:#888; display:block; margin-top:5px;">
+                ⚠️ Utilisez un email valide pour récupérer votre compte en cas de perte de mot de passe.
+                </small>
+                <input type="password" placeholder="Mot de passe" required>
+                <input type="tel" id="contact" placeholder="Numéro de contact" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
+                <button type="submit" class="btn">S'inscrire</button>
+            </form>
+
+            <p class="link" data-page="connexion">
+                Déjà un compte ? Se connecter
+            </p>
+
+            <div id="loader" class="loader-overlay">
+                <div class="spinner"></div>
+                <p>Chargement...</p>
+            </div>
+        </section>
+
+        <!-- CONNEXION -->
+        <section class="page" id="connexion">
+            <h2>Connexion</h2>
+
+            <form id="formConnexion">
+                <input type="email" placeholder="Adresse email" required>
+                <input type="password" placeholder="Mot de passe" required>
+                <p class="forget">
+                    Mot de passe oublié !
+                </p>
+                <button type="submit" class="btn">Se connecter</button>
+            </form>
+
+            <p class="link" data-page="inscription">
+                Pas encore de compte ? S'inscrire
+            </p>
+
+            <div id="loader-connexion" style="display:none;" class="loader-overlay">
+                <div class="spinner"></div>
+                <p>Connexion en cours...</p>
+            </div>
+        </section>
+
+        <!-- modal mot de passe ounlié -->
+        <div id="resetModal" class="modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <h3>Mot de passe oublié</h3>
+                <input type="email" id="resetEmail" placeholder="Entrez votre email">
+                <div class="modal-actions">
+                    <button id="sendResetBtn" class="btn">Envoyer</button>
+                    <button onclick="closeModal()" class="btn-cancel">Annuler</button>
+                </div>
+            </div>
+
+            <!-- Loader full-screen pour le modal -->
+            <div id="loader-reset" class="loader-overlay" style="display:none;">
+                <div class="spinner"></div>
+                <p>Envoi en cours...</p>
+            </div>
+        </div>
+
+        <!-- PAGE D'ACCUEIL APRÈS LOGIN -->
+        <section class="page" id="home">
+
+            <!-- HEADER FIXE EN HAUT -->
+            <div class="top-bar">
+                <!-- FILTRE PAR VILLE -->
+                <div class="dropdown">
+                    <button class="dropbtn">Toutes les villes ▼</button>
+                    <div class="dropdown-content" id="cityDropdown">
+                        <a href="#">Toutes les villes</a>
+                        <a href="#">BRAZZAVILLE</a>
+                        <a href="#">POINTE-NOIRE</a>
+                        <a href="#">DOLISIE</a>
+                        <a href="#">NKAYI</a>
+                    </div>
+                </div>
+
+                <!-- BOUTON RECHERCHE -->
+                <button class="search-btn" id="searchBtn">🔍</button>
+            </div>
+
+            <!-- CONTENEUR SCROLLABLE -->
+            <div class="home-content">
+                <!-- SPINNER DE CHARGEMENT -->
+                <div id="spinner" style="display:flex; justify-content:center; align-items:center; height:200px;">
+                    <div class="loader-home"></div>
+                </div>
+                <div id="categoriesContainer">
+                    <!-- Les groupes seront générés automatiquement via JS -->
+                    <!-- Exemple de structure :
+                    <div class="categorie-section">
+                        <h3 class="categorie-title">Petits logements</h3>
+                        <div class="annonces-row">
+                            <div class="annonce-card">Card 1</div>
+                            <div class="annonce-card">Card 2</div>
+                        </div>
+                    </div>
+                    -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ======================= -->
+        <!-- RECHERCHE -->
+        <!-- ====================== -->
+        <section class="page" id="recherche">
+
+            <div class="recherche-container">
+
+                <!-- TITRE -->
+                <h2 class="recherche-titre">Trouvez votre logement idéal</h2>
+
+                <!-- BARRE DE RECHERCHE + FILTRES -->
+                <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Rechercher par ville, type ou prix..." />
+                <select id="villeFilter">
+                    <option value="Toutes les villes">Toutes les villes</option>
+                    <option value="BRAZZAVILLE">Brazzaville</option>
+                    <option value="POINTE-NOIRE">Pointe-Noire</option>
+                    <option value="DOLISIE">Dolisie</option>
+                    <option value="NKAYI">Nkayi</option>
+                </select>
+                <select id="typeFilter">
+                    <option value="Toutes les catégories">Toutes les catégories</option>
+                    <option value="studio">Studio</option>
+                    <option value="appartement">Appartement</option>
+                    <option value="villa">Villa</option>
+                    <option value="parcelle">Parcelle</option>
+                    <option value="maison simple">Maison simple</option>
+                    <option value="maison 2 chambre">Maison 2 chambre</option>
+                    <option value="maison 3 chambre">Maison 3 chambre</option>
+                    <option value="maison 4 chambre et plus">Maison 4 chambre et plus</option>
+                </select>
+                </div>
+
+                <!-- RESULTATS -->
+                <div id="searchResults" class="results-grid">
+                <!-- Les cartes logement apparaîtront ici dynamiquement -->
+                </div>
+
+                <!-- RETOUR -->
+                <p class="link" data-page="home">⬅ Retour à l'accueil</p>
+
+            </div>
+
+        </section>
+
+        <!--  =====================  -->
+        <!-- AJOUTER UNE ANNONCE -->
+        <!--  =====================  -->
+        <section class="page" id="ajouter">
+            <h2>Ajouter une annonce</h2>
+
+            <form id="formAjouter" enctype="multipart/form-data">
+                <!-- AJOUT DES ID POUR CHAQUE CHAMP -->
+
+                <label><strong>Type d'annonce :</strong></label>
+                <div class="type-radios" id="titre">
+                    <input type="radio" id="location" name="titre" value="Location" required>
+                    <label for="location">Location</label>
+
+                    <input type="radio" id="vente" name="titre" value="Vente">
+                    <label for="vente">Vente</label>
+                </div>
+
+                <!-- GROUPE DE RADIO -->
+                <label><strong>Type de logement :</strong></label>
+                <div class="type-radios">
+                    <input type="radio" id="studio" name="type" value="studio" required>
+                    <label for="studio">Studio</label>
+
+                    <input type="radio" id="appartement" name="type" value="appartement">
+                    <label for="appartement">Appartement</label>
+
+                    <input type="radio" id="villa" name="type" value="villa">
+                    <label for="villa">Villa</label>
+
+                    <input type="radio" id="parcelle" name="type" value="parcelle">
+                    <label for="parcelle">Parcelle</label>
+
+                    <input type="radio" id="maisonSimple" name="type" value="maison simple">
+                    <label for="maisonSimple">Maison simple</label>
+
+                    <input type="radio" id="maison2Chambre" name="type" value="maison 2 chambre">
+                    <label for="maison2Chambre">Maison 2 chambre</label>
+
+                    <input type="radio" id="maison3Chambre" name="type" value="maison 3 chambre">
+                    <label for="maison3Chambre">Maison 3 chambre</label>
+
+                    <input type="radio" id="maison4Chambre" name="type" value="maison 4 chambre et plus">
+                    <label for="maison4Chambre">Maison 4 chambre et plus</label>
+                </div>
+
+                <label><strong>Ville :</strong></label>
+                <div class="type-radios">
+                    <input type="radio" id="brazzaville" name="ville" value="Brazzaville" required>
+                    <label for="brazzaville">Brazzaville</label>
+
+                    <input type="radio" id="pointeNoire" name="ville" value="Pointe-Noire">
+                    <label for="pointeNoire">Pointe-Noire</label>
+
+                    <input type="radio" id="dolisie" name="ville" value="Dolisie">
+                    <label for="dolisie">Dolisie</label>
+
+                    <input type="radio" id="nkayi" name="ville" value="Nkayi">
+                    <label for="nkayi">Nkayi</label>
+                </div>
+
+                <input type="text" id="quartier" placeholder="Quartier (ex: Moungali, Mfilou, etc.)" required>
+                <label><strong>Douche :</strong></label>
+
+                <div class="douche-radios">
+
+                    <input type="radio" id="interne" name="douche" value="interne">
+                    <label for="interne">Interne</label>
+
+                    <input type="radio" id="externe" name="douche" value="externe">
+                    <label for="externe">Externe</label>
+
+                </div>
+
+                <input type="number" id="prix" placeholder="Prix (XAF)" required>
+
+                <textarea id="description" placeholder="Description du logement (ex: Appartement lumineux, jardin, etc.)" rows="5" required></textarea>
+
+                <input type="tel" id="contactAnnonce" placeholder="Numéro de contact" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
+
+                <label>Ajouter des images (max 5) :</label>
+                <div id="imageGrid" class="image-grid"></div>
+                <input type="file" id="hiddenImageInput" accept="image/*" multiple style="display:none">
+
+                <button type="submit">Publier l'annonce</button>
+            </form>
+
+            <p class="link" data-page="home">
+                Retour à l'accueil
+            </p>
+
+            <div id="loader-pub">
+                <div class="spinner"></div>
+                <p>publication ...</p>
+            </div>
+
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE DÉTAIL ANNONCE           -->
+        <!-- ============================= -->
+        <section id="detail" class="page">
+
+            <h2>Détails de l’annonce</h2>
+
+            <!-- Images -->
+            <div class="detail-images" id="detailImages"></div>
+
+            <!-- Infos -->
+            <h2 id="detailTitre"></h2>
+
+            <!-- date d'expiration  -->
+            <h4 id="detailexpiration"></h4>
+
+            <!-- type de logement -->
+            <p><strong>Type de logement :</strong> <span id="detaillogement"></span></p>
+
+            <p><strong>Description :</strong> <span id="detailDescription"></span></p>
+
+            <p><strong>Ville :</strong> <span id="detailVille"></span></p>
+            <p><strong>Quartier :</strong> <span id="detailQuartier"></span></p>
+            <p><strong>Douche :</strong> <span id="detailDouche"></span></p>
+            <p><strong>Prix :</strong> <span id="detailPrix"></span> XAF</p>
+            <p><strong>Contact :</strong> <span id="detailContact"></span>/</p>
+
+            <button id="btnDebloquerContact">Je le veux</button>
+
+            <button id="btnSignalerProbleme">⚠️ Signaler un problème</button>
+
+            <!-- Lien retour à l'accueil -->
+            <p class="link" data-page="home">
+                Retour à l'accueil
+            </p>
+
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE POUR LE FORMULAIRE SIGNALER UN PROBLEME -->
+        <!-- ============================= -->
+        <section class="page" id="signalerProbleme">
+            <h2>Signaler un problème</h2>
+
+            <form id="formSignalerProbleme">
+                <label for="problemeDescription">Décrivez le problème :</label>
+                <textarea id="problemeDescription" placeholder="Veuillez détailler le problème que vous rencontrez." rows="5" required></textarea>
+
+                <button type="submit">Soumettre le signalement</button>
+            </form>
+            
+            <div id="loader-signaler" style="display:none;">
+                <div class="spinner"></div>
+                <p>chargement...</p>
+            </div>
+
+            <p class="link" data-page="home">
+                ← Retour à l'accueil
+            </p>
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE PROPOSER UNE IDEE -->
+        <!-- ============================= -->
+        <section class="page" id="proposerIdee">
+
+            <div class="idea-container">
+
+                <h2>💡 Proposer une idée</h2>
+                <p class="idea-subtitle">
+                    Une idée pour améliorer ChezMoi ? Nous serions ravis de l'entendre.
+                </p>
+
+                <form id="formProposerIdee">
+
+                    <div class="form-group">
+                        <label for="ideeTitre">Titre de l'idée</label>
+                        <input 
+                            type="text" 
+                            id="ideeTitre"
+                            placeholder="Ex : Ajouter une messagerie entre locataire et propriétaire"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideeDescription">Description</label>
+                        <textarea
+                            id="ideeDescription"
+                            placeholder="Expliquez votre idée en détail..."
+                            rows="5"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-idee">
+                        Envoyer l'idée
+                    </button>
+
+                </form>
+
+                <div id="loader-idee" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>Envoi en cours...</p>
+                </div>
+
+                <p class="link" data-page="home">
+                    ← Retour à l'accueil
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE EXPLORER                 -->
+        <!-- ============================= -->
+        <section class="page" id="explorer">
+            <h2>Explorer</h2>
+
+            <!-- Conteneur des images uniquement -->
+            <div id="explorerContainer" class="explorer-container">
+                <!-- Les images s’afficheront ici via JS -->
+            </div>
+
+            <div id="loader-explore" style="display:none;">
+                <div class="spinner"></div>
+                <p>chargement...</p>
+            </div>
+
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE PROFIL -->
+        <!-- ============================= -->
+        <section class="page" id="profil">
+            <div class="profil-container">
+                <!-- COLONNE GAUCHE : Infos utilisateur -->
+                <div class="profil-left">
+                    
+                    <div class="profil-header">
+                        <h2>Mon profil</h2>
+                        <div class="dropdown-menu">
+                            <button id="menuBtn">⋮</button>
+                            <div id="menuContent" class="menu-content">
+                                <button id="inviteFriendBtn">📤 Inviter un ami</button>
+                                <button id="feedbackBtn">💡 Proposer une idée</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profil-info">
+                        <div class="avatar">
+                            <img id="avatarImg" src="image/avatar.png" alt="Avatar">
+                        </div>
+                        <div class="user-details">
+                            <p><strong>Nom :</strong> <span id="userName">Utilisateur</span></p>
+                            <p><strong>Email :</strong> <span id="userEmail">email@example.com</span></p>
+                            <p><strong>Contact :</strong> <span id="userContact">Non renseigné</span></p>
+                        </div>
+                    </div>
+
+                    <div class="profil-stats">
+                        <p><strong>Nombre d'annonces publiées :</strong> <span id="userAnnonces">0</span></p>
+                        <p><strong>Favoris :</strong> <span id="favorisCount">0</span></p> <!-- compteur des favoris -->
+                        <p><strong>Autres statistiques :</strong> <span id="userStats">-</span></p>
+                    </div>
+
+                    <!-- Bouton pour voir la page Favoris -->
+                    <div class="profil-actions">
+                        <button id="editProfileBtn">✏️ Modifier le profil</button>
+
+                        <button id="logoutBtn">🚪 Se déconnecter</button>
+
+                    </div>
+
+                    <!-- ====================== -->
+                    <!-- MODAL DE MODIFICATION DE PROFIL -->
+                    
+                    <div id="editProfileForm" class="edit-profile-form">
+                        <div class="form-container">
+                            <div class="form-header">
+                                <h4>Modifier mon profil</h4>
+                                <button id="closeProfileModal" class="close-btn">&times;</button>
+                            </div>
+                            <input type="text" id="editName" placeholder="Nom">
+                            <input type="email" id="editEmail" placeholder="Email">
+                            <input type="text" id="editContact" placeholder="Contact">
+                            <button id="saveProfileBtn">Enregistrer</button>
+                        </div>
+                        <div id="loader-edit" style="display:none;">
+                            <div class="spinner"></div>
+                            <p>chargement...</p>
+                        </div>
+                    </div>
+
+                    <!-- OVERLAY DE CONNEXION (après ta section profil) -->
+                    <div id="loginOverlay" class="overlay">
+                        <div class="overlay-content">
+                            <h2>Choisissez un compte ou créez-en un nouveau</h2>
+                            <div id="savedAccounts" class="accounts-list">
+                                <!-- Les comptes existants apparaîtront ici via JS -->
+                            </div>
+                            <button id="createAccountBtn">➕ Créer un compte</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLONNE DROITE : Annonces de l'utilisateur -->
+                <div class="profil-right">
+                    <h3>Mes annonces publiées</h3>
+                    <div id="userAnnoncesContainer" class="user-annonces-container">
+                        <!-- Les annonces seront ajoutées ici via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- spinner pour la page profil -->
+            <div id="loader-profil" style="display:none;">
+                <div class="spinner"></div>
+                <p>chargement...</p>
+            </div>
+
+        </section>
+
+        <!-- ============================= -->
+        <!-- PAGE FAVORIS -->
+        <!-- ============================= -->
+        <section class="page" id="favoris">
+            <h2>Mes favoris</h2>
+            <div class="favoris-container">
+
+                <!-- Conteneur pour les cartes des annonces favorites -->
+                <div id="favorisContainer" class="favoris-annonces-container">
+                    <!-- Les annonces seront ajoutées ici via JS -->
+                </div>
+
+                <!-- Message si aucun favori -->
+                <p id="aucunFavorisMessage" style="text-align:center; margin-top:50px; font-size:16px; display:none;">
+                    Vous n’avez aucun favori pour le moment.
+                </p>
+
+            </div>
+
+            <div id="loader-fav">
+                <div class="spinner"></div>
+                <p>favoris ...</p>
+            </div>
+
+        </section>
+
+        <section class="page" id="paiementPublication">
+            <h2>Paiement avant publication</h2>
+
+            <form id="paymentFormPublication">
+                <label>Nom :</label>
+                <input type="text" name="name" placeholder="Votre nom" required /><br/>
+
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="padding:8px; background:#eee; border-radius:5px;">+242</span>
+                    <input type="text" name="msisdn" placeholder="6XXXXXXXX" maxlength="9" required />
+                </div>
+                <br/>
+
+                <label>Réseau Mobile Money :</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="providerPublication" value="mtn" required>
+                        <span>MTN Mobile Money</span>
+                    </label>
+
+                    <label class="radio-option">
+                        <input type="radio" name="providerPublication" value="airtel">
+                        <span>Airtel Money</span>
+                    </label>
+                </div>
+
+                <label>Montant :</label>
+                <input type="number" name="amount" value="1000" readonly /><br/>
+
+                <label>Description :</label>
+                <input type="text" name="description" value="Publication annonce ChezMoi" /><br/>
+
+                <button type="submit" class="btn">Payer 1000 XAF</button>
+            </form>
+
+            <div id="paymentResultPublication"></div>
+
+            <p class="link" id="retourFormAjouter" data-page="ajouter">
+                ← Retour au formulaire d'annonce
+            </p>
+        </section>
+
+        <section class="page" id="paiementDeblocage">
+            <h2>Déblocage contact</h2>
+
+            <form id="paymentFormDeblocage">
+                <label>Nom :</label>
+                <input type="text" name="name" placeholder="Votre nom" required /><br/>
+
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="padding:8px; background:#eee; border-radius:5px;">+242</span>
+                    <input type="text" name="msisdn" placeholder="6XXXXXXXX" maxlength="9" required />
+                </div>
+                <br/>
+
+                <label>Réseau Mobile Money :</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="providerDeblocage" value="mtn" required>
+                        <span>MTN Mobile Money</span>
+                    </label>
+
+                    <label class="radio-option">
+                        <input type="radio" name="providerDeblocage" value="airtel">
+                        <span>Airtel Money</span>
+                    </label>
+                </div>
+
+                <label>Montant :</label>
+                <input type="number" name="amount" value="500" readonly /><br/>
+
+                <label>Description :</label>
+                <input type="text" name="description" value="Déblocage du contact du propriétaire" /><br/>
+
+                <button type="submit" class="btn">Payer 500 XAF</button>
+            </form>
+
+            <div id="paymentResultDeblocage"></div>
+
+            <p class="link" id="retourDetail" data-page="detail">
+                ← Retour à la page détail
+            </p>
+        </section>
+
+        <!-- BOUTONS FIXES EN BAS -->
+        <div class="app-nav">
+
+            <button class="app-nav-item" data-page="home">
+                <i class='bx bx-home'></i>
+                <span>Accueil</span>
+            </button>
+
+            <button class="app-nav-item" id="exploreBtn" data-page="explorer">
+                <i class='bx bx-compass'></i>
+                <span>Explorer</span>
+            </button>
+
+            <button class="app-nav-item app-add" id="addBtn" data-page="ajouter">
+                <i class='bx bx-plus'></i>
+            </button>
+
+            <button class="app-nav-item" id="voirFavorisBtn" data-page="favoris">
+                <i class='bx bx-heart'></i>
+                <span>Favori</span>
+            </button>
+
+            <button class="app-nav-item" id="profileBtn" data-page="profil">
+                <i class='bx bx-user'></i>
+                <span>Profil</span>
+            </button>
+
+        </div>
+        
+        <!-- FOOTER -->
+        <footer class="klippo-footer">
+            2026 Klippo — Tous droits réservés
+        </footer>
+
+    </div>
+
+    <!-- POPUP D'INSTALLATION PWA -->
+    <div id="pwaPrompt" class="pwa-prompt" style="display:none;">
+        <div class="pwa-content">
+            
+            <!-- Bouton de fermeture -->
+            <button id="dismissBtn" class="dismiss-btn">❌</button>
+
+            <!-- Logo -->
+            <img src="icons/chezmoi_icon512.png" alt="Logo ChezMoi" />
+
+            <!-- Titre -->
+            <h3>ChezMoi</h3>
+            
+           <!-- Texte descriptif -->
+            <p>Profitez de la meilleure expérience pour trouver votre logement rapidement et en toute sécurité.</p>
+
+            <!-- Bouton d'installation -->
+            <button id="installBtn">Installer</button>
+            
+        </div>
+    </div>
+
+    <!-- JS principal -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

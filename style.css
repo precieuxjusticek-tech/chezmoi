@@ -1,0 +1,3253 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* GLOBAL */
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f7f7f7; /* gris très clair */
+    height: 100vh;
+    overflow: hidden; /* scroll global désactivé */
+    color: #333;
+}
+
+/* TITRES */
+h2 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* APP CONTAINER */
+.app {
+    min-width: 420px;
+    margin: auto;
+    background: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* HEADER */
+.app-header {
+    background: linear-gradient(135deg, #fd802e, #ffb74d); /* orange vif dégradé */
+    color: white;
+    text-align: center;
+    padding: 30px 20px;
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.brand {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* ACCUEIL */
+#accueil {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    min-height: 400px;
+    background: black;
+    box-sizing: border-box;
+    border-radius: 16px;
+}
+
+.acl {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acl p {
+    text-align: center;
+    color: #e4d8d8 !important;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.img {
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.img img:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+/* PAGES */
+.page {
+    display: none;
+    flex: 1 1 auto;
+    padding: 25px;
+    overflow-y: auto;
+}
+
+.page.active {
+    display: block;
+}
+
+#one {
+    margin-bottom: 15px;
+    color: #fd802e; /* accent orange */
+}
+
+.page p {
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+/* BUTTONS */
+.buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+button {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 16px;
+    background: #fd802e; /* orange vif */
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(253,128,46,0.4);
+    background: #ff9500; /* légèrement plus vif */
+}
+
+button.secondary {
+    background: #233d4c; 
+    color: #fd802e;
+    box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+}
+
+button.secondary:hover {
+    background: #2f5d73; 
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+}
+
+.btn {
+    width: 50%;
+}
+
+/* FORM */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+input {
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    width: 50%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: #fd802e; /* accent orange */
+    box-shadow: 0 0 8px rgba(253,128,46,0.3);
+}
+
+/* TEXT LINK */
+.link {
+    margin: 20px auto;
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 500;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.link:hover {
+    color: #ff9500;
+    text-decoration: underline;
+}
+
+/* TITRES */
+.page h2 {
+    color: black;
+    text-align: center;
+}
+
+/* ===================
+/* == modal pour le mot de passe
+/* =========================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-cancel {
+    background: #ccc;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+/* lien du bouton mot de passe oublier  */
+.forget {
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    color: red !important;       /* couleur principale du texte */
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.forget:hover {
+    color: #fd802e;       /* couleur d'accent au survol */
+}
+
+/* FOOTER */
+.klippo-footer {
+    text-align: center;
+    font-size: 12px;
+    color: #777;
+    padding: 10px 0 15px;
+}
+
+/* ============================= */
+/* HOME APRÈS LOGIN */
+/* ============================= */
+#home {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#home.active {
+    display: flex;
+}
+
+/* ========================== */
+/* Animation Spinner */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================== */
+/* Spinner circulaire moderne pour toutes les pages */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    border-top: 4px solid #233d4c; /* couleur principale ChezMoi */
+    border-right: 4px solid #fd802e; /* accent ChezMoi */
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+/* ========================== */
+/* Loader overlay commun pour toutes les pages */
+#loader,
+#loader-connexion,
+#loader-explore,
+#loader-edit,
+#loader-profil,
+#loader-signaler,
+#loader-pub,
+#loader-fav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* ========================== */
+/* Loader page inscription */
+#loader {
+    position: fixed;
+    font-size: 18px;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#loader.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ========================== */
+/* Loaders cachés par défaut */
+#loader-connexion,
+#loader-explore,
+#loader-edit,
+#loader-profil,
+#loader-signaler,
+#loader-pub,
+#loader-fav {
+    display: none;
+}
+
+/* ========================== */
+/* Texte des loaders */
+#loader-connexion p,
+#loader-explore p,
+#loader-edit p,
+#loader-profil p,
+#loader-signaler p,
+#loader-pub p,
+#loader-fav p {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* ========================== */
+/* Loader Home (spinner circulaire) */
+.loader-home {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #233d4c;
+    border-right: 5px solid #fd802e;
+    animation: spin 0.9s linear infinite;
+    margin: auto;
+}
+
+/* ===============
+loader pour mot de passe oublié
+========= */
+#loader-reset {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+#loader-reset p {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* ============================= */
+/* TOP BAR */
+/* ============================= */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    margin-top: -10px;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #fff;
+    font-size: 14px;
+    color: #333;
+    transition: 0.3s ease;
+}
+
+.dropbtn:hover {
+    background: #f0f0f0;
+}
+
+/* ============================= */
+/* DROPDOWN */
+/* ============================= */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background: #f9f9f9;
+    min-width: 140px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    border-radius: 10px;
+    z-index: 1;
+    animation: fadeIn 0.2s ease;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 10px 12px;
+    text-decoration: none;
+    display: block;
+    border-radius: 6px;
+    transition: 0.2s ease;
+}
+
+.dropdown-content a:hover {
+    background: #eaeaea;
+}
+
+/* ===================== */
+/* BARRE DE NAVIGATION BAS */
+/* ===================== */
+.app-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: #ffffff;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+
+    border-top: 1px solid #f1f1f1;
+
+    box-shadow: 0 -6px 25px rgba(0,0,0,0.08);
+
+    z-index: 1000;
+}
+
+/* ===================== */
+/* BOUTONS NAVIGATION */
+/* ===================== */
+.app-nav-item {
+    flex: 1;
+    max-width: 65px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 11px;
+    color: #8a8a8a;
+
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+}
+
+.app-nav-item i {
+    font-size: 24px;
+    transition: all 0.25s ease;
+}
+
+.app-nav-item span {
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Hover */
+.app-nav-item:hover {
+    color: #233d4c;
+}
+
+/* Actif */
+.app-nav-item.active {
+    color: #fd802e !important;
+}
+
+.app-nav-item.active i {
+    transform: translateY(-4px) scale(1.05);
+}
+
+/* ===================== */
+/* BOUTON CENTRAL PUBLIER */
+/* ===================== */
+.app-add {
+    background: linear-gradient(135deg, #fd802e, #ff5722);
+
+    color: #fff;
+
+    width: 64px;
+    height: 64px;
+
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 30px;
+
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+
+    z-index: 10;
+
+    transition: all 0.25s ease;
+}
+
+/* Hover bouton publier */
+.app-add:hover {
+    transform: translateX(-50%) scale(1.08);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+}
+
+/* clic */
+.app-add:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* cacher texte */
+.app-add span {
+    display: none;
+}
+
+/* ============================= */
+/* CONTENU SCROLLABLE */
+/* ============================= */
+#home .home-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px 15px;
+    background: #f4f6f8;
+    gap: 25px;
+}
+
+/* ============================= */
+/* SECTIONS CATEGORIES */
+/* ============================= */
+.categorie-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.categorie-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #233d4c;
+    padding-left: 5px;
+}
+
+/* ============================= */
+/* ROW ANNONCES (scroll horizontal) */
+/* ============================= */
+.annonces-row {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+}
+
+.annonces-row::-webkit-scrollbar {
+    height: 6px;
+}
+
+.annonces-row::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.25);
+    border-radius: 3px;
+}
+
+.annonces-row::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+}
+
+/* ============================= */
+/* CARD ANNONCE */
+/* ============================= */
+.annonce-card {
+    flex: 0 0 230px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    scroll-snap-align: start;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+/* HOVER */
+.annonce-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+}
+
+/* ============================= */
+/* IMAGE */
+/* ============================= */
+.annonce-card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.annonce-card:hover img {
+    transform: scale(1.06);
+}
+
+/* ============================= */
+/* CONTENU */
+/* ============================= */
+.annonce-content {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* BADGE TYPE */
+.annonce-type {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 6px;
+    background: #fd802e;
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* QUARTIER */
+.annonce-quartier {
+    font-size: 14px;
+    color: #777;
+}
+
+/* TYPE TEXTE */
+.annonce-type-text {
+    font-size: 14px;
+    color: #444;
+}
+
+/* ============================= */
+/* FOOTER CARD */
+/* ============================= */
+.annonce-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+
+/* INFO */
+.annonce-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.annonce-info .ville {
+    font-size: 13px;
+    color: #666;
+}
+
+/* PRIX */
+.annonce-info .prix {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fd802e !important;
+}
+
+/* BOUTON FAVORIS ULTRA DISCRET */
+.btn-fav {
+    position: absolute;
+    top: 100px;       /* légèrement descendu */
+    right: 20px;
+    background: none !important; /* aucun fond */
+    border: none !important;     /* aucune bordure */
+    padding: 0;                  /* aucun padding */
+    font-size: 20px;             /* taille du cœur */
+    color: #e74c3c;              /* rouge cœur */
+    z-index: 10;
+    cursor: pointer;
+    line-height: 1;              /* enlever espace vertical */
+    opacity: 0.95;               /* légèrement transparent */
+}
+
+.btn-fav:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.btn-fav:active {
+    transform: scale(1.3);
+}
+
+/* BOUTON VOIR MODERNE ORANGE */
+.btn-details {
+    background: linear-gradient(135deg, #233d4c, #2f5d73) !important;
+    color: #fff !important;
+}
+
+.btn-details:hover {
+    background: linear-gradient(135deg, #ff5722, #fd802e); /* inversé au hover */
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+
+.btn-details:active {
+    transform: translateY(1px) scale(0.97); 
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+/* BOUTON PARTAGER PLUS VISIBLE */
+.btn-share {
+    position: absolute;
+    top: 140px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    background: rgba(255,255,255,0.9); /* fond blanc léger */
+    border-radius: 50%; /* bouton rond */
+
+    border: none;
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); /* petit relief */
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-share:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.btn-share:active {
+    transform: scale(1.3);
+}
+
+.btn-share .share-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+/* BADGE EXPIRATION */
+.annonce-card .expire-info{
+    position:absolute;
+    top:30px;
+    left:6px;
+
+    background:#fd802e;
+    color:#fff;
+
+    padding:2px 6px;
+    font-size:11px;
+    font-weight:600;
+
+    border-radius:6px;
+
+    z-index:10;
+    opacity:0.95;
+}
+
+/* quand expiration proche */
+.annonce-card .expire-info.urgent{
+    background:#e74c3c;
+}
+
+/* ============================= */
+/* EFFETS HOVER PREMIUM */
+/* ============================= */
+.annonce-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.18);
+}
+
+.annonce-card:hover img {
+    transform: scale(1.08);
+}
+
+.annonce-card:hover .annonce-type {
+    letter-spacing: 1px;
+}
+
+/* ============================= */
+/* SCROLL HORIZONTAL */
+/* ============================= */
+.annonces-row {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.annonces-row::-webkit-scrollbar {
+    height: 6px;
+}
+
+.annonces-row::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+.annonces-row::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 3px;
+}
+
+/* ============================= */
+/* ANIMATION FADE IN */
+/* ============================= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================= */
+/* PAGE AJOUTER UNE ANNONCE      */
+/* ============================= */
+#ajouter {
+    flex-direction: column;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+}
+
+/* Titre de la page */
+#ajouter h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Formulaire principal */
+#formAjouter {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Champs texte, nombre, tel, textarea */
+#formAjouter input[type="text"],
+#formAjouter input[type="number"],
+#formAjouter input[type="tel"],
+#formAjouter textarea {
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* Focus effet sur champs */
+#formAjouter input:focus,
+#formAjouter textarea:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+/* Labels pour radio et sections */
+#formAjouter label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+    color: #333;
+}
+
+/* ============================= */
+/* RADIOS CUSTOM STYLÉ            */
+/* ============================= */
+
+/* Container type de logement - 4 par 4 */
+.type-radios {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 5px;
+}
+
+/* Container douche - 2 par 1 */
+.douche-radios {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 5px;
+}
+
+/* Masquer les radios natives */
+.type-radios input[type="radio"],
+.douche-radios input[type="radio"] {
+    display: none;
+}
+
+#titre {
+    display: flex;
+    align-items: center;
+}
+
+/* Label stylé comme bouton */
+.type-radios label,
+.douche-radios label {
+    padding: 10px 12px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    color: #333;
+    text-align: center;
+}
+
+/* Radio sélectionnée */
+.type-radios input[type="radio"]:checked + label,
+.douche-radios input[type="radio"]:checked + label {
+    background-color: #fd802e;
+    color: #233d4c;
+    border-color: #fd802e;
+}
+
+/* Hover effet */
+.type-radios label:hover,
+.douche-radios label:hover {
+    background-color: #e6f4ea;
+    border-color: #4CAF50;
+}
+
+/* ============================= */
+/* GRILLE D'IMAGES / CARDS       */
+/* ============================= */
+.image-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.image-card {
+    width: 100px;
+    height: 100px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.image-card:hover {
+    transform: scale(1.05);
+}
+
+.image-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Bouton supprimer sur chaque image */
+.image-card .btnSuppr {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Card “+” pour ajouter une nouvelle image */
+.image-card.plus {
+    font-size: 36px;
+    color: #666;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* ============================= */
+/* BOUTON PUBLIER                 */
+/* ============================= */
+#formAjouter button[type="submit"] {
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 16px;
+    background-color: #233d4c;
+    color: #fd802e;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#formAjouter button[type="submit"]:hover {
+    background-color: #45a049;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* ============================= */
+/* LIEN RETOUR À L'ACCUEIL       */
+/* ============================= */
+#ajouter .link {
+    text-align: center;
+    margin-top: 20px;
+    cursor: pointer;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+#ajouter .link:hover {
+    text-decoration: underline;
+}
+
+/* =========================== */
+/* ===== CONTENEUR PAGE RECHERCHE ====== */
+/* =========================== */
+#recherche {
+  padding: 40px 40px;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f5f5;
+  min-height: 95vh;
+}
+
+.recherche-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ===== TITRE ===== */
+.recherche-titre {
+  color: #233d4c;
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+/* BARRE DE RECHERCHE + FILTRES MODERNE RELIEF */
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.search-bar input,
+.search-bar select {
+  padding: 14px 18px;
+  border-radius: 20px;                /* arrondi pill pour effet moderne */
+  border: 2px solid transparent;      /* base transparente pour gradient */
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(90deg, #fd802e, #233d4c) border-box; /* bordure dégradée */
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* léger relief */
+}
+
+/* Flex pour responsive */
+.search-bar input { flex: 1 1 300px; }
+.search-bar select { flex: 1 1 200px; }
+
+/* FOCUS animé */
+.search-bar input:focus,
+.search-bar select:focus {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(253, 128, 46, 0.6);
+}
+
+/* Hover léger */
+.search-bar input:hover,
+.search-bar select:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(253, 128, 46, 0.4);
+}
+
+/* Placeholder */
+.search-bar input::placeholder {
+  color: #999;
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* ===== GRILLE DES CARTES ===== */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  
+  max-height: 250px; /* hauteur maximale de la zone résultats */
+  overflow-y: auto;  /* scroll vertical uniquement ici */
+  padding-right: 10px; /* pour éviter que le scroll masque le contenu */
+}
+
+/* Optionnel : style du scroll pour moderniser */
+.results-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.results-grid::-webkit-scrollbar-thumb {
+  background-color: #fd802e;
+  border-radius: 4px;
+}
+
+.results-grid::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* ===== CARTES ===== */
+.search-card {
+  background: #fff;
+  border-radius: 18px;
+  flex: 0 0 200px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.search-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* ===== IMAGE DE LA CARTE ===== */
+.search-card img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+/* ===== CONTENU ===== */
+.search-card-content {
+  padding: 10px;
+  text-align: left;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.search-card-content h3 {
+  font-size: 1.1rem;
+  color: #233d4c;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* INFOS LOGEMENT */
+.card-infos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 5px;
+}
+
+.card-infos p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+}
+
+.card-infos .prix {
+  font-weight: bold;
+  color: #fd802e;
+}
+
+/* BOUTON PARTAGER DANS SEARCH CARD UNIQUEMENT */
+div.search-card > .search-card-content > .btn-share {
+    position: absolute;
+    top: 70px;
+    right: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+div.search-card > .search-card-content > .btn-share:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+div.search-card > .search-card-content > .btn-share:active {
+    transform: scale(1.3);
+}
+
+div.search-card > .search-card-content > .btn-share .share-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+/* BOUTON FAVORIS DANS SEARCH CARD UNIQUEMENT */
+div.search-card > .search-card-content > .btn-fav {
+    position: absolute;
+    top: 40px;
+    right: 15px;
+    background: none !important;
+    border: none !important;
+    padding: 0;
+    font-size: 20px;
+    color: #e74c3c;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.95;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+div.search-card > .search-card-content > .btn-fav:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+div.search-card > .search-card-content > .btn-fav:active {
+    transform: scale(1.3);
+}
+
+/* BOUTON "VOIR" */
+.btn-details {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #fd802e;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-details:hover {
+  background: #233d4c;
+}
+
+/* BADGE EXPIRATION */
+.expire-info{
+    position:absolute;
+    top:10px;
+    left:6px;
+
+    background:#fd802e;
+    color:#fff;
+
+    padding:2px 6px;
+    font-size:11px;
+    font-weight:600;
+
+    border-radius:6px;
+
+    z-index:10;
+    opacity:0.95;
+}
+
+/* quand expiration proche */
+.expire-info.urgent{
+    background:#e74c3c;
+}
+
+/* ===== LIEN RETOUR ===== */
+.link {
+  display: inline-block;
+  margin-top: 40px;
+  color: #fd802e;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.link:hover {
+  color: #233d4c;
+}
+/* MESSAGE VIDE */
+#searchResults > p {
+    text-align: center;
+    color: #999;
+    grid-column: 1 / -1;
+}
+
+
+/* ============================= */
+/* PAGE DÉTAIL ANNONCE           */
+/* ============================= */
+#detail {
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+#detail.active {
+  display: flex;
+}
+
+#detail h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.detail-images {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  flex: 0 0  210px;
+}
+
+.detail-images img {
+  height: 200px;
+  min-width: 200px;
+  width: auto;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease;
+}
+
+.detail-images img:hover {
+  transform: scale(1.03);
+}
+
+#detail h3 {
+  font-size: 20px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+#detail h4 {
+    font-size: 18;
+    margin-top: 5px;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+#detail p {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+#detail button {
+  margin-top: 20px;
+  align-self: center;
+  padding: 12px 20px;
+  border-radius: 16px;
+  border: none;
+  background: #232323;
+  color: #fd802e;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#detail button:hover {
+  background: #ffb74d;
+}
+
+/* ===== bouton signaler un problème ===== */
+#detail button#btnSignalerProbleme {
+  background: #e53935; /* rouge pour signaler un problème */
+}
+
+#detail button#btnSignalerProbleme:hover {
+  background: #b71c1c;
+}
+
+#detail .link.link {
+    text-align: center;
+    align-self: center;
+    margin-top: 20px;
+    cursor: pointer;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+#detail .link.link:hover {
+    text-decoration: underline;
+}
+
+/* ============================= */
+/* PAGE SIGNALER UN PROBLEME      */
+/* ============================= */
+#signalerProbleme {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+#signalerProbleme.active {
+  display: flex;
+}
+
+#signalerProbleme h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #e53935; /* Rouge pour indiquer un problème */
+}
+
+#signalerProbleme form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+#signalerProbleme label {
+  font-weight: 600;
+  color: #333;
+}
+
+#signalerProbleme textarea {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 120px;
+}
+
+#signalerProbleme button[type="submit"] {
+  padding: 12px;
+  border-radius: 16px;
+  border: none;
+  background: #e53935;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#signalerProbleme button[type="submit"]:hover {
+  background: #b71c1c;
+}
+
+#signalerProbleme .link {
+  text-align: center;
+  cursor: pointer;
+  color: #1e88e5;
+  font-weight: 600;
+}
+
+#signalerProbleme .link:hover {
+  text-decoration: underline;
+}
+
+/* ============================= */
+/* PAGE PROPOSER IDEE */
+/* ============================= */
+
+.idea-container{
+    max-width:500px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+.idea-container h2{
+    text-align:center;
+    margin-bottom:5px;
+}
+
+.idea-subtitle{
+    text-align:center;
+    color:#666;
+    font-size:14px;
+    margin-bottom:20px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:15px;
+}
+
+.form-group label{
+    font-weight:600;
+    margin-bottom:5px;
+}
+
+.form-group input,
+.form-group textarea{
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+
+.form-group textarea{
+    resize:none;
+}
+
+.btn-idee{
+    width:100%;
+    padding:12px;
+    background:#6f42c1;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn-idee:hover{
+    background:#5a35a3;
+}
+
+/* ============================= */
+/* PAGE EXPLORER - CARDS IMAGES  */
+/* ============================= */
+/* Explorer actif */
+#explorer.active {
+    display: flex;
+}
+
+/* Conteneur principal */
+#explorer {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+    padding: 20px;
+    background: #f2f2f2; /* fond gris clair */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Titre */
+#explorer h2 {
+    position: sticky;
+    top: 0;
+    background: #f2f2f2;
+    padding-bottom: 12px;
+    z-index: 10;
+    font-size: 26px;
+    font-weight: 600;
+    border-bottom: 2px solid #fd802e; /* accent orange vif */
+    color: #222;
+}
+
+/* Paragraphe centré */
+#explorer p {
+    align-self: center;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Conteneur des cartes */
+.explorer-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+    padding-right: 10px;
+    scroll-behavior: smooth;
+}
+
+/* Chaque card */
+.explorer-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex: 0 0 240px;
+    margin: auto;
+    color: #333;
+}
+
+/* Hover subtil */
+.explorer-card:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+/* Image dans la card */
+.explorer-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.explorer-card img:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+/* Prix */
+.explorer-card .prix {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fd802e; /* orange vif */
+    margin-bottom: 8px;
+}
+
+/* Quartier et ville */
+.explorer-card p {
+    font-size: 17px;
+    margin: 3px 0;
+}
+
+/* Bouton Découvrir */
+.btn-decouvrir {
+    padding: 10px 18px;
+    margin-bottom: 10px;
+    border: none;
+    background-color: #fd802e; /* vert vif */
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Hover bouton */
+.btn-decouvrir:hover {
+    background-color: #43a047; /* vert plus foncé */
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+/* Conteneur des boutons */
+.explorer-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}
+
+/* ========================= */
+/* ANIMATIONS ET EFFETS PSY  */
+/* ========================= */
+
+/* fade-in au chargement des cartes */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* appliquer fade-in progressif */
+.animate-card {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+/* pulse sur bouton pour attirer l’œil */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse-btn {
+  animation: pulse 2s infinite;
+}
+
+/* ===============================
+   PAGE PROFIL
+   Styles complets pour la page profil
+=============================== */
+
+.page#profil {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* Conteneur principal : deux colonnes */
+.profil-container {
+    display: flex;
+    gap: 20px; /* espace entre les colonnes */
+    align-items: flex-start;
+    flex-wrap: wrap; /* pour mobile */
+}
+
+/* pour les trois point */
+/* Menu caché *//* Conteneur du titre + bouton menu */
+.profil-header {
+    display: flex;
+    justify-content: space-between; /* titre à gauche, bouton à droite */
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Bouton menu */
+#menuBtn {
+    background-color: transparent;
+    border: none;
+    font-size: 20px; /* taille des trois points */
+    cursor: pointer;
+    color: #333;
+}
+
+#menuBtn:hover {
+    color: #007bff;
+}
+
+/* Menu déroulant */
+.dropdown-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-content {
+    display: none;
+    position: absolute;
+    top: 100%;      /* juste sous le bouton */
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 100;
+
+    width: max-content; /* largeur auto selon le contenu */
+    min-width: 120px;
+    padding: 4px 0;
+}
+
+.dropdown-menu.show .menu-content {
+    display: block;
+}
+
+.menu-content button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+}
+
+.menu-content button:hover {
+    background-color: #f0f0f0;
+}
+
+/* -------------------------------
+   COLONNE GAUCHE : Infos utilisateur
+------------------------------- */
+.profil-left {
+    flex: 1 1 250px; /* prend moins de largeur mais reste responsive */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Titre de la section */
+.profil-left h2 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Informations utilisateur (avatar + détails) */
+.profil-info {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.profil-info .avatar img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+.user-details p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+/* Statistiques de l'utilisateur */
+.profil-stats p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Boutons actions */
+.profil-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.profil-actions button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #233d4c;
+    color: #fd802e;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.profil-actions button:hover {
+    background-color: #555;
+}
+
+/* -------------------------------
+   COLONNE DROITE : Annonces utilisateur
+------------------------------- */
+.profil-right {
+    flex: 2 1 600px; /* prend plus de largeur mais reste responsive */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Titre de la section annonces */
+.profil-right h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Conteneur des annonces - grille 3 colonnes */
+.user-annonces-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* adapte le nombre de colonnes selon l'espace */
+    gap: 15px;
+    justify-content: center; /* centre la grille horizontalement */
+}
+
+/* Carte pour chaque annonce */
+.user-annonces-container .annonce-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fafafa;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hover effet */
+.user-annonces-container .annonce-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Image de l'annonce */
+.user-annonces-container .annonce-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+/* Contenu texte dans la carte */
+.user-annonces-container .annonce-card .card-content {
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Titre et ville/prix */
+.user-annonces-container .annonce-card .card-content .title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-annonces-container .annonce-card .card-content .details {
+    font-size: 13px;
+    color: #555;
+}
+
+
+/* ============================= */
+/* PAGE FAVORIS */
+/* ============================= */
+
+.favoris-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.favoris h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #233d4c;
+}
+
+/* Conteneur des cartes */
+.favoris-annonces-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 220px);
+    gap: 15px;
+    justify-content: center;
+}
+
+/* Style d'une carte d'annonce */
+.annonce-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.annonce-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Image de l'annonce */
+.annonce-card .annonce-img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+/* Type et titre */
+.annonce-card .annonce-type {
+    display: block;
+    padding: 5px 10px;
+    background: #233d4c;
+    color: #fd802e;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Info quartier / type */
+.annonce-card .type-annonce {
+    padding: 8px 10px;
+    font-size: 22px;
+    color: #555;
+}
+
+/* Footer de la carte */
+.annonce-card .annonce-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+/* Ville et prix */
+.annonce-card .annonce-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+.annonce-card .annonce-info .ville {
+    color: #333;
+    font-weight: 500;
+}
+
+.annonce-card .annonce-info .prix {
+    font-weight: bold;
+}
+
+/* Bouton Voir détail */
+.annonce-card .btn-details {
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.annonce-card .btn-details:hover {
+    background: #fd802e;
+}
+
+/* Message aucun favori */
+#aucunFavorisMessage {
+    color: #555;
+    font-style: italic;
+}
+
+
+/* ============================= */
+/* Conteneur des formulaires de paiement */
+/* ============================= */
+section#paiementPublication,
+section#paiementDeblocage {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Titres */
+section#paiementPublication h2,
+section#paiementDeblocage h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #222;
+    font-size: 22px;
+}
+
+/* Labels */
+section#paiementPublication label,
+section#paiementDeblocage label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #444;
+}
+
+/* Inputs */
+section#paiementPublication input[type="text"],
+section#paiementDeblocage input[type="text"],
+section#paiementPublication input[type="number"],
+section#paiementDeblocage input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+/* Focus effet moderne */
+section#paiementPublication input:focus,
+section#paiementDeblocage input:focus {
+    border-color: #ff6600;
+    box-shadow: 0 0 0 3px rgba(255,102,0,0.15);
+    outline: none;
+}
+
+/* ============================= */
+/* RADIOS MODERNES - PUBLICATION & DEBLOCAGE */
+/* ============================= */
+
+/* Conteneur radio */
+section#paiementPublication .radio-group,
+section#paiementDeblocage .radio-group {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Chaque option */
+section#paiementPublication .radio-option,
+section#paiementDeblocage .radio-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+}
+
+/* Hover */
+section#paiementPublication .radio-option:hover,
+section#paiementDeblocage .radio-option:hover {
+    border-color: #ff6600;
+    background: #fff5eb;
+}
+
+/* Masquer le radio classique */
+section#paiementPublication .radio-option input[type="radio"],
+section#paiementDeblocage .radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Cercle custom */
+section#paiementPublication .radio-option span::before,
+section#paiementDeblocage .radio-option span::before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+}
+
+/* Quand sélectionné */
+section#paiementPublication .radio-option input[type="radio"]:checked + span::before,
+section#paiementDeblocage .radio-option input[type="radio"]:checked + span::before {
+    background-color: #ff6600;
+    border-color: #ff6600;
+}
+
+/* Texte sélectionné */
+section#paiementPublication .radio-option input[type="radio"]:checked + span,
+section#paiementDeblocage .radio-option input[type="radio"]:checked + span {
+    font-weight: bold;
+    color: #ff6600;
+}
+
+/* Boutons paiement */
+section#paiementPublication button,
+section#paiementDeblocage button {
+    width: 100%;
+    margin-top: 25px;
+    padding: 14px;
+    background: #ff6600;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+section#paiementPublication button:hover,
+section#paiementDeblocage button:hover {
+    background: #e65c00;
+}
+
+/* Résultat paiement */
+#paymentResultPublication,
+#paymentResultDeblocage {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Lien retour */
+#retourFormAjouter,
+#retourDetail {
+    display: block;
+    margin-top: 25px;
+    text-align: center;
+    font-size: 14px;
+    color: #ff6600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+#retourFormAjouter:hover,
+#retourDetail:hover {
+    text-decoration: underline;
+}
+
+/* ============================= */
+/* ===== POPUP INSTALLATION PWA PREMIUM === */
+/* ============================= */
+
+.pwa-prompt {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.pwa-prompt.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Carte centrale */
+.pwa-content {
+    position: relative;
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    padding: 35px 25px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    transform: translateY(50px) scale(0.95);
+    transition: all 0.4s cubic-bezier(.4,1.3,.5,1);
+}
+
+/* Animation bounce */
+.pwa-prompt.show .pwa-content {
+    transform: translateY(0) scale(1);
+}
+
+/* Icône au-dessus */
+.pwa-content img {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 15px;
+}
+
+/* Titre */
+.pwa-content h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #222;
+}
+
+/* Texte descriptif */
+.pwa-content p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+/* Bouton Installer */
+#installBtn {
+    background: #fd802e;
+    color:#233d4c;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+}
+
+#installBtn:hover {
+    transform: translateY(-2px);
+    box-shadow:  0 6px 20px rgba(253,128,46,0.4);
+}
+
+/* Bouton Fermer (croix) ajusté) */
+.dismiss-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #f44336; /* rouge style Apple/iOS */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    line-height: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;          /* on enlève padding par défaut */
+}
+
+.dismiss-btn:hover {
+    background: #d32f2f; /* rouge plus foncé au hover */
+    transform: scale(1.1);
+}
+
+/* ============================= */
+/* FORMULAIRE MODIFICATION PROFIL */
+/* ============================= */
+.edit-profile-form {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);   /* fond semi-transparent */
+    backdrop-filter: blur(3px);    /* léger flou pro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.edit-profile-form.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Conteneur du formulaire */
+.edit-profile-form .form-container {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff, #f0f4ff);
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    transform: translateY(-50px);
+    transition: transform 0.3s ease;
+}
+
+.edit-profile-form.active .form-container {
+    transform: translateY(0);
+}
+
+/* Barre header avec titre et bouton fermer */
+.edit-profile-form .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Titre centré */
+.edit-profile-form .form-header h4 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1e3a8a;
+    text-align: center;
+    flex: 1; /* occupe tout l’espace pour centrer */
+    margin: 0;
+}
+
+/* Bouton fermer */
+.edit-profile-form .close-btn {
+    background: none;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    color: #555;
+    transition: color 0.2s;
+    margin-left: 10px;
+}
+
+.edit-profile-form .close-btn:hover {
+    color: #1e3a8a;
+}
+
+/* Inputs */
+.edit-profile-form input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.25s;
+}
+
+.edit-profile-form input:focus {
+    border-color: #1e3a8a;
+    box-shadow: 0 0 8px rgba(30,58,138,0.3);
+}
+
+/* Bouton enregistrer */
+.edit-profile-form button#saveProfileBtn {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #1e3a8a;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-profile-form button#saveProfileBtn:hover {
+    background-color: #3b5bbf;
+    transform: translateY(-2px);
+}
+
+/* =================== Overlay =================== */
+.overlay {
+    display: none; /* caché par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* fond semi-transparent */
+    z-index: 1000; /* au-dessus de tout le reste */
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.overlay-content {
+    background: #fff;
+    padding: 30px 25px;
+    border-radius: 16px;
+    width: 380px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+.overlay-content h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #333;
+}
+
+/* Liste des comptes existants */
+.accounts-list {
+    margin: 15px 0;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.account-item {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-item:hover {
+    background-color: #f0f4ff;
+    transform: translateY(-2px);
+}
+
+/* Bouton Créer un compte */
+#createAccountBtn {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+#createAccountBtn:hover {
+    background-color: #0056b3;
+}
+
+/* Scrollbar personnalisée */
+.accounts-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.accounts-list::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes slideUp {
+    from {transform: translateY(20px);}
+    to {transform: translateY(0);}
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 767px) {
+    /* Mobile styles */
+    body {
+        height: 100vh;
+    }
+    
+    .app {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .app-header {
+        padding: 15px 10px;
+    }
+    
+    .brand {
+        font-size: 10px;
+    }
+    
+    #accueil {
+        flex-direction: column;
+        padding: 0px 50px 80px 50px;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+        background-color: black;
+    }
+    
+    #accueil h2 {
+        font-size: 24px;
+        margin: 0;
+    }
+    
+    #accueil p {
+        color: #666;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    .acl {
+        width: 100%;
+        max-width: 350px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: -200px; /* remonter légèrement */
+    }
+    
+    .img {
+        display: none;
+    }
+    
+    .app-nav {
+        display: none;
+    }
+    
+    .acl {
+        gap: 10px;
+    }
+    
+    .buttons {
+        gap: 10px;
+    }
+    
+    button {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    input {
+        width: 100%;
+    }
+    
+    input:focus {
+        width: 100%;
+    }
+    
+    .link {
+        width: 100%;
+    }
+    
+    /* TOP BAR : forcer que rien ne coupe le texte */
+    .top-bar,
+    .top-bar * {
+        overflow: visible !important;  /* ignore tout overflow caché */
+        height: auto !important;
+    }
+
+    /* BOUTON DROPDOWN : texte entièrement visible */
+    .dropbtn {
+        display: inline-flex !important;        /* flex pour centrer texte et flèche */
+        align-items: center !important;        /* centre verticalement le texte */
+        justify-content: space-between !important;
+        height: auto !important;               /* laisse s’adapter au contenu */
+        padding: 10px 12px !important;         /* espace suffisant autour du texte */
+        font-size: 14px !important;
+        line-height: normal !important;        /* texte non écrasé */
+        border-radius: 12px !important;
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        cursor: pointer !important;
+    }
+
+    /* DROPDOWN NORMAL */
+    .dropdown {
+        position: relative !important;
+        display: inline-block !important;
+    }
+
+    .dropdown-content {
+        display: none !important;
+        position: absolute !important;
+        top: 100% !important;                  
+        left: 0 !important;
+        min-width: 140px !important;           
+        background: #f9f9f9 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15) !important;
+        z-index: 1000 !important;
+    }
+
+    .dropdown-content a {
+        display: block !important;
+        padding: 10px 12px !important;
+        white-space: nowrap !important;
+        color: #333 !important;
+        text-decoration: none !important;
+        border-radius: 6px !important;
+    }
+
+    .dropdown-content a:hover {
+        background: #eaeaea !important;
+    }
+
+    /* AFFICHAGE AU SURVOL */
+    .dropdown:hover .dropdown-content {
+        display: block !important;
+    }
+
+    .app-nav-item {
+        font-size: 10px;
+    }
+    
+    .app-nav-item i {
+        font-size: 20px;
+    }
+    
+    .app-add {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        bottom: 5px;
+    }
+    
+    .app-nav {
+        bottom: 0px;
+    }
+    
+    .klippo-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+        color: #777;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* ============================== */
+    /* ==== PAGE RECHERCHE ==== */
+    /* ============================== */
+    /* GRILLE DES RESULTATS */
+    .recherche-container {
+        height: 80vh;
+    }
+    .results-grid {
+        grid-template-columns: 1fr; /* 1 carte par ligne */
+        gap: 10px;
+        max-height: 400px;
+    }
+
+    /* IMAGE DES CARTES */
+    .search-card img {
+        height: 110px; /* un peu plus petite pour que ça rentre bien */
+    }
+
+    /* TITRE */
+    .search-card-content h3 {
+        font-size: 0.9rem;
+    }
+
+    /* INFOS */
+    .card-infos p {
+        font-size: 0.8rem;
+    }
+
+    /* BOUTON */
+    .btn-details {
+        padding: 7px;
+        font-size: 0.85rem;
+    } /* fin */
+
+    form {
+        width: 100%;
+    }
+    /* all images scale */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    #ajouter h2 {
+        font-size: 20px;
+    }
+    
+    #formAjouter input[type="text"],
+    #formAjouter input[type="number"],
+    #formAjouter input[type="tel"],
+    #formAjouter textarea {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .type-radios {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .type-radios label, .douche-radios label {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .image-grid {
+        gap: 8px;
+    }
+    
+    .profil-container {
+        flex-direction: column;
+    }
+    
+    .profil-left, .profil-right {
+        width: 100%;
+    }
+    
+    .idea-container {
+        margin: 5px;
+        padding: 10px;
+    }
+    
+    .idea-container h2 {
+        font-size: 18px;
+    }
+
+    /* very small phones (≤390px) */
+    @media (max-width: 390px) {
+        .app {
+            min-width: auto;
+        }
+        .app-header {
+            padding: 10px 8px;
+        }
+        .brand {
+            font-size: 9px;
+        }
+        #accueil h2 {
+            font-size: 22px;
+        }
+        #accueil p {
+            font-size: 14px;
+        }
+        .buttons button {
+            padding: 10px;
+            font-size: 13px;
+        }
+        .btn, input, .link {
+            width: 90%;
+        }
+        input, .link {
+            font-size: 13px;
+        }
+        .bottom-nav button {
+            font-size: 22px;
+        }
+        /* form adjustments for very small screens */
+        form {
+            gap: 10px;
+        }
+        input, textarea {
+            padding: 10px;
+            font-size: 12px;
+        }
+        button {
+            padding: 8px;
+        }
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    
+    /* on cache l'image sur accueil */
+    #accueil .img {
+        display: none;
+    }
+    /* on centre le texte sur accueil */
+    #accueil {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 25px;
+    }
+    /* Tablet styles */
+    .annonce-card {
+        flex: 0 0 200px;
+    }
+    
+    .type-radios {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* PAGE RECHERCHE */
+    #recherche{
+        padding:30px 25px;
+    }
+
+    .recherche-titre{
+        font-size:1.8rem;
+    }
+
+    /* barre recherche */
+    .search-bar{
+        gap:12px;
+        margin-bottom:25px;
+    }
+
+    .search-bar input{
+        flex:1 1 250px;
+    }
+
+    .search-bar select{
+        flex:1 1 180px;
+    }
+
+    /* grille annonces */
+    .results-grid{
+        grid-template-columns: repeat(3, 1fr); /* 3 cartes par ligne */
+        gap:12px;
+        max-height: 1000px;
+    }
+
+    /* cartes */
+    .search-card{
+        border-radius:16px;
+    }
+
+    /* image */
+    .search-card img{
+        height:140px;
+    }
+
+    /* contenu */
+    .search-card-content{
+        padding:12px;
+    }
+
+    /* titre carte */
+    .search-card-content h3{
+        font-size:1rem;
+    }
+
+    /* infos */
+    .card-infos p{
+        font-size:0.85rem;
+    }
+
+    /* bouton */
+    .btn-details{
+        font-size:0.9rem;
+        padding:8px;
+    }
+
+    /* lien retour */
+    .link{
+        margin-top:25px;
+    }
+    /* general adjustments */
+    .page { padding: 25px 15px; }
+    .buttons { gap: 12px; }
+    .btn { width: 80%; }
+    input { width: 80%; }
+    .link { width: 80%; }
+
+
+}
+
+@media (max-width: 768px) {
+    /* Mobile styles */
+    body {
+        height: 100vh;
+    }
+    
+    .app {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .app-header {
+        padding: 15px 10px;
+    }
+    
+    .brand {
+        font-size: 10px;
+    }
+    
+    #accueil {
+        flex-direction: column;
+        padding: 0px 50px 80px 50px;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+        background-color: black;
+    }
+    
+    #accueil h2 {
+        font-size: 24px;
+        margin: 0;
+    }
+    
+    #accueil p {
+        color: #666;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    .acl {
+        width: 100%;
+        max-width: 350px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: -200px; /* remonter légèrement */
+    }
+    
+    .img {
+        display: none;
+    }
+    
+    .app-nav {
+        display: none;
+    }
+    
+    .acl {
+        gap: 10px;
+    }
+    
+    .buttons {
+        gap: 10px;
+    }
+    
+    button {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    input {
+        width: 100%;
+    }
+    
+    input:focus {
+        width: 100%;
+    }
+    
+    .link {
+        width: 100%;
+    }
+    
+    .top-bar {
+        margin-top: 0;
+    }
+    
+    .dropbtn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .dropdown-content {
+        min-width: 120px;
+    }
+    
+    .app-nav-item {
+        font-size: 10px;
+    }
+    
+    .app-nav-item i {
+        font-size: 20px;
+    }
+    
+    .app-add {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        bottom: 5px;
+    }
+    
+    .app-nav {
+        bottom: 0px;
+    }
+    
+    .klippo-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+        color: #777;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* ============================== */
+    /* ==== PAGE RECHERCHE ==== */
+    /* ============================== */
+    /* GRILLE DES RESULTATS */
+    .recherche-container {
+        height: 80vh;
+    }
+    .results-grid {
+        gap: 10px;
+        max-height: 800px;
+    }
+
+    /* IMAGE DES CARTES */
+    .search-card img {
+        height: 110px; /* un peu plus petite pour que ça rentre bien */
+    }
+
+    /* TITRE */
+    .search-card-content h3 {
+        font-size: 0.9rem;
+    }
+
+    /* INFOS */
+    .card-infos p {
+        font-size: 0.8rem;
+    }
+
+    /* BOUTON */
+    .btn-details {
+        padding: 7px;
+        font-size: 0.85rem;
+    } /* fin */
+
+    form {
+        width: 100%;
+    }
+    /* all images scale */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    #ajouter h2 {
+        font-size: 20px;
+    }
+    
+    #formAjouter input[type="text"],
+    #formAjouter input[type="number"],
+    #formAjouter input[type="tel"],
+    #formAjouter textarea {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .type-radios {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .type-radios label, .douche-radios label {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .image-grid {
+        gap: 8px;
+    }
+    
+    .profil-container {
+        flex-direction: column;
+    }
+    
+    .profil-left, .profil-right {
+        width: 100%;
+    }
+    
+    .idea-container {
+        margin: 5px;
+        padding: 10px;
+    }
+    
+    .idea-container h2 {
+        font-size: 18px;
+    }
+
+}
