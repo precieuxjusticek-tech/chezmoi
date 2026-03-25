@@ -1,6 +1,6 @@
 // sw.js - Service Worker optimisé pour ChezMoi SPA
 
-const CACHE_NAME = 'chezmoi-cache-v3';
+const CACHE_NAME = 'chezmoi-cache-v2';
 
 const urlsToCache = [
   '/',                                // racine (important pour SPA)
@@ -8,6 +8,7 @@ const urlsToCache = [
   '/app.js',
   '/style.css',
   '/image/logo_ChezMoi.png',
+  '/image/partager.png',
   '/icons/chezmoi_icon256.png',
   '/icons/chezmoi_icon512.png'
 ];
@@ -73,6 +74,8 @@ self.addEventListener('fetch', event => {
           })
           .catch(() => {
             console.log('[SW] Offline et ressource non trouvée');
+            // Optionnel : renvoyer une image de fallback pour éviter le crash
+            return caches.match('/image/logo_ChezMoi.png'); // ou une autre image par défaut
           });
 
       })

@@ -475,6 +475,28 @@ const pwaPrompt = document.getElementById('pwaPrompt');
 const installBtn = document.getElementById('installBtn');
 const dismissBtn = document.getElementById('dismissBtn');
 
+// Création overlay spinner pour l'installation
+const loaderOverlay = document.createElement('div');
+loaderOverlay.id = "loader-install";
+loaderOverlay.style.position = "fixed";
+loaderOverlay.style.top = "0";
+loaderOverlay.style.left = "0";
+loaderOverlay.style.width = "100%";
+loaderOverlay.style.height = "100%";
+loaderOverlay.style.background = "rgba(255,255,255,0.85)";
+loaderOverlay.style.backdropFilter = "blur(3px)";
+loaderOverlay.style.display = "flex";
+loaderOverlay.style.flexDirection = "column";
+loaderOverlay.style.justifyContent = "center";
+loaderOverlay.style.alignItems = "center";
+loaderOverlay.style.zIndex = "2000";
+loaderOverlay.style.display = "none"; // caché par défaut
+loaderOverlay.innerHTML = `
+    <div class="spinner"></div>
+    <p style="font-size:18px; color:#233d4c; font-weight:bold;">Installation en cours...</p>
+`;
+document.body.appendChild(loaderOverlay);
+
 // Intercepter l'événement beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
@@ -489,7 +511,7 @@ function isPwaInstalled() {
 // Afficher le popup
 function showPwaPrompt() {
     if (!isPwaInstalled()) {
-        pwaPrompt.style.display = "flex";       // indispensable
+        pwaPrompt.style.display = "flex";
         setTimeout(() => pwaPrompt.classList.add("show"), 50);
     }
 }
@@ -504,10 +526,11 @@ function hidePwaPrompt() {
 installBtn.addEventListener('click', async () => {
     hidePwaPrompt();
     if (deferredPrompt) {
+        loaderOverlay.style.display = "flex"; // afficher spinner
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        // toast d'information
-        showToast('Résultat de l\'installation : ' + outcome, "info");
+        loaderOverlay.style.display = "none"; // cacher spinner
+        showToast('Résultat de l\'installation : ' + outcome, "info"); // utilise ta fonction existante
         deferredPrompt = null; 
     }
 });
@@ -517,7 +540,7 @@ dismissBtn.addEventListener('click', hidePwaPrompt);
 
 // Affichage automatique toutes les 5 minutes
 document.addEventListener('DOMContentLoaded', () => {
-    showPwaPrompt();  // afficher au chargement
+    showPwaPrompt();
     setInterval(showPwaPrompt, 5 * 60 * 1000);
 });
 

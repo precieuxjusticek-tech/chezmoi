@@ -31,6 +31,7 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <!-- lien des icônes -->
+    <link rel="preload" href="https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2" as="font" type="font/woff2" crossorigin="anonymous">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
 <body>
@@ -710,6 +711,14 @@
             <!-- Bouton d'installation -->
             <button id="installBtn">Installer</button>
             
+        </div>
+    </div>
+
+    <!-- loader pour l'installation -->
+    <div id="installLoader" class="install-loader">
+        <div class="install-box">
+            <img src="image/logo_ChezMoi.png" class="install-logo">
+            <p>Installation de ChezMoi...</p>
         </div>
     </div>
 

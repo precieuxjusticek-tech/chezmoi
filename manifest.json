@@ -1,10 +1,10 @@
 {
-    "name": "ChezMoi",
+    "name": "ChezMoi by Klippo",
     "short_name": "ChezMoi",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#0d6efd",
+    "theme_color": "#fd802e",
     "icons": [
         {
             "src": "/icons/chezmoi_icon256.png",

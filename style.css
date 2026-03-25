@@ -416,6 +416,53 @@ loader pour mot de passe oublié
 }
 
 /* ============================= */
+/* Loader spécial installation PWA */
+.install-loader{
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(4px);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:3000;
+}
+
+.install-box{
+    text-align:center;
+}
+
+.install-logo{
+    width:80px;
+    margin-bottom:15px;
+    animation: logoPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes logoPulse{
+    0%{
+        transform: scale(1) rotate(0deg);
+        opacity:0.8;
+    }
+    50%{
+        transform: scale(1.15) rotate(5deg);
+        opacity:1;
+    }
+    100%{
+        transform: scale(1) rotate(0deg);
+        opacity:0.8;
+    }
+}
+
+.install-box p{
+    font-size:16px;
+    color:#233d4c;
+    font-weight:600;
+}
+
+/* ============================= */
 /* TOP BAR */
 /* ============================= */
 .top-bar {
@@ -2793,6 +2840,15 @@ section#paiementDeblocage button:hover {
     .app-nav {
         bottom: 0px;
     }
+
+    .app-nav-item:hover {
+        color: inherit; /* conserve la couleur normale */
+    }
+
+    .app-add:hover {
+        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
+    }
     
     .klippo-footer {
         position: fixed;
@@ -2901,6 +2957,17 @@ section#paiementDeblocage button:hover {
         .brand {
             font-size: 9px;
         }
+        
+        /* bouton nav */
+        .app-nav-item:hover {
+            color: inherit; /* conserve la couleur normale */
+        }
+
+        .app-add:hover {
+            transform: translateX(-50%) scale(1); /* pas d’agrandissement */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
+        }
+     
         #accueil h2 {
             font-size: 22px;
         }
@@ -2955,6 +3022,16 @@ section#paiementDeblocage button:hover {
     
     .type-radios {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* bouton nav */
+    .app-nav-item:hover {
+        color: inherit; /* conserve la couleur normale */
+    }
+
+    .app-add:hover {
+        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
     }
 
     /* PAGE RECHERCHE */
@@ -3155,6 +3232,16 @@ section#paiementDeblocage button:hover {
         bottom: 0px;
     }
     
+    .app-nav-item:hover {
+        color: inherit; /* conserve la couleur normale */
+    }
+
+    .app-add:hover {
+        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
+    }
+
+    /* footer klippo */
     .klippo-footer {
         position: fixed;
         bottom: 0;
