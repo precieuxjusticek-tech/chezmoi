@@ -647,6 +647,7 @@ loader pour mot de passe oublié
     padding: 20px 15px;
     background: #f4f6f8;
     gap: 25px;
+    padding-bottom: 120px;
 }
 
 /* ============================= */
@@ -1537,6 +1538,7 @@ div.search-card > .search-card-content > .btn-fav:active {
 /* ===== bouton signaler un problème ===== */
 #detail button#btnSignalerProbleme {
   background: #e53935; /* rouge pour signaler un problème */
+  color: #232323;
 }
 
 #detail button#btnSignalerProbleme:hover {
@@ -1548,7 +1550,7 @@ div.search-card > .search-card-content > .btn-fav:active {
     align-self: center;
     margin-top: 20px;
     cursor: pointer;
-    color: #4CAF50;
+    color: #232323;
     font-weight: 600;
 }
 
