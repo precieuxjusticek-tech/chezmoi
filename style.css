@@ -2834,11 +2834,26 @@ section#paiementDeblocage button:hover {
         width: 50px;
         height: 50px;
         font-size: 24px;
-        bottom: 5px;
+        bottom: -5px;
     }
     
     .app-nav {
         bottom: 0px;
+    }
+
+    /* pour nav */
+    .app-nav-item:hover,
+    .app-add:hover {
+        /* Ne rien appliquer sur mobile */
+        transform: none !important;
+        box-shadow: none !important;
+        color: inherit !important;
+    }
+
+    /* Facultatif : enlever la transition pour éviter les flashs */
+    .app-nav-item,
+    .app-add {
+        transition: none !important;
     }
     
     .klippo-footer {
@@ -2942,6 +2957,21 @@ section#paiementDeblocage button:hover {
         .app {
             min-width: auto;
         }
+
+        /* pour nav */
+        .app-nav-item:hover,
+        .app-add:hover {
+            /* Ne rien appliquer sur mobile */
+            transform: none !important;
+            box-shadow: none !important;
+            color: inherit !important;
+        }
+
+        /* Facultatif : enlever la transition pour éviter les flashs */
+        .app-nav-item,
+        .app-add {
+            transition: none !important;
+        }
         .app-header {
             padding: 10px 8px;
         }
@@ -3002,6 +3032,21 @@ section#paiementDeblocage button:hover {
     
     .type-radios {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* pour nav */
+    .app-nav-item:hover,
+    .app-add:hover {
+        /* Ne rien appliquer sur mobile */
+        transform: none !important;
+        box-shadow: none !important;
+        color: inherit !important;
+    }
+
+    /* Facultatif : enlever la transition pour éviter les flashs */
+    .app-nav-item,
+    .app-add {
+        transition: none !important;
     }
 
     /* PAGE RECHERCHE */
@@ -3195,11 +3240,26 @@ section#paiementDeblocage button:hover {
         width: 50px;
         height: 50px;
         font-size: 24px;
-        bottom: 5px;
+        bottom: -5px;
     }
     
     .app-nav {
         bottom: 0px;
+    }
+
+    /* pour nav */
+    .app-nav-item:hover,
+    .app-add:hover {
+        /* Ne rien appliquer sur mobile */
+        transform: none !important;
+        box-shadow: none !important;
+        color: inherit !important;
+    }
+
+    /* Facultatif : enlever la transition pour éviter les flashs */
+    .app-nav-item,
+    .app-add {
+        transition: none !important;
     }
     
     .klippo-footer {
@@ -3297,14 +3357,4 @@ section#paiementDeblocage button:hover {
         font-size: 18px;
     }
 
-}
-
-/* pour desactiver le hover */
-@media (hover: none) and (pointer: coarse) {
-    .app-nav-item:hover,
-    .app-add:hover {
-        transform: none;
-        box-shadow: none;
-        color: inherit;
-    }
 }
