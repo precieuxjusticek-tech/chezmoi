@@ -9,7 +9,7 @@
 body {
     font-family: "Segoe UI", Arial, sans-serif;
     background: #f7f7f7; /* gris très clair */
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden; /* scroll global désactivé */
     color: #333;
 }
@@ -1538,7 +1538,7 @@ div.search-card > .search-card-content > .btn-fav:active {
 /* ===== bouton signaler un problème ===== */
 #detail button#btnSignalerProbleme {
   background: #e53935; /* rouge pour signaler un problème */
-  color: #232323;
+  color: white;
 }
 
 #detail button#btnSignalerProbleme:hover {
@@ -1745,6 +1745,7 @@ div.search-card > .search-card-content > .btn-fav:active {
     gap: 18px;
     overflow-y: auto;
     padding-right: 10px;
+    padding-bottom: 120px; /* espace pour la navbar */
     scroll-behavior: smooth;
 }
 
@@ -1860,6 +1861,7 @@ div.search-card > .search-card-content > .btn-fav:active {
 
 .page#profil {
     padding: 20px;
+    padding-bottom: 120px;
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
 }
@@ -2086,6 +2088,7 @@ div.search-card > .search-card-content > .btn-fav:active {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
+    padding-bottom: 120px;
 }
 
 .favoris h2 {
@@ -2678,7 +2681,7 @@ section#paiementDeblocage button:hover {
 @media (max-width: 767px) {
     /* Mobile styles */
     body {
-        height: 100vh;
+        height: 100dvh;
     }
     
     .app {
@@ -2824,38 +2827,127 @@ section#paiementDeblocage button:hover {
         display: block !important;
     }
 
-    .app-nav-item {
-        font-size: 10px;
-    }
-    
-    .app-nav-item i {
-        font-size: 20px;
-    }
-    
-    .app-add {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        bottom: -5px;
-    }
-    
     .app-nav {
-        bottom: 0px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        padding: 0 10px;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid #f1f1f1;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
     }
 
-    /* pour nav */
-    .app-nav-item:hover,
-    .app-add:hover {
-        /* Ne rien appliquer sur mobile */
-        transform: none !important;
-        box-shadow: none !important;
-        color: inherit !important;
-    }
+    /* ---------------------- */
+    /* BOUTONS NAVIGATION */
+    .app-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
 
-    /* Facultatif : enlever la transition pour éviter les flashs */
-    .app-nav-item,
-    .app-add {
+        font-size: 11px;
+        color: #8a8a8a;
+
+        /* Supprime hover/focus/active */
         transition: none !important;
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .app-nav-item i {
+        font-size: 26px;
+        color: #8a8a8a;
+    }
+
+    .app-nav-item span {
+        font-size: 10px;
+        margin-top: 2px;
+        color: #8a8a8a;
+        display: block;
+    }
+
+    /* Actif : couleur orange uniquement */
+    .app-nav-item.active i,
+    .app-nav-item.active span {
+        color: #fd802e !important;
+    }
+
+    /* Forcer suppression de tout effet visuel */
+    .app-nav-item:hover,
+    .app-nav-item:focus,
+    .app-nav-item:active {
+        transform: none !important;
+        color: inherit !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ---------------------- */
+    /* BOUTON CENTRAL ADD */
+    .app-add {
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+        background: linear-gradient(135deg, #fd802e, #ff5722);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        z-index: 10;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    /* Hover / clic bouton central */
+    .app-add:hover {
+        transform: translateX(-50%) scale(1.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .app-add:active,
+    .app-add:focus {
+        transform: translateX(-50%) scale(0.95);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    /* Supprimer texte dans le bouton central */
+    .app-add span {
+        display: none;
+    }
+
+    /* ---------------------- */
+    /* ESPACE AUTOUR DU BOUTON CENTRAL */
+    .app-nav-item:first-child,
+    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
+        margin-right: 30px;
+    }
+
+    .app-nav-item:nth-last-child(2),
+    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
+        margin-left: 30px;
     }
     
     .klippo-footer {
@@ -2960,23 +3052,6 @@ section#paiementDeblocage button:hover {
             min-width: auto;
         }
 
-        /* pour nav */
-        .app-nav-item:hover,
-        .app-add:hover {
-            /* Ne rien appliquer sur mobile */
-            transform: none !important;
-            box-shadow: none !important;
-            color: inherit !important;
-        }
-
-        /* Facultatif : enlever la transition pour éviter les flashs */
-        .app-nav-item,
-        .app-add {
-            transition: none !important;
-        }
-        .app-header {
-            padding: 10px 8px;
-        }
         .brand {
             font-size: 9px;
         }
@@ -3037,18 +3112,127 @@ section#paiementDeblocage button:hover {
     }
 
     /* pour nav */
-    .app-nav-item:hover,
-    .app-add:hover {
-        /* Ne rien appliquer sur mobile */
-        transform: none !important;
-        box-shadow: none !important;
-        color: inherit !important;
+    .app-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        padding: 0 10px;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid #f1f1f1;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
     }
 
-    /* Facultatif : enlever la transition pour éviter les flashs */
-    .app-nav-item,
-    .app-add {
+    /* ---------------------- */
+    /* BOUTONS NAVIGATION */
+    .app-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+
+        font-size: 11px;
+        color: #8a8a8a;
+
+        /* Supprime hover/focus/active */
         transition: none !important;
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .app-nav-item i {
+        font-size: 26px;
+        color: #8a8a8a;
+    }
+
+    .app-nav-item span {
+        font-size: 10px;
+        margin-top: 2px;
+        color: #8a8a8a;
+        display: block;
+    }
+
+    /* Actif : couleur orange uniquement */
+    .app-nav-item.active i,
+    .app-nav-item.active span {
+        color: #fd802e !important;
+    }
+
+    /* Forcer suppression de tout effet visuel */
+    .app-nav-item:hover,
+    .app-nav-item:focus,
+    .app-nav-item:active {
+        transform: none !important;
+        color: inherit !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ---------------------- */
+    /* BOUTON CENTRAL ADD */
+    .app-add {
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+        background: linear-gradient(135deg, #fd802e, #ff5722);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        z-index: 10;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    /* Hover / clic bouton central */
+    .app-add:hover {
+        transform: translateX(-50%) scale(1.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .app-add:active,
+    .app-add:focus {
+        transform: translateX(-50%) scale(0.95);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    /* Supprimer texte dans le bouton central */
+    .app-add span {
+        display: none;
+    }
+
+    /* ---------------------- */
+    /* ESPACE AUTOUR DU BOUTON CENTRAL */
+    .app-nav-item:first-child,
+    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
+        margin-right: 30px;
+    }
+
+    .app-nav-item:nth-last-child(2),
+    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
+        margin-left: 30px;
     }
 
     /* PAGE RECHERCHE */
@@ -3129,7 +3313,7 @@ section#paiementDeblocage button:hover {
 @media (max-width: 768px) {
     /* Mobile styles */
     body {
-        height: 100vh;
+        height: 100dvh;
     }
     
     .app {
@@ -3229,39 +3413,129 @@ section#paiementDeblocage button:hover {
     .dropdown-content {
         min-width: 120px;
     }
-    
-    .app-nav-item {
-        font-size: 10px;
-    }
-    
-    .app-nav-item i {
-        font-size: 20px;
-    }
-    
-    .app-add {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        bottom: -5px;
-    }
-    
+
+    /* pour nav */ 
     .app-nav {
-        bottom: 0px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        padding: 0 10px;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid #f1f1f1;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
     }
 
-    /* pour nav */
-    .app-nav-item:hover,
-    .app-add:hover {
-        /* Ne rien appliquer sur mobile */
-        transform: none !important;
-        box-shadow: none !important;
-        color: inherit !important;
-    }
+    /* ---------------------- */
+    /* BOUTONS NAVIGATION */
+    .app-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
 
-    /* Facultatif : enlever la transition pour éviter les flashs */
-    .app-nav-item,
-    .app-add {
+        font-size: 11px;
+        color: #8a8a8a;
+
+        /* Supprime hover/focus/active */
         transition: none !important;
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    .app-nav-item i {
+        font-size: 26px;
+        color: #8a8a8a;
+    }
+
+    .app-nav-item span {
+        font-size: 10px;
+        margin-top: 2px;
+        color: #8a8a8a;
+        display: block;
+    }
+
+    /* Actif : couleur orange uniquement */
+    .app-nav-item.active i,
+    .app-nav-item.active span {
+        color: #fd802e !important;
+    }
+
+    /* Forcer suppression de tout effet visuel */
+    .app-nav-item:hover,
+    .app-nav-item:focus,
+    .app-nav-item:active {
+        transform: none !important;
+        color: inherit !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ---------------------- */
+    /* BOUTON CENTRAL ADD */
+    .app-add {
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+        background: linear-gradient(135deg, #fd802e, #ff5722);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        z-index: 10;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    /* Hover / clic bouton central */
+    .app-add:hover {
+        transform: translateX(-50%) scale(1.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .app-add:active,
+    .app-add:focus {
+        transform: translateX(-50%) scale(0.95);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    /* Supprimer texte dans le bouton central */
+    .app-add span {
+        display: none;
+    }
+
+    /* ---------------------- */
+    /* ESPACE AUTOUR DU BOUTON CENTRAL */
+    .app-nav-item:first-child,
+    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
+        margin-right: 30px;
+    }
+
+    .app-nav-item:nth-last-child(2),
+    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
+        margin-left: 30px;
     }
     
     .klippo-footer {
