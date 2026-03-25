@@ -2840,15 +2840,6 @@ section#paiementDeblocage button:hover {
     .app-nav {
         bottom: 0px;
     }
-
-    .app-nav-item:hover {
-        color: inherit; /* conserve la couleur normale */
-    }
-
-    .app-add:hover {
-        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
-        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
-    }
     
     .klippo-footer {
         position: fixed;
@@ -2957,17 +2948,6 @@ section#paiementDeblocage button:hover {
         .brand {
             font-size: 9px;
         }
-        
-        /* bouton nav */
-        .app-nav-item:hover {
-            color: inherit; /* conserve la couleur normale */
-        }
-
-        .app-add:hover {
-            transform: translateX(-50%) scale(1); /* pas d’agrandissement */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
-        }
-     
         #accueil h2 {
             font-size: 22px;
         }
@@ -3022,16 +3002,6 @@ section#paiementDeblocage button:hover {
     
     .type-radios {
         grid-template-columns: repeat(3, 1fr);
-    }
-
-    /* bouton nav */
-    .app-nav-item:hover {
-        color: inherit; /* conserve la couleur normale */
-    }
-
-    .app-add:hover {
-        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
-        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
     }
 
     /* PAGE RECHERCHE */
@@ -3232,16 +3202,6 @@ section#paiementDeblocage button:hover {
         bottom: 0px;
     }
     
-    .app-nav-item:hover {
-        color: inherit; /* conserve la couleur normale */
-    }
-
-    .app-add:hover {
-        transform: translateX(-50%) scale(1); /* pas d’agrandissement */
-        box-shadow: 0 10px 25px rgba(0,0,0,0.25); /* même ombre que l’état normal */
-    }
-
-    /* footer klippo */
     .klippo-footer {
         position: fixed;
         bottom: 0;
@@ -3337,4 +3297,14 @@ section#paiementDeblocage button:hover {
         font-size: 18px;
     }
 
+}
+
+/* pour desactiver le hover */
+@media (hover: none) and (pointer: coarse) {
+    .app-nav-item:hover,
+    .app-add:hover {
+        transform: none;
+        box-shadow: none;
+        color: inherit;
+    }
 }
