@@ -1,12 +1,10 @@
 // sw.js - Service Worker optimisé pour ChezMoi SPA
 
-const CACHE_NAME = 'chezmoi-cache-v7';
+const CACHE_NAME = 'chezmoi-cache-v1';
 
 const urlsToCache = [
   '/',                                // racine (important pour SPA)
   '/index.html',
-  '/app.js',
-  '/style.css',
   '/image/logo_ChezMoi.png',
   '/image/partager.png',
   '/icons/chezmoi_icon256.png',

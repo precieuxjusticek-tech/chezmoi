@@ -11,15 +11,31 @@ if(savedUid){
 let villeSelectionnee = "Toutes les villes";
 let selectedImages = [];
 let favorisLocal = []; // tableau pour stocker les IDs d'annonces favorites
-/* ===================================================== */
-/* ============== fonction pour le toast ================= */
-/* ===================================================== */
-function showToast(message, type = "success") {
-  let color;
 
-  if(type === "success") color = "#4CAF50";  // vert
-  if(type === "error") color = "#f44336";    // rouge
-  if(type === "info") color = "#2196F3";     // bleu
+function showToast(type = "info", customMessage = "") {
+  // dictionnaire des messages en français
+  const messages = {
+    offline: "⚠️ Impossible de se connecter. Vérifiez votre connexion internet.",
+    loadFail: "❌ Échec du chargement. Veuillez réessayer.",
+    success: "✅ Action effectuée avec succès !",
+    paymentFail: "❌ Le paiement a échoué. Veuillez réessayer.",
+    formIncomplete: "⚠️ Veuillez remplir tous les champs requis.",
+    serverDown: "⚠️ Le serveur ne répond pas. Réessayez plus tard.",
+    clipboardSuccess: "✅ Lien copié dans le presse-papiers ! Partage-le avec tes amis !",
+    clipboardFail: "❌ Impossible de copier le lien. Veuillez réessayer.",
+    imageMissing: "⚠️ Veuillez sélectionner au moins une image."
+  };
+
+  // couleur selon type
+  let color;
+  if(type === "success" || type === "clipboardSuccess") color = "#4CAF50";   // vert
+  else if(type === "error" || type === "loadFail" || type === "clipboardFail") color = "#f44336"; // rouge
+  else if(type === "info") color = "#2196F3";      // bleu
+  else if(type === "warning") color = "#ffc107";   // jaune/orange
+  else color = "#2196F3"; // fallback bleu
+
+  // message final : message du dictionnaire ou message personnalisé
+  const message = messages[type] || customMessage;
 
   Toastify({
     text: message,
@@ -36,6 +52,20 @@ function showToast(message, type = "success") {
     }
   }).showToast();
 }
+
+// Setup global de la connexion
+function setupConnectionWatcher() {
+    if (!navigator.onLine) {
+        showToast("info", "⚠️ Vous êtes hors ligne. Vérifiez votre connexion internet.");
+    }
+    window.addEventListener('offline', () => {
+        showToast("info", "⚠️ Vous êtes hors ligne. Vérifiez votre connexion internet.");
+    });
+    window.addEventListener('online', () => {
+        showToast("success", "✅ Connexion rétablie !");
+    });
+}
+setupConnectionWatcher(); // appel dès le démarrage
 
 // calcule les jours avant expiration
 function getJoursRestants(expireAt){
@@ -114,8 +144,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     // ===== Service Worker =====
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
-            .then(() => showToast("Service Worker enregistré !", "success"))
-            .catch(err => showToast("Erreur SW : " + err.message, "error"));
+            .then(() => showToast("success")) // message prédéfini succès
+            .catch(err => showToast("loadFail")); // message prédéfini échec
     }
 
     // ===== Vérifier utilisateur =====
@@ -137,7 +167,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             afficherDetailAnnonce();
         } catch(err){
             console.error(err);
-            showToast("Impossible de charger l'annonce depuis ce lien.", "error");
+            showToast("loadFail");
             afficherPage(savedUid ? "home" : "accueil");
         }
     } else {
@@ -177,7 +207,7 @@ async function toggleFavorite(uid, annonceId, isFavorite) {
 
   } catch (err) {
     // toast
-    showToast("Erreur favoris : " + err.message, "error");
+    showToast("loadFail");
     return isFavorite;
   }
 }
@@ -190,7 +220,7 @@ function setupFavoriButton(btn, annonce) {
 
     btn.addEventListener("click", async () => {
         if(!currentUserUid){
-            showToast("Vous devez être connecté pour ajouter aux favoris.", "info");
+            showToast("offline");
             return;
         }
 
@@ -243,11 +273,11 @@ function partagerAnnonce(annonce) {
             text: texte,
             url: url
         })
-        .catch((error) => showToast("Erreur partage : " + error.message, "error"));
+        .catch((error) => showToast("loadFail"));
     } else {
         navigator.clipboard.writeText(url)
-            .then(() => showToast("Lien copié dans le presse-papiers ! Partage-le avec tes amis !", "info"))
-            .catch((err) => showToast("Erreur copie : " + err.message, "error"));
+            .then(() => showToast("clipboardSuccess")) // message spécifique presse-papiers
+            .catch(() => showToast("clipboardFail"));  // message échec copie
     }
 }
 
@@ -284,7 +314,7 @@ async function afficherAnnoncesParGroupes(ville) {
                 favorisUtilisateur = await favRes.json();
                 favorisLocal = favorisUtilisateur;
             }catch(err){
-                showToast("Erreur chargement favoris : " + err.message, "error");
+                showToast("loadFail");
                 favorisLocal = [];
             }
         }
@@ -460,7 +490,7 @@ async function afficherAnnoncesParGroupes(ville) {
         document.getElementById("retryBtn").addEventListener("click", () => {
             location.reload();
         });
-        showToast("Erreur de chargement des annonces : " + error.message, "error");
+        showToast("loadFail");
     }
 }
 
@@ -498,7 +528,6 @@ dropdownContent.querySelectorAll("a").forEach(a => {
     });
 });
 
-
 let deferredPrompt; 
 const pwaPrompt = document.getElementById('pwaPrompt');
 const installBtn = document.getElementById('installBtn');
@@ -521,10 +550,27 @@ loaderOverlay.style.alignItems = "center";
 loaderOverlay.style.zIndex = "2000";
 loaderOverlay.style.display = "none"; // caché par défaut
 loaderOverlay.innerHTML = `
-    <div class="spinner"></div>
+    <div class="spinner" style="
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #233d4c;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+    "></div>
     <p style="font-size:18px; color:#233d4c; font-weight:bold;">Installation en cours...</p>
 `;
 document.body.appendChild(loaderOverlay);
+
+// Animation CSS du spinner
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}`;
+document.head.appendChild(style);
 
 // Intercepter l'événement beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -554,23 +600,43 @@ function hidePwaPrompt() {
 // Bouton Installer
 installBtn.addEventListener('click', async () => {
     hidePwaPrompt();
-    if (deferredPrompt) {
-        loaderOverlay.style.display = "flex"; // afficher spinner
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        loaderOverlay.style.display = "none"; // cacher spinner
-        showToast('Résultat de l\'installation : ' + outcome, "info"); // utilise ta fonction existante
-        deferredPrompt = null; 
+    if (!deferredPrompt) {
+        showToast("info", "⚠️ Impossible d’installer. Rafraîchissez la page et réessayez.");
+        return;
     }
+
+    // Afficher le spinner
+    loaderOverlay.style.display = "flex";
+
+    // Lancer l'installation
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    // Cacher le spinner
+    loaderOverlay.style.display = "none";
+
+    if (outcome === "accepted") {
+        showToast("success", "✅ Installation acceptée !");
+    } else {
+        showToast("info", "Installation annulée par l'utilisateur.");
+    }
+
+    deferredPrompt = null;
+});
+
+// Détecter PWA installée
+window.addEventListener('appinstalled', () => {
+    loaderOverlay.style.display = "none"; // s'assure que le spinner est caché
+    showToast("success", "✅ ChezMoi est maintenant installé sur votre appareil !");
 });
 
 // Bouton Fermer
 dismissBtn.addEventListener('click', hidePwaPrompt);
 
-// Affichage automatique toutes les 5 minutes
+// Affichage automatique toutes les 2 minutes (au lieu de 5)
 document.addEventListener('DOMContentLoaded', () => {
     showPwaPrompt();
-    setInterval(showPwaPrompt, 5 * 60 * 1000);
+    setInterval(showPwaPrompt, 2 * 60 * 1000);
 });
 
 /* ============================= */
@@ -605,7 +671,7 @@ form.addEventListener("submit", async (e) => {
         if (!res.ok) throw new Error(data.message);
 
         // toast de succès
-        showToast("Inscription réussie !", "success");
+        showToast("info", "Inscription réussie !");
 
         currentUserUid = data.uid;
         localStorage.setItem("uid", data.uid);
@@ -615,7 +681,7 @@ form.addEventListener("submit", async (e) => {
             favorisLocal = await favRes.json();
         } catch(err){
             // toast d'erreur
-            showToast("Erreur chargement favoris : " + err.message, "error");
+            showToast("loadFail");
             favorisLocal = [];
         }
 
@@ -624,7 +690,7 @@ form.addEventListener("submit", async (e) => {
     } catch (err) {
         loader.classList.remove("show");
         // toast d'erreur
-        showToast("Erreur : " + err.message, "error");
+        showToast("loadFail");
     }
 });
 
@@ -652,7 +718,7 @@ async function loginUser() {
         if (!res.ok) throw new Error(data.message);
 
         // toast de succès 
-        showToast("Connexion réussie !", "success");
+        showToast("info", "Connexion réussie !");
         
         currentUserUid = data.uid;
         localStorage.setItem("uid", data.uid);
@@ -664,7 +730,7 @@ async function loginUser() {
         } catch (err) {
 
             // toast d'erreur
-            showToast("Erreur chargement favoris : " + err.message, "error");
+            showToast("loadFail");
             
             favorisLocal = [];
         }
@@ -676,7 +742,7 @@ async function loginUser() {
         loader.style.display = "none"; // Masque le loader en cas d'erreur
         
         // toast d'erreur plus visible que alert()
-        showToast("Erreur : " + err.message, "error");
+        showToast("loadFail");
 
     }
 }
@@ -699,7 +765,7 @@ function showModalLoader(show = true) {
 async function sendReset() {
     const email = document.getElementById("resetEmail").value.trim();
     if (!email) {
-        showToast("⚠️ Veuillez entrer votre email.", "error");
+        showToast("formIncomplete");
         return;
     }
 
@@ -717,12 +783,12 @@ async function sendReset() {
 
         if (!res.ok) throw new Error(data.message);
 
-        showToast(`✅ Email de réinitialisation envoyé à ${email}`, "success");
+        showToast("info", `✅ Email de réinitialisation envoyé à ${email}`);
         closeModal();
 
     } catch (err) {
         showModalLoader(false);
-        showToast(`❌ Impossible d'envoyer l'email : ${err.message}`, "error");
+        showToast(loadFail);
     }
 }
 
@@ -861,7 +927,8 @@ if(formAjouter){
 
         if(!currentUserUid){
             // toast d'information
-            showToast("Vous devez être connecté.", "info");
+            showToast("info", "Vous devez être connecté pour voir vos favoris.");
+            afficherPage("inscription")
             return;
         }
 
@@ -876,13 +943,13 @@ if(formAjouter){
 
         if(!titre || !type || !ville || !quartier || !douche || !prix || !description || !contact){
             // toast d'information
-            showToast("Veuillez remplir tous les champs.", "info");
+            showToast("formIncomplete");
             return;
         }
 
         if(selectedFiles.length === 0){
             // toast d'information
-            showToast("Veuillez sélectionner au moins une image.", "info");
+            showToast("info", "Veuillez sélectionner au moins une image.");
             return;
         }
 
@@ -930,7 +997,7 @@ if(formAjouter){
                 chargementpub.style.display = "none"
                 console.error("Réponse serveur non JSON :", text);
                 // toast d'erreur
-                showToast("Erreur serveur interne. Voir console pour détails.", "error");
+                showToast("serverDown");
                 return;
             }
 
@@ -938,14 +1005,14 @@ if(formAjouter){
                 console.error("Erreur serveur :", data);
                 chargementpub.style.display = "none"
                 // toast d'erreur
-                showToast("Erreur : " + (data.message || "Serveur a renvoyé une erreur."), "error");
+                showToast("serverDown");
                 return;
             }
 
             // arret du loader
             chargementpub.style.display = "none"
             // toast de succès
-            showToast("Annonce publiée !", "success");
+            showToast("info", "Annonce publiée !");
             formAjouter.reset();
             selectedFiles = [];
             renderGrid();
@@ -956,7 +1023,7 @@ if(formAjouter){
             console.error("Erreur JS :", error);
             chargementpub.style.display = "none"
             // toast d'erreur
-            showToast("Erreur : " + error.message, "error");
+            showToast("loadFail");
         }
     });
 }
@@ -1154,7 +1221,7 @@ const signalerLoader = document.getElementById("loader-signaler");
 // Fonction pour ouvrir le formulaire et stocker l'annonce
 function signalerAnnonceCourante(annonce) {
     if(!annonce){
-        showToast("Aucune annonce sélectionnée.", "info");
+        showToast("info", "Aucune annonce sélectionnée.");
         return;
     }
     localStorage.setItem("annonceProbleme", JSON.stringify(annonce));
@@ -1177,7 +1244,8 @@ if (formSignalerProbleme) {
         // Vérifier connexion
         const uid = localStorage.getItem("uid");
         if (!uid) {
-            showToast("Vous devez être connecté pour signaler un problème.", "info");
+            showToast("info", "Vous devez être connecté pour voir vos favoris.");
+            afficherPage("inscription")
             return;
         }
 
@@ -1185,14 +1253,14 @@ if (formSignalerProbleme) {
         const descriptionInput = document.getElementById("problemeDescription");
         const description = descriptionInput.value.trim();
         if (!description) {
-            showToast("Veuillez décrire le problème.", "info");
+            showToast("info", "Veuillez décrire le problème.");
             return;
         }
 
         // Récupérer l'annonce liée
         const annonce = JSON.parse(localStorage.getItem("annonceProbleme"));
         if (!annonce) {
-            showToast("Aucune annonce sélectionnée.", "info");
+            showToast("info", "Aucune annonce sélectionnée.");
             return;
         }
 
@@ -1230,13 +1298,13 @@ if (formSignalerProbleme) {
             const data = await response.json();
 
             if (!response.ok) {
-                showToast("Erreur : " + (data.message || "Impossible de signaler le problème."), "error");
+                showToast("serverDown");
                 return;
             }
 
             // Succès
             signalerLoader.style.display = "none";
-            showToast("Problème signalé avec succès !", "success");
+            showToast("success");
             descriptionInput.value = "";
             localStorage.removeItem("annonceProbleme");
             afficherPage("home");
@@ -1244,7 +1312,7 @@ if (formSignalerProbleme) {
         } catch (err) {
             signalerLoader.style.display = "none";
             console.error("Erreur JS signaler problème :", err);
-            showToast("Erreur serveur : " + err.message, "error");
+            showToast("loadFail");
         }
     });
 }
@@ -1265,7 +1333,8 @@ if(formProposerIdee){
         const uid = localStorage.getItem("uid");
 
         if(!uid){
-            showToast("Vous devez être connecté pour proposer une idée.", "info");
+            showToast("info", "Vous devez être connecté pour voir vos favoris.");
+            afficherPage("inscription")
             return;
         }
 
@@ -1276,7 +1345,7 @@ if(formProposerIdee){
         const description = descriptionInput.value.trim();
 
         if(!titre || !description){
-            showToast("Veuillez remplir tous les champs.", "info");
+            showToast("formIncomplete");
             return;
         }
 
@@ -1306,13 +1375,13 @@ if(formProposerIdee){
             const data = await response.json();
 
             if(!response.ok){
-                showToast("Erreur : " + (data.message || "Impossible d'envoyer l'idée."), "error");
+                showToast("serverDown");
                 return;
             }
 
             ideeLoader.style.display = "none";
 
-            showToast("Merci pour votre idée ❤️", "success");
+            showToast("info", "Merci pour votre idée ❤️");
 
             titreInput.value = "";
             descriptionInput.value = "";
@@ -1325,7 +1394,7 @@ if(formProposerIdee){
 
             console.error("Erreur JS idée :", err);
 
-            showToast("Erreur serveur : " + err.message, "error");
+            showToast("serverDown");
         }
 
     });
@@ -1360,7 +1429,7 @@ document.addEventListener("DOMContentLoaded", () => {
             afficherAnnonces(); // affichage initial
         } catch (err) {
             searchResults.innerHTML = `<p style="text-align:center; font-size:18px; margin-top:50px; color:red;">
-                Erreur de chargement des annonces.
+                Erreur de chargement des annonces.\n Vérifiez votre connexion internet.
             </p>`;
             console.error(err);
         }
@@ -1599,7 +1668,8 @@ function afficherExplorer() {
         favBtn.addEventListener("click", async () => {
             if(!currentUserUid){
                 // toast d'information
-                showToast("Vous devez être connecté pour ajouter aux favoris.", "info");
+                showToast("info", "Vous devez être connecté pour voir vos favoris.");
+                afficherPage("inscription")
                 return;
             }
 
@@ -1683,7 +1753,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if(!currentUserUid){
                 // toast d'information
-                showToast("Vous devez être connecté.", "info");
+                showToast("info", "Vous devez être connecté pour voir vos favoris.");
+                afficherPage("inscription")
                 return;
             }
 
@@ -1868,7 +1939,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     const data = await res.json();
                                     if(!res.ok) throw new Error(data.message);
 
-                                    showToast("Annonce supprimée !", "success");
+                                    showToast("info", "Annonce supprimée !");
 
                                     card.remove();
 
@@ -1887,7 +1958,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                 } catch(err){
                                     console.error(err);
-                                    showToast("Erreur suppression : " + err.message, "error");
+                                    showToast("info", "Erreur lors de la suppression, Veuillez réessayer.");
                                 }
 
                                 overlay.remove();
@@ -1899,11 +1970,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 profilchargement.style.display = "none"; // Cache le loader après chargement
             } catch(error){
                 profilchargement.style.display = "none"; // Cache le loader
-                // toast d'erreur
-                showToast("Erreur chargement profil." + error.message, "error");
                 console.error(error);
                 // toast d'erreur
-                showToast("Erreur chargement profil.", "error");
+                showToast("loadFail");
             }
         });
     }
@@ -1942,7 +2011,7 @@ async function afficherComptes() {
                 currentUserUid = compte.uid;
                 localStorage.setItem("uid", compte.uid);
                 overlay.style.display = 'none';
-                showToast(`Connecté avec ${compte.nom}`, 'success');
+                showToast("info", `Connecté avec ${compte.nom}`);
                 // Ici tu peux rafraîchir le profil si nécessaire
             });
 
@@ -1986,8 +2055,8 @@ document.getElementById("inviteFriendBtn").addEventListener("click", () => {
         navigator.share(shareData).catch(err => console.error("Erreur de partage :", err));
     } else {
         navigator.clipboard.writeText(shareData.url)
-            .then(() => alert("Lien ChezMoi copié dans le presse-papiers ! Partage-le avec tes amis !"))
-            .catch(err => console.error("Erreur de copie :", err));
+            .then(() => showToast("clipboardSuccess"))
+            .catch(() => showToast("clipboardFail"));
     }
 
     menuContainer.classList.remove("show");
@@ -2002,9 +2071,15 @@ document.getElementById("feedbackBtn").addEventListener("click", () => {
 
 // ------------------- BOUTON DE DÉCONNEXION -------------------
 logoutBtn.addEventListener("click", () => {
+    if(!currentUserUid){
+        // toast d'information
+        showToast("info", "Vous devez être connecté pour voir vos favoris.");
+        afficherPage("inscription")
+        return;
+    }
     currentUserUid = null;
     localStorage.removeItem("uid");
-    showToast("Déconnecté !", "info");
+    showToast("info", "Déconnecté !");
 
     // Affiche overlay et comptes uniquement au clic
     overlay.style.display = "flex";
@@ -2043,7 +2118,7 @@ editProfileBtn.addEventListener("click", async () => {
 
         editProfileForm.classList.add("active");
     } catch(err) {
-        showToast("Erreur : " + err.message, "error");
+        showToast("serverDown");
     }
 });
 
@@ -2067,6 +2142,12 @@ saveProfileBtn.addEventListener("click", async () => {
     const editchargement = document.getElementById("loader-edit");
     editchargement.style.display = "flex";
 
+    if(!currentUserUid){
+        showToast("info", "Vous devez être connecté pour voir vos favoris.");
+        afficherPage("inscription")
+        return;
+    }
+
     try {
         const res = await fetch(`${API_URL}/api/user/${currentUserUid}`, {
             method: "PUT",
@@ -2078,7 +2159,7 @@ saveProfileBtn.addEventListener("click", async () => {
         if (!res.ok) throw new Error(data.message);
 
         editchargement.style.display = "none";
-        showToast("Profil mis à jour !", "success");
+        showToast("info", "Profil mis à jour !");
 
         // Mise à jour affichage
         document.getElementById("userName").textContent = nom;
@@ -2088,7 +2169,7 @@ saveProfileBtn.addEventListener("click", async () => {
         editProfileForm.classList.remove("active");
     } catch(err) {
         editchargement.style.display = "none";
-        showToast("Erreur : " + err.message, "error");
+        showToast("loadFail");
     }
 });
 
@@ -2102,7 +2183,8 @@ if(voirFavorisBtn){
     voirFavorisBtn.addEventListener("click", async () => {
         if(!currentUserUid){
             // toast d'information
-            showToast("Vous devez être connecté pour voir vos favoris.", "info");
+            showToast("info", "Vous devez être connecté pour voir vos favoris.");
+            afficherPage("inscription")
             return;
         }
 
@@ -2216,7 +2298,7 @@ window.addEventListener("hashchange", async () => {
             afficherDetailAnnonce();
         } catch(err){
             console.error(err);
-            showToast("Impossible de charger l'annonce depuis ce lien.", "error");
+            showToast("info", "Impossible de charger l'annonce depuis ce lien.");
         }
     } else {
         afficherPage("home");
