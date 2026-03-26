@@ -962,6 +962,7 @@ loader pour mot de passe oublié
     padding: 20px;
     background-color: #f9f9f9;
     overflow-y: auto;
+    padding-bottom: 120px;
 }
 
 /* Titre de la page */
@@ -1174,7 +1175,8 @@ loader pour mot de passe oublié
   padding: 40px 40px;
   font-family: 'Segoe UI', sans-serif;
   background: #f5f5f5;
-  min-height: 95vh;
+  min-height: 95dvh;
+  padding-bottom: 120px; /* espace en bas pour éviter que la page soit coupée */
 }
 
 .recherche-container {
@@ -2827,6 +2829,7 @@ section#paiementDeblocage button:hover {
         display: block !important;
     }
 
+    /* pour nav */ 
     .app-nav {
         position: fixed;
         bottom: 0;
@@ -2941,13 +2944,13 @@ section#paiementDeblocage button:hover {
     /* ---------------------- */
     /* ESPACE AUTOUR DU BOUTON CENTRAL */
     .app-nav-item:first-child,
-    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
-        margin-right: 30px;
+    .app-nav-item:nth-child(2) { 
+        margin-right: clamp(10px, 4vw, 30px);
     }
 
     .app-nav-item:nth-last-child(2),
-    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
-        margin-left: 30px;
+    .app-nav-item:last-child { 
+        margin-left: clamp(10px, 4vw, 30px);
     }
     
     .klippo-footer {
@@ -2965,7 +2968,7 @@ section#paiementDeblocage button:hover {
     /* ============================== */
     /* GRILLE DES RESULTATS */
     .recherche-container {
-        height: 80vh;
+        height: 80dvh;
     }
     .results-grid {
         grid-template-columns: 1fr; /* 1 carte par ligne */
@@ -3111,7 +3114,7 @@ section#paiementDeblocage button:hover {
         grid-template-columns: repeat(3, 1fr);
     }
 
-    /* pour nav */
+    /* pour nav */ 
     .app-nav {
         position: fixed;
         bottom: 0;
@@ -3226,13 +3229,13 @@ section#paiementDeblocage button:hover {
     /* ---------------------- */
     /* ESPACE AUTOUR DU BOUTON CENTRAL */
     .app-nav-item:first-child,
-    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
-        margin-right: 30px;
+    .app-nav-item:nth-child(2) { 
+        margin-right: clamp(10px, 4vw, 30px);
     }
 
     .app-nav-item:nth-last-child(2),
-    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
-        margin-left: 30px;
+    .app-nav-item:last-child { 
+        margin-left: clamp(10px, 4vw, 30px);
     }
 
     /* PAGE RECHERCHE */
@@ -3529,13 +3532,13 @@ section#paiementDeblocage button:hover {
     /* ---------------------- */
     /* ESPACE AUTOUR DU BOUTON CENTRAL */
     .app-nav-item:first-child,
-    .app-nav-item:nth-child(2) { /* Home et Explorer à gauche du Add */
-        margin-right: 30px;
+    .app-nav-item:nth-child(2) { 
+        margin-right: clamp(10px, 4vw, 30px);
     }
 
     .app-nav-item:nth-last-child(2),
-    .app-nav-item:last-child { /* Favoris et Profil à droite du Add */
-        margin-left: 30px;
+    .app-nav-item:last-child { 
+        margin-left: clamp(10px, 4vw, 30px);
     }
     
     .klippo-footer {
@@ -3553,7 +3556,7 @@ section#paiementDeblocage button:hover {
     /* ============================== */
     /* GRILLE DES RESULTATS */
     .recherche-container {
-        height: 80vh;
+        height: 80dvh;
     }
     .results-grid {
         gap: 10px;

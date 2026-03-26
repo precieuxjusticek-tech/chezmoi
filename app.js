@@ -219,26 +219,35 @@ function setupFavoriButton(btn, annonce) {
 
 // ====== Fonction globale de partage ======
 function partagerAnnonce(annonce) {
-    const titre = annonce.titre;
+    const titre = annonce.titre; // ex: "Location" ou "Vente"
     const prix = annonce.prix;
     const ville = annonce.ville;
+    const type = annonce.type_annonce; // ex: "Appartement", "Maison"
 
-    // IMPORTANT : lien spécial SPA
-    const url = `${window.location.origin}${window.location.pathname}#annonce-${annonce.id}`;
+    // Emoji selon type de bien
+    const emojiBien = type.toLowerCase().includes("appartement") ? "🏢" :
+                      type.toLowerCase().includes("maison") ? "🏠" :
+                      type.toLowerCase().includes("terrain") ? "🌳" : "🏡";
 
-    const texte = `${titre} - ${prix} XAF à ${ville} sur ChezMoi`;
+    // Lien vers l'annonce sur ton site Netlify
+    const url = `https://chezmoi-app.netlify.app#annonce-${annonce.id}`;
+
+    // Texte attractif
+    const texte = `🚨 Nouvelle ${titre} : ${type} ${emojiBien} à ${ville} !\n` +
+                  `Prix : ${prix} XAF\n` +
+                  `Découvre vite cette annonce sur ChezMoi 👉`;
 
     if (navigator.share) {
         navigator.share({
-            title: titre,
+            title: `ChezMoi 🌟: ${titre} - ${type}`,
             text: texte,
             url: url
         })
-        .catch((error) => showToast("Erreur partage : " + error.message, "error")); // toast
+        .catch((error) => showToast("Erreur partage : " + error.message, "error"));
     } else {
-        navigator.clipboard.writeText(url);
-        // toast d'information
-        showToast("Lien copié !", "info");
+        navigator.clipboard.writeText(url)
+            .then(() => showToast("Lien copié dans le presse-papiers ! Partage-le avec tes amis !", "info"))
+            .catch((err) => showToast("Erreur copie : " + err.message, "error"));
     }
 }
 
@@ -426,11 +435,31 @@ async function afficherAnnoncesParGroupes(ville) {
         spinner.style.display = "none";
         container.style.display = "block";
 
-        container.innerHTML = `<p style="text-align:center; font-size:18px; margin-top:50px;">
-                Erreur de chargement des annonces.
-                vueillez verifier votre connexion !
-            </p>`;
+        container.innerHTML = `
+            <div style="text-align:center; margin-top:50px; padding:20px; background:#ffe6e6; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+                <p style="font-size:18px; color:#cc0000; margin-bottom:20px;">
+                    ⚠️ Erreur de chargement des annonces.<br>
+                    Veuillez vérifier votre connexion internet !
+                </p>
+                <button id="retryBtn" style="
+                    padding:10px 20px;
+                    font-size:16px;
+                    background:#233d4c;
+                    color:#fff;
+                    border:none;
+                    border-radius:5px;
+                    cursor:pointer;
+                    transition: background 0.3s;
+                " onmouseover="this.style.background='#1a2a3b'" onmouseout="this.style.background='#233d4c'">
+                    🔄 Actualiser
+                </button>
+            </div>
+        `;
 
+        // Ajouter l'événement pour le bouton actualiser
+        document.getElementById("retryBtn").addEventListener("click", () => {
+            location.reload();
+        });
         showToast("Erreur de chargement des annonces : " + error.message, "error");
     }
 }
@@ -1948,16 +1977,17 @@ window.addEventListener("click", (e) => {
 // Inviter un ami
 document.getElementById("inviteFriendBtn").addEventListener("click", () => {
     const shareData = {
-        title: "Chezmoi",
-        text: "Viens découvrir ChezMoi !",
-        url: "https://chezmoi-app.com"
+        title: "Chezmoi 🌟",
+        text: "Hey ! Rejoins-moi sur ChezMoi, la plateforme qui simplifie la recherche de logement partout dans le monde. Découvre des annonces, contacte facilement les propriétaires et bien plus !",
+        url: "https://chezmoi-app.netlify.app"
     };
 
     if (navigator.share) {
-        navigator.share(shareData).catch(console.error);
+        navigator.share(shareData).catch(err => console.error("Erreur de partage :", err));
     } else {
         navigator.clipboard.writeText(shareData.url)
-            .then(() => alert("Lien copié dans le presse-papiers !"));
+            .then(() => alert("Lien ChezMoi copié dans le presse-papiers ! Partage-le avec tes amis !"))
+            .catch(err => console.error("Erreur de copie :", err));
     }
 
     menuContainer.classList.remove("show");
