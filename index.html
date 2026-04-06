@@ -17,11 +17,13 @@
     <!-- Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Logo dans l'onglet -->
-    <link rel="icon" type="image/png" sizes="64x64" href="image/logo_ChezMoi.png">
+    <!-- Favicon ChezMoi -->
+    <link rel="icon" href="image/logo_ChezMoi1.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="16x16" href="image/logo_ChezMoi-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="image/logo_ChezMoi-32x32.png">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="style.css">
 
     <!-- Manifest pour PWA -->
     <link rel="manifest" href="manifest.json">
@@ -284,6 +286,7 @@
                     <label for="nkayi">Nkayi</label>
                 </div>
 
+                <label><strong>Quartier :</strong></label>
                 <input type="text" id="quartier" placeholder="Quartier (ex: Moungali, Mfilou, etc.)" required>
                 <label><strong>Douche :</strong></label>
 
@@ -297,16 +300,50 @@
 
                 </div>
 
+                <label><strong>Prix (XAF) :</strong></label>
                 <input type="number" id="prix" placeholder="Prix (XAF)" required>
 
+                <label><strong>Description :</strong></label>
                 <textarea id="description" placeholder="Description du logement (ex: Appartement lumineux, jardin, etc.)" rows="5" required></textarea>
 
+                <label><strong>Tel :</strong></label>
                 <input type="tel" id="contactAnnonce" placeholder="Numéro de contact" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
 
-                <label>Ajouter des images (max 5) :</label>
+                <label id="imageText">
+                Images ajoutées : <span id="imageCounter">0</span> sur <span id="imageMax">5</span> autorisées
+                </label>
                 <div id="imageGrid" class="image-grid"></div>
                 <input type="file" id="hiddenImageInput" accept="image/*" multiple style="display:none">
 
+                <!-- Sélecteur de packs d'images supplémentaires -->
+                <label><strong>Images supplémentaires :</strong></label>
+
+                <div class="extra-images-control">
+
+                <p>Choisissez combien d'images supplémentaires vous voulez :</p>
+
+                <input 
+                type="range"
+                id="extraImagesSlider"
+                min="0"
+                max="10"
+                value="0"
+                step="1"
+                />
+
+                <p>
+                Images supplémentaires choisies : 
+                <strong><span id="extraImagesValue">0</span></strong>
+                </p>
+
+                <p class="info-images">
+                5 images incluses gratuitement.<br>
+                Vous pouvez ajouter jusqu'à 10 images supplémentaires.
+                </p>
+
+                </div>
+
+                <p><strong>Prix total de l'annonce :</strong> <span id="prixTotal">0</span> XAF</p>
                 <button type="submit">Publier l'annonce</button>
             </form>
 
@@ -329,24 +366,27 @@
             <h2>Détails de l’annonce</h2>
 
             <!-- Images -->
-            <div class="detail-images" id="detailImages"></div>
-
+            <div class="detail-images-wrapper">
+                <div class="detail-images" id="detailImages"></div>
+                <div id="sliderPagination"></div>
+                <div class="detail-images-indicator" id="detailImagesIndicator">1 / 5</div>
+            </div>
+            
             <!-- Infos -->
             <h2 id="detailTitre"></h2>
 
             <!-- date d'expiration  -->
             <h4 id="detailexpiration"></h4>
 
-            <!-- type de logement -->
-            <p><strong>Type de logement :</strong> <span id="detaillogement"></span></p>
-
-            <p><strong>Description :</strong> <span id="detailDescription"></span></p>
-
-            <p><strong>Ville :</strong> <span id="detailVille"></span></p>
-            <p><strong>Quartier :</strong> <span id="detailQuartier"></span></p>
-            <p><strong>Douche :</strong> <span id="detailDouche"></span></p>
-            <p><strong>Prix :</strong> <span id="detailPrix"></span> XAF</p>
-            <p><strong>Contact :</strong> <span id="detailContact"></span>/</p>
+            <div class="detail-info">
+                <p><strong>Type de logement :</strong> <span id="detaillogement"></span></p>
+                <p><strong>Description :</strong> <span id="detailDescription"></span></p>
+                <p><strong>Ville :</strong> <span id="detailVille"></span></p>
+                <p><strong>Quartier :</strong> <span id="detailQuartier"></span></p>
+                <p><strong>Douche :</strong> <span id="detailDouche"></span></p>
+                <p><strong>Prix :</strong> <span id="detailPrix"></span> XAF</p>
+                <p><strong>Contact :</strong> <span id="detailContact"></span></p>
+            </div>
 
             <button id="btnDebloquerContact">Je le veux</button>
 
@@ -572,90 +612,6 @@
 
         </section>
 
-        <section class="page" id="paiementPublication">
-            <h2>Paiement avant publication</h2>
-
-            <form id="paymentFormPublication">
-                <label>Nom :</label>
-                <input type="text" name="name" placeholder="Votre nom" required /><br/>
-
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="padding:8px; background:#eee; border-radius:5px;">+242</span>
-                    <input type="text" name="msisdn" placeholder="6XXXXXXXX" maxlength="9" required />
-                </div>
-                <br/>
-
-                <label>Réseau Mobile Money :</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="providerPublication" value="mtn" required>
-                        <span>MTN Mobile Money</span>
-                    </label>
-
-                    <label class="radio-option">
-                        <input type="radio" name="providerPublication" value="airtel">
-                        <span>Airtel Money</span>
-                    </label>
-                </div>
-
-                <label>Montant :</label>
-                <input type="number" name="amount" value="1000" readonly /><br/>
-
-                <label>Description :</label>
-                <input type="text" name="description" value="Publication annonce ChezMoi" /><br/>
-
-                <button type="submit" class="btn">Payer 1000 XAF</button>
-            </form>
-
-            <div id="paymentResultPublication"></div>
-
-            <p class="link" id="retourFormAjouter" data-page="ajouter">
-                ← Retour au formulaire d'annonce
-            </p>
-        </section>
-
-        <section class="page" id="paiementDeblocage">
-            <h2>Déblocage contact</h2>
-
-            <form id="paymentFormDeblocage">
-                <label>Nom :</label>
-                <input type="text" name="name" placeholder="Votre nom" required /><br/>
-
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="padding:8px; background:#eee; border-radius:5px;">+242</span>
-                    <input type="text" name="msisdn" placeholder="6XXXXXXXX" maxlength="9" required />
-                </div>
-                <br/>
-
-                <label>Réseau Mobile Money :</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="providerDeblocage" value="mtn" required>
-                        <span>MTN Mobile Money</span>
-                    </label>
-
-                    <label class="radio-option">
-                        <input type="radio" name="providerDeblocage" value="airtel">
-                        <span>Airtel Money</span>
-                    </label>
-                </div>
-
-                <label>Montant :</label>
-                <input type="number" name="amount" value="500" readonly /><br/>
-
-                <label>Description :</label>
-                <input type="text" name="description" value="Déblocage du contact du propriétaire" /><br/>
-
-                <button type="submit" class="btn">Payer 500 XAF</button>
-            </form>
-
-            <div id="paymentResultDeblocage"></div>
-
-            <p class="link" id="retourDetail" data-page="detail">
-                ← Retour à la page détail
-            </p>
-        </section>
-
         <!-- BOUTONS FIXES EN BAS -->
         <div class="app-nav">
 
@@ -723,6 +679,6 @@
     </div>
 
     <!-- JS principal -->
-    <script type="module" src="app.js?v=1.0"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

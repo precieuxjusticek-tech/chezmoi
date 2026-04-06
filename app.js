@@ -806,26 +806,89 @@ if (formConnexion) {
     });
 }
 
-/* ===================================================== */
-/* ================= GRILLE D'IMAGES ================== */
-/* ===================================================== */
-
 const imageGrid = document.getElementById("imageGrid");
 const hiddenInput = document.getElementById("hiddenImageInput");
 const imageCounter = document.getElementById("imageCounter");
+const imageMax = document.getElementById("imageMax");
+const prixTotalSpan = document.getElementById("prixTotal");
 
 let selectedFiles = [];
+let packSelectionne = 0; // nombre d'images supplémentaires
 
-// Met à jour le compteur
-function updateImageCounter() {
+const extraImagesSlider = document.getElementById("extraImagesSlider");
+const extraImagesValue = document.getElementById("extraImagesValue");
+
+if(extraImagesSlider){
+
+    extraImagesSlider.addEventListener("input", () => {
+
+        packSelectionne = Number(extraImagesSlider.value);
+
+        if(extraImagesValue){
+            extraImagesValue.textContent = packSelectionne;
+        }
+
+        updateImageCounter();
+        updatePrixTotal();
+
+        const maxImages = 5 + packSelectionne;
+
+        if(selectedFiles.length > maxImages){
+            selectedFiles = selectedFiles.slice(0, maxImages);
+            renderGrid();
+        }
+
+    });
+
+}
+
+function updateImageCounter(){
+    const maxImages = Math.min(5 + Number(packSelectionne), 15);
+
     if(imageCounter){
-        imageCounter.textContent = `Images : ${selectedFiles.length}/5`;
+        imageCounter.textContent = selectedFiles.length;
+    }
+
+    if(imageMax){
+        imageMax.textContent = maxImages;
     }
 }
 
-// Met à jour la grille
+// ================= CALCULER PRIX TOTAL =================
+const prixBaseAnnonce = {
+    location: 1000,
+    vente: 3000
+};
+
+const fraisYabetoo = 6; // % de frais
+
+function updatePrixTotal() {
+    const selectedType = document.querySelector('input[name="titre"]:checked')?.value?.toLowerCase();
+    if(!selectedType) return;
+
+    const base = prixBaseAnnonce[selectedType] || 0;
+    const packPrix = Number(packSelectionne) * 200; // 200 XAF par image supplémentaire
+
+    let total = base + packPrix;
+
+    // appliquer les frais Yabetoo pour retrouver montant affiché
+    total = total / (1 - fraisYabetoo/100);
+
+    // arrondir au multiple de 5 supérieur
+    total = Math.ceil(total / 5) * 5;
+
+    if(prixTotalSpan){
+        prixTotalSpan.textContent = total;
+    }
+
+    return total;
+}
+
+// ================= MODIFIER LA GRILLE =================
 function renderGrid() {
     imageGrid.innerHTML = "";
+
+    const maxImages = Math.min(5 + Number(packSelectionne), 15);
 
     selectedFiles.forEach((file, index) => {
         const reader = new FileReader();
@@ -837,16 +900,14 @@ function renderGrid() {
             img.src = e.target.result;
             card.appendChild(img);
 
-            // plein écran au clic
             img.addEventListener("click", () => afficherPleinEcran(e.target.result));
 
-            // bouton supprimer
             const btnSuppr = document.createElement("div");
             btnSuppr.classList.add("btnSuppr");
             btnSuppr.textContent = "✖";
             btnSuppr.title = "Supprimer";
             btnSuppr.addEventListener("click", (ev) => {
-                ev.stopPropagation(); // empêche le plein écran
+                ev.stopPropagation();
                 selectedFiles.splice(index, 1);
                 renderGrid();
                 updateImageCounter();
@@ -858,8 +919,7 @@ function renderGrid() {
         reader.readAsDataURL(file);
     });
 
-    // Card "+" pour ajouter des images
-    if(selectedFiles.length < 5){
+    if (selectedFiles.length < maxImages) {
         const plusCard = document.createElement("div");
         plusCard.classList.add("image-card", "plus");
         plusCard.textContent = "+";
@@ -868,22 +928,58 @@ function renderGrid() {
     }
 
     updateImageCounter();
+    updatePrixTotal();
 }
 
-// Sélection de nouvelles images
+// ================= AJOUTER IMAGE =================
 hiddenInput.addEventListener("change", () => {
-    const files = Array.from(hiddenInput.files);
+    if(!hiddenInput.files.length) return;
 
-    if(selectedFiles.length + files.length > 5){
-        alert("Maximum 5 images autorisées.");
+    const files = Array.from(hiddenInput.files);
+    const maxImages = Math.min(5 + Number(packSelectionne), 15);
+    const MAX_TOTAL_IMAGES = 15;
+    const MAX_SIZE_MB = 20;
+
+    for (let file of files) {
+
+        const supportedFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+        
+        if (!supportedFormats.includes(file.type)) {
+            alert(`Le fichier "${file.name}" n'est pas supporté. Formats autorisés : JPEG, PNG, GIF, WEBP`);
+            hiddenInput.value = "";
+            return;
+        }
+
+        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+            alert(`L'image "${file.name}" dépasse 20MB`);
+            hiddenInput.value = "";
+            return;
+        }
+
+    }
+
+    if(selectedFiles.length + files.length > Math.min(maxImages, MAX_TOTAL_IMAGES)){
+        alert(`Maximum ${Math.min(maxImages, MAX_TOTAL_IMAGES)} images autorisées selon le pack choisi.`);
         hiddenInput.value = "";
         return;
     }
 
-    selectedFiles = selectedFiles.concat(files);
+    selectedFiles.push(...files);
     renderGrid();
     hiddenInput.value = "";
 });
+
+// ================= ACTUALISER PRIX QUAND TYPE CHANGE =================
+const typeRadios = document.querySelectorAll('input[name="titre"]'); // Note le All
+
+typeRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        updatePrixTotal();
+    });
+});
+
+updateImageCounter();
+updatePrixTotal();
 
 /* ===================================================== */
 /* ================= PLEIN ÉCRAN ====================== */
@@ -919,16 +1015,15 @@ function afficherPleinEcran(src) {
 /* ================= PUBLIER ANNONCE =================== */
 /* ===================================================== */
 const formAjouter = document.getElementById("formAjouter");
-const chargementpub = document.getElementById("loader-pub")
+const chargementpub = document.getElementById("loader-pub");
 
-if(formAjouter){
+if (formAjouter) {
     formAjouter.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        if(!currentUserUid){
-            // toast d'information
-            showToast("info", "Vous devez être connecté pour voir vos favoris.");
-            afficherPage("inscription")
+        if (!currentUserUid) {
+            showToast("info", "Vous devez être connecté pour publier une annonce.");
+            afficherPage("inscription");
             return;
         }
 
@@ -941,102 +1036,83 @@ if(formAjouter){
         const description = document.getElementById("description").value.trim();
         const contact = document.getElementById("contactAnnonce").value.trim();
 
-        if(!titre || !type || !ville || !quartier || !douche || !prix || !description || !contact){
-            // toast d'information
+        if (!titre || !type || !ville || !quartier || !douche || !prix || !description || !contact) {
             showToast("formIncomplete");
             return;
         }
 
-        if(selectedFiles.length === 0){
-            // toast d'information
+        if (isNaN(prix) || prix <= 0) {
+            showToast("info", "Veuillez entrer un prix valide supérieur à 0");
+            return;
+        }
+
+        if (selectedFiles.length === 0) {
             showToast("info", "Veuillez sélectionner au moins une image.");
             return;
         }
 
-        // loader
-        chargementpub.style.display = "flex"
+        chargementpub.style.display = "flex";
 
-        try{
-            const imagesBase64 = [];
-            for(let file of selectedFiles){
-                const base64 = await convertirEnBase64(file);
-                imagesBase64.push(base64);
+        try {
+            // Validation rapide des formats (optionnel si déjà fait)
+            const supportedFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+            for (let file of selectedFiles) {
+                if (!supportedFormats.includes(file.type)) {
+                    showToast("info", `L'image "${file.name}" n'est pas supportée.`);
+                    chargementpub.style.display = "none";
+                    return;
+                }
             }
 
-            const now = new Date();
-            const expiration = new Date();
-            expiration.setMonth(expiration.getMonth() + 1);
+            // Création de FormData pour tout envoyer
+            const formData = new FormData();
+            formData.append("uid", currentUserUid);
+            formData.append("titre", titre);
+            formData.append("type_annonce", type);
+            formData.append("description", description);
+            formData.append("prix", prix);
+            formData.append("ville", ville);
+            formData.append("quartier", quartier);
+            formData.append("douche", douche);
+            formData.append("contact", contact);
+            formData.append("packSelectionne", packSelectionne || 0);
+            formData.append("statut", "pending_payment");
 
-            const bodyData = {
-                uid: currentUserUid,
-                titre,
-                type_annonce: type,
-                description,
-                prix: Number(prix),
-                ville,
-                quartier,
-                douche,
-                contact,
-                imagesBase64,
-                dateCreation: now.toISOString(),
-                dateExpiration: expiration.toISOString()
-            };
-
-            const response = await fetch(`${API_URL}/api/annonces`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(bodyData)
+            selectedFiles.forEach((file, index) => {
+                formData.append(`images`, file); // tu peux utiliser 'images[]' si tu préfères côté backend
             });
 
-            // Lire le body **une seule fois** et parser
-            const text = await response.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (err) {
-                chargementpub.style.display = "none"
-                console.error("Réponse serveur non JSON :", text);
-                // toast d'erreur
-                showToast("serverDown");
-                return;
-            }
+            // Envoi au backend
+            const annonceResponse = await fetch(`${API_URL}/api/annonces`, {
+                method: "POST",
+                body: formData
+            });
 
-            if(!response.ok){
-                console.error("Erreur serveur :", data);
-                chargementpub.style.display = "none"
-                // toast d'erreur
-                showToast("serverDown");
-                return;
-            }
+            const annonceData = await annonceResponse.json();
+            if (!annonceResponse.ok) throw new Error(annonceData.message);
 
-            // arret du loader
-            chargementpub.style.display = "none"
-            // toast de succès
-            showToast("info", "Annonce publiée !");
-            formAjouter.reset();
-            selectedFiles = [];
-            renderGrid();
-            afficherPage("home");
-            afficherAnnoncesParGroupes("Toutes les villes");
+            // Ensuite tu peux créer la session de paiement comme avant
+            const paiementResponse = await fetch(`${API_URL}/api/create-annonce-payment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    uid: currentUserUid,
+                    titre: titre,
+                    packSelectionne: packSelectionne || 0,
+                    annonceId: annonceData.id ,
+                })
+            });
 
-        } catch(error){
+            const paiementData = await paiementResponse.json();
+            if (!paiementResponse.ok) throw new Error(paiementData.message);
+
+            window.location.replace(paiementData.redirectUrl);
+
+        } catch (error) {
             console.error("Erreur JS :", error);
-            chargementpub.style.display = "none"
-            // toast d'erreur
             showToast("loadFail");
+            chargementpub.style.display = "none";
         }
-    });
-}
-
-/* ===================================================== */
-/* ================= CONVERTIR BASE64 ================== */
-/* ===================================================== */
-function convertirEnBase64(file){
-    return new Promise((resolve,reject)=>{
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
     });
 }
 
@@ -1046,38 +1122,33 @@ renderGrid();
 /* ===================================================== */
 /* ================= AFFICHAGE DÉTAIL ================= */
 /* ===================================================== */
-function afficherDetailAnnonce() {
-    // Récupérer l'annonce sélectionnée depuis localStorage
+async function afficherDetailAnnonce() {
     const data = localStorage.getItem("annonceDetail");
-    if (!data) return; // si aucune annonce n'est stockée, ne rien faire
+    if (!data) return;
 
     const annonce = JSON.parse(data);
 
-    // calculer jours restants
-    const joursRestants = getJoursRestants(annonce.expireAt)
-
+    // Calculer jours restants
     const expirationEl = document.getElementById("detailexpiration");
+    const joursRestants = getJoursRestants(annonce.expireAt);
 
     if (joursRestants <= 0) {
         expirationEl.textContent = "Annonce expirée";
         expirationEl.style.color = "red";
-        expirationEl.style.display = "inline"; // visible
-    }
-    else if (joursRestants <= 2) {
+        expirationEl.style.display = "inline";
+    } else if (joursRestants <= 2) {
         expirationEl.textContent = "⚠️ Expire dans " + joursRestants + " jours";
         expirationEl.style.color = "red";
-        expirationEl.style.display = "inline"; // visible
-    }
-    else if (joursRestants <= 7) {
+        expirationEl.style.display = "inline";
+    } else if (joursRestants <= 7) {
         expirationEl.textContent = "Expire dans " + joursRestants + " jours";
         expirationEl.style.color = "orange";
-        expirationEl.style.display = "inline"; // visible
-    }
-    else {
-        expirationEl.style.display = "none"; // cache si plus de 7 jours
+        expirationEl.style.display = "inline";
+    } else {
+        expirationEl.style.display = "none";
     }
 
-    // Remplir les champs de la page détail
+    // Remplir les champs
     document.getElementById("detailTitre").textContent = annonce.titre || "";
     document.getElementById("detaillogement").textContent = annonce.type_annonce || "";
     document.getElementById("detailDescription").textContent = annonce.description || "";
@@ -1087,128 +1158,125 @@ function afficherDetailAnnonce() {
     document.getElementById("detailPrix").textContent = annonce.prix || "";
     document.getElementById("detailContact").textContent = annonce.contact || "";
 
-    // Afficher les images
+    // Afficher les images en slider
     const imagesContainer = document.getElementById("detailImages");
-    imagesContainer.innerHTML = ""; // vider avant d'ajouter
+    const paginationContainer = document.getElementById("sliderPagination");
+    imagesContainer.innerHTML = "";
+    paginationContainer.innerHTML = "";
 
     const images = (annonce.images && annonce.images.length > 0) ? annonce.images : ["image/logo_ChezMoi.png"];
 
-    images.forEach(img => {
+    // imagesContainer et paginationContainer déjà définis
+    images.forEach((img, index) => {
         const imageEl = document.createElement("img");
         imageEl.src = img;
         imageEl.alt = annonce.titre;
-        imageEl.style.maxWidth = "200px";
-        imageEl.style.marginRight = "10px";
-        imageEl.style.cursor = "pointer"; // montrer que c'est cliquable
         imagesContainer.appendChild(imageEl);
 
-        // ======= Activer plein écran au clic =======
-        imageEl.addEventListener("click", () => {
-            // Créer l'overlay si pas déjà présent
-            let overlay = document.getElementById("imageFullscreenOverlay");
-            if (!overlay) {
-                overlay = document.createElement("div");
-                overlay.id = "imageFullscreenOverlay";
-                overlay.style.position = "fixed";
-                overlay.style.top = 0;
-                overlay.style.left = 0;
-                overlay.style.width = "100%";
-                overlay.style.height = "100%";
-                overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
-                overlay.style.display = "flex";
-                overlay.style.alignItems = "center";
-                overlay.style.justifyContent = "center";
-                overlay.style.zIndex = 9999;
-                overlay.style.cursor = "pointer";
+        imageEl.addEventListener("click", () => afficherImageFullscreen(img));
 
-                const fullscreenImg = document.createElement("img");
-                fullscreenImg.id = "fullscreenImg";
-                fullscreenImg.style.maxWidth = "90%";
-                fullscreenImg.style.maxHeight = "90%";
-                overlay.appendChild(fullscreenImg);
-
-                document.body.appendChild(overlay);
-
-                // Fermer au clic sur l'overlay
-                overlay.addEventListener("click", () => {
-                    overlay.style.display = "none";
-                });
-
-                // Fermer avec Échap
-                document.addEventListener("keydown", (e) => {
-                    if(e.key === "Escape"){
-                        overlay.style.display = "none";
-                    }
-                });
-            }
-
-            document.getElementById("fullscreenImg").src = img;
-            overlay.style.display = "flex";
-        });
+        // point pagination
+        const dot = document.createElement("span");
+        if (index === 0) dot.classList.add("active");
+        paginationContainer.appendChild(dot);
     });
-    // Bouton Je le veux → ouvrir paiement
-    const btnDebloquer = document.getElementById("btnDebloquerContact");
 
-    if(btnDebloquer){
-        btnDebloquer.addEventListener("click", () => {
-            afficherPage("paiementDeblocage");
+    // Pagination dynamique
+    function updatePagination() {
+        const scrollLeft = imagesContainer.scrollLeft;
+        const imageWidth = imagesContainer.clientWidth; // largeur visible du slider
+        const index = Math.round(scrollLeft / imageWidth);
+
+        const dots = paginationContainer.querySelectorAll("span");
+        dots.forEach((dot, i) => {
+            dot.classList.toggle("active", i === index);
+        });
+    }
+
+    imagesContainer.addEventListener("scroll", updatePagination);
+    window.addEventListener("resize", updatePagination); // recalcul si resize
+
+    const indicator = document.getElementById("detailImagesIndicator");
+
+    function updateIndicator() {
+        const scrollLeft = imagesContainer.scrollLeft;
+        const imageWidth = imagesContainer.clientWidth;
+        const index = Math.round(scrollLeft / imageWidth) + 1; // +1 pour que ça commence à 1
+        const total = images.length;
+
+        if(indicator) indicator.textContent = `${index} / ${total}`;
+    }
+
+    // Mettre à jour au scroll et au resize
+    imagesContainer.addEventListener("scroll", updateIndicator);
+    window.addEventListener("resize", updateIndicator);
+
+    // Initialiser au début
+    updateIndicator();
+
+    // Bouton débloquer contact
+    const btnDebloquer = document.getElementById("btnDebloquerContact");
+    if (btnDebloquer) {
+        btnDebloquer.addEventListener("click", async () => {
+            const payload = {
+                amount: Number(1060),
+                annonceId: localStorage.getItem("annonceId") || "test123",
+                description: "Déblocage contact propriétaire",
+                name: "Utilisateur test",
+                msisdn: "0000000000",
+                provider: "test"
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/payment/deblocage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (response.ok) window.location.href = data.redirectUrl;
+                else showToast("paymentFail");
+            } catch (err) {
+                console.error("Erreur frontend paiement :", err);
+                showToast("serverDown");
+            }
         });
     }
 }
 
-/* ============================= */
-/* IMAGE PLEIN ÉCRAN POUR LA PAGE DETAIL ANNONCES    */
-/* ============================= */
-function activerFullscreenImages() {
-    const images = document.querySelectorAll("#detailImages img");
-
-    images.forEach(img => {
-        img.style.cursor = "pointer"; // montrer que c'est cliquable
-
-        img.addEventListener("click", () => {
-            // Créer l'overlay si pas déjà présent
-            let overlay = document.getElementById("imageFullscreenOverlay");
-            if (!overlay) {
-                overlay = document.createElement("div");
-                overlay.id = "imageFullscreenOverlay";
-                overlay.style.position = "fixed";
-                overlay.style.top = 0;
-                overlay.style.left = 0;
-                overlay.style.width = "100%";
-                overlay.style.height = "100%";
-                overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
-                overlay.style.display = "flex";
-                overlay.style.alignItems = "center";
-                overlay.style.justifyContent = "center";
-                overlay.style.zIndex = 9999;
-                overlay.style.cursor = "pointer";
-
-                const fullscreenImg = document.createElement("img");
-                fullscreenImg.id = "fullscreenImg";
-                fullscreenImg.style.maxWidth = "90%";
-                fullscreenImg.style.maxHeight = "90%";
-                overlay.appendChild(fullscreenImg);
-
-                document.body.appendChild(overlay);
-
-                // Fermer au clic sur l'overlay
-                overlay.addEventListener("click", () => {
-                    overlay.style.display = "none";
-                });
-
-                // Fermer avec la touche Échap
-                document.addEventListener("keydown", (e) => {
-                    if(e.key === "Escape"){
-                        overlay.style.display = "none";
-                    }
-                });
-            }
-
-            // Mettre l'image cliquée dans l'overlay et l'afficher
-            document.getElementById("fullscreenImg").src = img.src;
-            overlay.style.display = "flex";
+// Fonction unique pour plein écran
+function afficherImageFullscreen(src) {
+    let overlay = document.getElementById("imageFullscreenOverlay");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "imageFullscreenOverlay";
+        Object.assign(overlay.style, {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.9)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            cursor: "pointer"
         });
-    });
+
+        const fullscreenImg = document.createElement("img");
+        fullscreenImg.id = "fullscreenImg";
+        fullscreenImg.style.maxWidth = "90%";
+        fullscreenImg.style.maxHeight = "90%";
+        overlay.appendChild(fullscreenImg);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener("click", () => overlay.style.display = "none");
+        document.addEventListener("keydown", e => { if(e.key === "Escape") overlay.style.display = "none"; });
+    }
+
+    document.getElementById("fullscreenImg").src = src;
+    overlay.style.display = "flex";
 }
 
 /* ============================= */

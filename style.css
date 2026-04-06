@@ -1134,6 +1134,51 @@ loader pour mot de passe oublié
 }
 
 /* ============================= */
+/* IMAGES SUPPLÉMENTAIRES SLIDER */
+/* ============================= */
+
+.extra-images-control{
+    margin-top:10px;
+    padding:15px;
+    border:1px solid #ccc;
+    border-radius:12px;
+    background:#fff;
+}
+
+.extra-images-control p{
+    font-size:14px;
+    margin:5px 0;
+}
+
+/* Slider */
+#extraImagesSlider{
+    width:100%;
+    margin:10px 0;
+    cursor:pointer;
+}
+
+/* Nombre choisi */
+#extraImagesValue{
+    color:#fd802e;
+    font-size:18px;
+}
+
+/* Texte info */
+.info-images{
+    font-size:13px;
+    color:#666;
+}
+
+/* Prix total */
+#prixTotal {
+    font-weight: 700;
+    color: #fd802e;
+    margin-top: 5px;
+    display: inline-block;
+    font-size: 16px;
+}
+
+/* ============================= */
 /* BOUTON PUBLIER                 */
 /* ============================= */
 #formAjouter button[type="submit"] {
@@ -1450,15 +1495,14 @@ div.search-card > .search-card-content > .btn-fav:active {
     grid-column: 1 / -1;
 }
 
-
 /* ============================= */
-/* PAGE DÉTAIL ANNONCE           */
+/* PAGE DÉTAIL ANNONCE - DESIGN PRO */
 /* ============================= */
 #detail {
   display: none;
   flex-direction: column;
-  gap: 15px;
-  padding: 20px;
+  gap: 20px;
+  padding: 20px 15px 50px; /* plus de padding-bottom */
   background: #fff;
   position: fixed;
   top: 0;
@@ -1467,98 +1511,167 @@ div.search-card > .search-card-content > .btn-fav:active {
   height: 100%;
   overflow-y: auto;
   z-index: 1000;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 #detail.active {
   display: flex;
 }
 
-#detail h2 {
+/* TITRES */
+#detail h1, #detail h2 {
   text-align: center;
+  color: #232323;
   margin-bottom: 10px;
 }
 
+#detail h4 {
+  font-size: 18px;
+  text-align: center;
+  color: #fd802e;
+  margin: 5px 0 15px 0;
+}
+
+/* GRID IMAGES */
+/* CONTENEUR SLIDER */
 .detail-images {
   display: flex;
-  gap: 10px;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 10px;
   padding-bottom: 10px;
-  flex: 0 0  210px;
+
+  /* Hauteur fixe minimale pour que les images soient visibles */
+  min-height: 300px;   /* tu peux augmenter si nécessaire */
+  max-height: 60vh;    /* limite la hauteur à 60% de l’écran */
 }
 
 .detail-images img {
-  height: 200px;
-  min-width: 200px;
-  width: auto;
-  object-fit: cover;
+  flex: 0 0 100%;       /* chaque image prend toute la largeur du container */
+  width: 100%;
+  height: 100%;         /* prend toute la hauteur du container */
+  object-fit: contain;   /* image entière visible */
   border-radius: 16px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  transition: transform 0.2s ease;
+  scroll-snap-align: start;
+  cursor: pointer;
 }
 
 .detail-images img:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
-#detail h3 {
-  font-size: 20px;
+/* pagination(des point indiquand quelle image est affichée) */
+#sliderPagination {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
   margin-top: 10px;
-  text-align: center;
 }
 
-#detail h4 {
-    font-size: 18;
-    margin-top: 5px;
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-#detail p {
-  font-size: 15px;
-  color: #333;
-  line-height: 1.5;
-  text-align: justify;
-}
-
-#detail button {
-  margin-top: 20px;
-  align-self: center;
-  padding: 12px 20px;
-  border-radius: 16px;
-  border: none;
-  background: #232323;
-  color: #fd802e;
-  font-size: 16px;
-  cursor: pointer;
+#sliderPagination span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
   transition: background 0.2s ease;
 }
 
-#detail button:hover {
-  background: #ffb74d;
+#sliderPagination span.active {
+  background: #fd802e;
 }
 
-/* ===== bouton signaler un problème ===== */
-#detail button#btnSignalerProbleme {
-  background: #e53935; /* rouge pour signaler un problème */
-  color: white;
+/* Wrapper pour slider et indicateur */
+.detail-images-wrapper {
+  position: relative; /* nécessaire pour positionner l’indicateur sur l’image */
 }
 
-#detail button#btnSignalerProbleme:hover {
+/* Indicateur superposé sur l’image */
+.detail-images-indicator {
+  position: absolute;
+  top: 10px;              
+  right: 10px;               
+  background: rgba(0, 0, 0, 0.5); 
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+/* BLOCS INFOS */
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  border-radius: 16px;
+  background: #f9f9f9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.detail-info p {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.detail-info strong {
+  color: #232323;
+}
+
+/* BOUTONS PRINCIPAUX */
+#detail button {
+  margin: 15px auto 0 auto;
+  padding: 12px 25px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  font-weight: 600;
+}
+
+/* Bouton débloquer contact */
+#btnDebloquerContact {
+  background: #232323;
+  color: #fd802e;
+}
+
+#btnDebloquerContact:hover {
+  background: #fd802e;
+  color: #232323;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+/* Bouton signaler problème */
+#btnSignalerProbleme {
+  background: #e53935;
+  color: #fff;
+}
+
+#btnSignalerProbleme:hover {
   background: #b71c1c;
+  transform: translateY(-2px);
 }
 
-#detail .link.link {
-    text-align: center;
-    align-self: center;
-    margin-top: 20px;
-    cursor: pointer;
-    color: #232323;
-    font-weight: 600;
+/* LIEN RETOUR */
+#detail .link {
+  text-align: center;
+  margin-top: 20px;
+  cursor: pointer;
+  color: #fd802e;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-#detail .link.link:hover {
-    text-decoration: underline;
+#detail .link:hover {
+  text-decoration: underline;
+  color: #e07b3f;
 }
+
 
 /* ============================= */
 /* PAGE SIGNALER UN PROBLEME      */
@@ -2191,176 +2304,6 @@ div.search-card > .search-card-content > .btn-fav:active {
     font-style: italic;
 }
 
-
-/* ============================= */
-/* Conteneur des formulaires de paiement */
-/* ============================= */
-section#paiementPublication,
-section#paiementDeblocage {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 30px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-    font-family: 'Arial', sans-serif;
-}
-
-/* Titres */
-section#paiementPublication h2,
-section#paiementDeblocage h2 {
-    text-align: center;
-    margin-bottom: 25px;
-    color: #222;
-    font-size: 22px;
-}
-
-/* Labels */
-section#paiementPublication label,
-section#paiementDeblocage label {
-    display: block;
-    margin-top: 15px;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    color: #444;
-}
-
-/* Inputs */
-section#paiementPublication input[type="text"],
-section#paiementDeblocage input[type="text"],
-section#paiementPublication input[type="number"],
-section#paiementDeblocage input[type="number"] {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 15px;
-    transition: all 0.2s ease;
-}
-
-/* Focus effet moderne */
-section#paiementPublication input:focus,
-section#paiementDeblocage input:focus {
-    border-color: #ff6600;
-    box-shadow: 0 0 0 3px rgba(255,102,0,0.15);
-    outline: none;
-}
-
-/* ============================= */
-/* RADIOS MODERNES - PUBLICATION & DEBLOCAGE */
-/* ============================= */
-
-/* Conteneur radio */
-section#paiementPublication .radio-group,
-section#paiementDeblocage .radio-group {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* Chaque option */
-section#paiementPublication .radio-option,
-section#paiementDeblocage .radio-option {
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 15px;
-}
-
-/* Hover */
-section#paiementPublication .radio-option:hover,
-section#paiementDeblocage .radio-option:hover {
-    border-color: #ff6600;
-    background: #fff5eb;
-}
-
-/* Masquer le radio classique */
-section#paiementPublication .radio-option input[type="radio"],
-section#paiementDeblocage .radio-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-}
-
-/* Cercle custom */
-section#paiementPublication .radio-option span::before,
-section#paiementDeblocage .radio-option span::before {
-    content: "";
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ddd;
-    border-radius: 50%;
-    margin-right: 12px;
-    transition: all 0.2s ease;
-}
-
-/* Quand sélectionné */
-section#paiementPublication .radio-option input[type="radio"]:checked + span::before,
-section#paiementDeblocage .radio-option input[type="radio"]:checked + span::before {
-    background-color: #ff6600;
-    border-color: #ff6600;
-}
-
-/* Texte sélectionné */
-section#paiementPublication .radio-option input[type="radio"]:checked + span,
-section#paiementDeblocage .radio-option input[type="radio"]:checked + span {
-    font-weight: bold;
-    color: #ff6600;
-}
-
-/* Boutons paiement */
-section#paiementPublication button,
-section#paiementDeblocage button {
-    width: 100%;
-    margin-top: 25px;
-    padding: 14px;
-    background: #ff6600;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-section#paiementPublication button:hover,
-section#paiementDeblocage button:hover {
-    background: #e65c00;
-}
-
-/* Résultat paiement */
-#paymentResultPublication,
-#paymentResultDeblocage {
-    margin-top: 20px;
-    text-align: center;
-    font-size: 14px;
-}
-
-/* Lien retour */
-#retourFormAjouter,
-#retourDetail {
-    display: block;
-    margin-top: 25px;
-    text-align: center;
-    font-size: 14px;
-    color: #ff6600;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-#retourFormAjouter:hover,
-#retourDetail:hover {
-    text-decoration: underline;
-}
 
 /* ============================= */
 /* ===== POPUP INSTALLATION PWA PREMIUM === */
