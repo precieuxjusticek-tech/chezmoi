@@ -900,7 +900,10 @@ function renderGrid() {
             img.src = e.target.result;
             card.appendChild(img);
 
-            img.addEventListener("click", () => afficherPleinEcran(e.target.result));
+            img.addEventListener("click", (ev) => {
+                ev.stopPropagation(); // évite conflit avec d’autres clics
+                afficherPleinEcran(e.target.result);
+            });
 
             const btnSuppr = document.createElement("div");
             btnSuppr.classList.add("btnSuppr");
@@ -964,7 +967,7 @@ hiddenInput.addEventListener("change", () => {
         return;
     }
 
-    selectedFiles.push(...files);
+    selectedFiles = [...selectedFiles, ...files].slice(0, MAX_TOTAL_IMAGES);
     renderGrid();
     hiddenInput.value = "";
 });
@@ -984,31 +987,123 @@ updatePrixTotal();
 /* ===================================================== */
 /* ================= PLEIN ÉCRAN ====================== */
 /* ===================================================== */
+let overlayPleinEcran = null;
+
 function afficherPleinEcran(src) {
-    const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.top = 0;
-    overlay.style.left = 0;
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
-    overlay.style.display = "flex";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.zIndex = 9999;
-    overlay.style.cursor = "pointer";
+    // Crée l'overlay si inexistant
+    if (!overlayPleinEcran) {
+        overlayPleinEcran = document.createElement("div");
+        overlayPleinEcran.id = "overlayPleinEcran";
+        Object.assign(overlayPleinEcran.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.9)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: "9999",
+        });
 
-    const img = document.createElement("img");
+        const img = document.createElement("img");
+        img.id = "imagePleinEcran";
+        img.style.maxWidth = "90%";
+        img.style.maxHeight = "90%";
+        overlayPleinEcran.appendChild(img);
+
+        // Fermer au clic
+        overlayPleinEcran.addEventListener("click", () => fermerPleinEcran());
+
+        document.body.appendChild(overlayPleinEcran);
+    }
+
+    const img = document.getElementById("imagePleinEcran");
     img.src = src;
-    img.style.maxWidth = "90%";
-    img.style.maxHeight = "90%";
-    img.style.borderRadius = "8px";
+    overlayPleinEcran.style.display = "flex";
 
-    overlay.appendChild(img);
+    // Empile dans l'historique pour capter le bouton retour
+    history.pushState({fullscreen: true}, '', '#fullscreen');
+}
 
-    overlay.addEventListener("click", () => overlay.remove());
+function fermerPleinEcran(fromPopState = false) {
+    if (!overlayPleinEcran) return;
 
-    document.body.appendChild(overlay);
+    overlayPleinEcran.style.display = "none";
+
+    // Ne fait history.back() que si ce n'est pas déclenché par popstate
+    if (!fromPopState && window.location.hash === "#fullscreen") {
+        history.back();
+    }
+}
+
+// ===== Écouter le bouton retour navigateur/téléphone =====
+window.addEventListener("popstate", (event) => {
+    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
+        fermerPleinEcran(true); // indique que c’est depuis popstate
+    }
+});
+
+// ===== Écouter le bouton retour navigateur/téléphone =====
+window.addEventListener("popstate", (event) => {
+    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
+        fermerPleinEcran();
+    }
+});
+
+// compression d'image avant upload pour réduire la taille et accélérer le processus
+async function compressImage(file, maxSizeMB = 5) {
+    return new Promise((resolve, reject) => {
+
+        const img = new Image();
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const reader = new FileReader();
+
+        reader.onload = (e) => img.src = e.target.result;
+
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            const maxWidth = 1200;
+
+            // redimension proportionnel si trop large
+            if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.8; // qualité initiale
+            function tryCompress() {
+                canvas.toBlob((blob) => {
+                    if (!blob) return reject("Erreur compression");
+
+                    // Si taille OK ou qualité min atteinte, ok
+                    if (blob.size / 1024 / 1024 <= maxSizeMB || quality <= 0.3) {
+                        resolve(new File([blob], file.name, {
+                            type: "image/jpeg",
+                            lastModified: Date.now()
+                        }));
+                    } else {
+                        // sinon on réduit la qualité et recommence
+                        quality -= 0.1;
+                        tryCompress();
+                    }
+                }, "image/jpeg", quality);
+            }
+
+            tryCompress();
+        };
+
+        img.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+
+    });
 }
 
 /* ===================================================== */
@@ -1078,9 +1173,13 @@ if (formAjouter) {
             formData.append("packSelectionne", packSelectionne || 0);
             formData.append("statut", "pending_payment");
 
-            selectedFiles.forEach((file, index) => {
-                formData.append(`images`, file); // tu peux utiliser 'images[]' si tu préfères côté backend
-            });
+            for (let file of selectedFiles) {
+
+                const compressedFile = await compressImage(file);
+
+                formData.append("images[]", compressedFile);
+
+            }
 
             // Envoi au backend
             const annonceResponse = await fetch(`${API_URL}/api/annonces`, {
@@ -1106,6 +1205,8 @@ if (formAjouter) {
             const paiementData = await paiementResponse.json();
             if (!paiementResponse.ok) throw new Error(paiementData.message);
 
+            // On remplace l'état actuel pour enlever la page de paiement de l'historique
+            history.replaceState({ page: "home" }, '', '#home');
             window.location.replace(paiementData.redirectUrl);
 
         } catch (error) {
@@ -1118,6 +1219,28 @@ if (formAjouter) {
 
 // Initialisation de la grille au chargement
 renderGrid();
+// ================= RESET COMPLET FORMULAIRE =================
+
+// Fonction pour tout remettre à zéro
+function resetFormulaire() {
+    if(formAjouter) formAjouter.reset(); // vider tous les champs texte, radios, selects
+    selectedFiles = [];                   // vider les images sélectionnées
+    packSelectionne = 0;                  // reset pack d'images
+    if(extraImagesSlider) extraImagesSlider.value = 0; // slider à zéro
+    if(extraImagesValue) extraImagesValue.textContent = 0; // compteur slider à zéro
+    renderGrid();                         // réafficher grille vide
+    updatePrixTotal();                    // remettre prix total à zéro
+}
+
+// Vider le formulaire dès que la page se charge
+window.addEventListener("DOMContentLoaded", () => {
+    resetFormulaire();
+});
+
+// Vider le formulaire si l'utilisateur quitte la page
+window.addEventListener("beforeunload", () => {
+    resetFormulaire();
+});
 
 /* ===================================================== */
 /* ================= AFFICHAGE DÉTAIL ================= */
@@ -2276,6 +2399,7 @@ if(voirFavorisBtn){
 
             if(annoncesFavorites.length === 0){
                 message.style.display = "block";
+                chargementfav.style.display = "none"
                 return;
             } else {
                 message.style.display = "none";
@@ -2427,4 +2551,36 @@ window.addEventListener('popstate', function(event) {
     afficherPage.skipHistory = true;
     afficherPage(pageId);
     afficherPage.skipHistory = false;
+});
+
+/* ===================================================== */
+/* ================= PULL TO REFRESH ================== */
+/* ===================================================== */
+let touchStartY = 0;
+let touchEndY = 0;
+let isRefreshing = false;
+
+document.addEventListener('touchstart', (e) => {
+    if (window.scrollY === 0) {
+        touchStartY = e.touches[0].clientY;
+    }
+});
+
+document.addEventListener('touchmove', (e) => {
+    touchEndY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchend', () => {
+    if (!isRefreshing && window.scrollY === 0 && touchEndY - touchStartY > 50) {
+        isRefreshing = true;
+        showToast("info", "🔄 Actualisation...");
+
+        afficherAnnoncesParGroupes(villeSelectionnee)
+            .finally(() => {
+                isRefreshing = false;
+            });
+    }
+
+    touchStartY = 0;
+    touchEndY = 0;
 });

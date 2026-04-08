@@ -313,7 +313,15 @@
                 Images ajoutées : <span id="imageCounter">0</span> sur <span id="imageMax">5</span> autorisées
                 </label>
                 <div id="imageGrid" class="image-grid"></div>
-                <input type="file" id="hiddenImageInput" accept="image/*" multiple style="display:none">
+
+                <input 
+                type="file"
+                id="hiddenImageInput"
+                accept="image/*"
+                multiple
+                capture="environment"
+                style="display:none"
+                >
 
                 <!-- Sélecteur de packs d'images supplémentaires -->
                 <label><strong>Images supplémentaires :</strong></label>
