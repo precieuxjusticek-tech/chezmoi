@@ -1,20 +1,44 @@
 {
     "name": "ChezMoi by Klippo",
     "short_name": "ChezMoi",
+    "description": "Trouvez ou publiez des logements facilement au Congo",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#fd802e",
+    "orientation": "portrait",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "categories": ["lifestyle", "shopping"],
+    "lang": "fr",
     "icons": [
         {
             "src": "/icons/chezmoi_icon256.png",
             "sizes": "256x256",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "/icons/chezmoi_icon512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Ajouter une annonce",
+            "short_name": "Publier",
+            "description": "Publiez rapidement une annonce",
+            "url": "/#ajouter",
+            "icons": [{ "src": "/icons/chezmoi_icon256.png", "sizes": "256x256" }]
+        },
+        {
+            "name": "Rechercher un logement",
+            "short_name": "Rechercher",
+            "description": "Trouvez un logement rapidement",
+            "url": "/#recherche",
+            "icons": [{ "src": "/icons/chezmoi_icon256.png", "sizes": "256x256" }]
         }
     ]
 }

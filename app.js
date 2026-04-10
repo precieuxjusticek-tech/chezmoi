@@ -111,6 +111,12 @@ const pagesSansNav = [
 ];
 
 function afficherPage(id) {
+    // Vider le formulaire si on quitte la page "ajouter"
+    const pageActive = document.querySelector(".page.active");
+    if (pageActive && pageActive.id === "ajouter" && id !== "ajouter") {
+        resetFormulaire();
+    }
+
     pages.forEach(page => page.classList.remove("active"));
 
     const accueil = document.getElementById("accueil");
@@ -118,7 +124,6 @@ function afficherPage(id) {
 
     const currentPage = document.getElementById(id);
     if (currentPage) currentPage.classList.add("active");
-
     if(nav){
         nav.style.display = pagesSansNav.includes(id) ? "none" : "flex";
     }
@@ -144,8 +149,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     // ===== Service Worker =====
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
-            .then(() => showToast("success")) // message prédéfini succès
-            .catch(err => showToast("loadFail")); // message prédéfini échec
+            .then(registration => {
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            window.location.reload();
+                        }
+                    });
+                });
+                showToast("success");
+            })
+            .catch(err => showToast("loadFail"));
     }
 
     // ===== Vérifier utilisateur =====
@@ -583,6 +598,78 @@ function isPwaInstalled() {
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+function showIOSPrompt() {
+    if (isPwaInstalled()) return;
+    if (!isIOS()) return;
+
+    // Vérifier si déjà montré récemment
+    const lastShown = localStorage.getItem("iosPromptShown");
+    if (lastShown && Date.now() - Number(lastShown) < 24 * 60 * 60 * 1000) return;
+
+    const iosOverlay = document.createElement("div");
+    iosOverlay.id = "iosInstallPrompt";
+    iosOverlay.style.cssText = `
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        padding: 25px 20px;
+        box-shadow: 0 -5px 30px rgba(0,0,0,0.2);
+        z-index: 99999;
+        text-align: center;
+        font-family: 'Segoe UI', sans-serif;
+        animation: slideUp 0.3s ease;
+    `;
+
+    iosOverlay.innerHTML = `
+        <div style="width:40px; height:4px; background:#ddd; border-radius:2px; margin:0 auto 15px;"></div>
+        <img src="icons/chezmoi_icon512.png" style="width:60px; height:60px; border-radius:14px; margin-bottom:10px;">
+        <h3 style="font-size:18px; color:#233d4c; margin-bottom:8px;">Installer ChezMoi</h3>
+        <p style="font-size:14px; color:#555; margin-bottom:20px; line-height:1.6;">
+            Pour installer l'app sur votre iPhone :
+        </p>
+        <div style="display:flex; flex-direction:column; gap:12px; text-align:left; background:#f9f9f9; padding:15px; border-radius:12px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:22px;">1️⃣</span>
+                <span style="font-size:14px; color:#333;">Appuyez sur <strong>Partager</strong> <span style="font-size:16px;">⬆️</span> en bas de Safari</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:22px;">2️⃣</span>
+                <span style="font-size:14px; color:#333;">Faites défiler et appuyez sur <strong>"Sur l'écran d'accueil"</strong></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:22px;">3️⃣</span>
+                <span style="font-size:14px; color:#333;">Appuyez sur <strong>"Ajouter"</strong> en haut à droite</span>
+            </div>
+        </div>
+        <button id="closeIOSPrompt" style="
+            width:100%;
+            padding:14px;
+            background:#233d4c;
+            color:#fd802e;
+            border:none;
+            border-radius:12px;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;
+        ">J'ai compris !</button>
+    `;
+
+    document.body.appendChild(iosOverlay);
+    localStorage.setItem("iosPromptShown", Date.now().toString());
+
+    document.getElementById("closeIOSPrompt").addEventListener("click", () => {
+        iosOverlay.style.animation = "slideDown 0.3s ease";
+        setTimeout(() => iosOverlay.remove(), 300);
+    });
+}
+
 // Afficher le popup
 function showPwaPrompt() {
     if (!isPwaInstalled()) {
@@ -616,7 +703,7 @@ installBtn.addEventListener('click', async () => {
     loaderOverlay.style.display = "none";
 
     if (outcome === "accepted") {
-        showToast("success", "✅ Installation acceptée !");
+        showToast("info", "✅ Installation acceptée !");
     } else {
         showToast("info", "Installation annulée par l'utilisateur.");
     }
@@ -627,7 +714,7 @@ installBtn.addEventListener('click', async () => {
 // Détecter PWA installée
 window.addEventListener('appinstalled', () => {
     loaderOverlay.style.display = "none"; // s'assure que le spinner est caché
-    showToast("success", "✅ ChezMoi est maintenant installé sur votre appareil !");
+    showToast("info", "✅ ChezMoi est maintenant installé sur votre appareil !");
 });
 
 // Bouton Fermer
@@ -636,6 +723,7 @@ dismissBtn.addEventListener('click', hidePwaPrompt);
 // Affichage automatique toutes les 2 minutes (au lieu de 5)
 document.addEventListener('DOMContentLoaded', () => {
     showPwaPrompt();
+    showIOSPrompt();
     setInterval(showPwaPrompt, 2 * 60 * 1000);
 });
 
@@ -806,6 +894,9 @@ if (formConnexion) {
     });
 }
 
+// ===============================
+// pour la publication
+// ===============================
 const imageGrid = document.getElementById("imageGrid");
 const hiddenInput = document.getElementById("hiddenImageInput");
 const imageCounter = document.getElementById("imageCounter");
@@ -1038,20 +1129,6 @@ function fermerPleinEcran(fromPopState = false) {
     }
 }
 
-// ===== Écouter le bouton retour navigateur/téléphone =====
-window.addEventListener("popstate", (event) => {
-    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
-        fermerPleinEcran(true); // indique que c’est depuis popstate
-    }
-});
-
-// ===== Écouter le bouton retour navigateur/téléphone =====
-window.addEventListener("popstate", (event) => {
-    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
-        fermerPleinEcran();
-    }
-});
-
 // compression d'image avant upload pour réduire la taille et accélérer le processus
 async function compressImage(file, maxSizeMB = 5) {
     return new Promise((resolve, reject) => {
@@ -1172,12 +1249,14 @@ if (formAjouter) {
             formData.append("contact", contact);
             formData.append("packSelectionne", packSelectionne || 0);
             formData.append("statut", "pending_payment");
+            formData.append("statut_numero", "verrouille"); // le numéro est masqué par défaut
+            formData.append("date_deblocage", "");// pas encore débloqué
 
             for (let file of selectedFiles) {
 
                 const compressedFile = await compressImage(file);
 
-                formData.append("images[]", compressedFile);
+                formData.append("images", compressedFile);
 
             }
 
@@ -1279,7 +1358,7 @@ async function afficherDetailAnnonce() {
     document.getElementById("detailQuartier").textContent = annonce.quartier || "";
     document.getElementById("detailDouche").textContent = annonce.douche || "";
     document.getElementById("detailPrix").textContent = annonce.prix || "";
-    document.getElementById("detailContact").textContent = annonce.contact || "";
+    const contactEl = document.getElementById("detailContact");
 
     // Afficher les images en slider
     const imagesContainer = document.getElementById("detailImages");
@@ -1339,31 +1418,72 @@ async function afficherDetailAnnonce() {
 
     // Bouton débloquer contact
     const btnDebloquer = document.getElementById("btnDebloquerContact");
-    if (btnDebloquer) {
-        btnDebloquer.addEventListener("click", async () => {
-            const payload = {
-                amount: Number(1060),
-                annonceId: localStorage.getItem("annonceId") || "test123",
-                description: "Déblocage contact propriétaire",
-                name: "Utilisateur test",
-                msisdn: "0000000000",
-                provider: "test"
-            };
+    const titreEl = document.getElementById("detailTitre");
 
-            try {
-                const response = await fetch(`${API_URL}/api/payment/deblocage`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                if (response.ok) window.location.href = data.redirectUrl;
-                else showToast("paymentFail");
-            } catch (err) {
-                console.error("Erreur frontend paiement :", err);
-                showToast("serverDown");
+    // Vérifier si déjà débloqué
+    const maintenant = new Date();
+    if (annonce.statut_numero === "debloque" && annonce.expire_deblocage) {
+        const expireDeblocage = new Date(annonce.expire_deblocage._seconds * 1000);
+        if (maintenant < expireDeblocage) {
+            // Numéro débloqué et pas encore expiré
+            contactEl.textContent = annonce.contact;
+            if (titreEl) titreEl.textContent = annonce.titre_negociation || "En cours de négociation";
+            if (btnDebloquer) {
+                btnDebloquer.textContent = "✅ Contact débloqué";
+                btnDebloquer.disabled = true;
+                btnDebloquer.style.opacity = "0.5";
+                btnDebloquer.style.cursor = "not-allowed";
+
+                // Afficher date d'expiration
+                const joursRestants = Math.ceil((expireDeblocage - maintenant) / (1000 * 60 * 60 * 24));
+                const expireEl = document.getElementById("detailexpiration");
+                if (expireEl) {
+                    expireEl.textContent = `📞 Contact disponible encore ${joursRestants} jour(s)`;
+                    expireEl.style.color = "#fd802e";
+                    expireEl.style.display = "inline";
+                }
             }
-        });
+        }
+    } else {
+        // Numéro verrouillé
+        contactEl.textContent = "🔒 Numéro verrouillé";
+        if (btnDebloquer) {
+            btnDebloquer.addEventListener("click", async () => {
+                if (!currentUserUid) {
+                    showToast("info", "Vous devez être connecté pour débloquer un contact.");
+                    afficherPage("inscription");
+                    return;
+                }
+
+                const payload = {
+                    amount: 1060,
+                    annonceId: annonce.id,
+                    description: "Déblocage contact propriétaire",
+                    name: currentUserUid,
+                    msisdn: currentUserUid,
+                    provider: "chezmoi",
+                    uid: currentUserUid
+                };
+
+                try {
+                    const response = await fetch(`${API_URL}/api/payment/deblocage`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        history.replaceState({ page: "detail" }, '', '#detail');
+                        window.location.replace(data.redirectUrl);
+                    } else {
+                        showToast("paymentFail");
+                    }
+                } catch (err) {
+                    console.error("Erreur frontend paiement :", err);
+                    showToast("serverDown");
+                }
+            });
+        }
     }
 }
 
@@ -2542,12 +2662,22 @@ document.addEventListener("DOMContentLoaded", () => {
 /* memoriser les page */
 /* ============================= */
 window.addEventListener('popstate', function(event) {
+    // Priorité 1 : fermer plein écran formulaire si ouvert
+    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
+        fermerPleinEcran(true);
+        return;
+    }
+
+    // Priorité 2 : fermer plein écran detail si ouvert
+    const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
+    if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
+        fullscreenOverlay.style.display = "none";
+        return;
+    }
+
+    // Priorité 3 : navigation normale entre pages
     let pageId = (event.state && event.state.page) ? event.state.page : 'home';
-
-    // Si l’historique essaye de revenir sur "accueil", on force "home"
     if(pageId === 'accueil') pageId = 'home';
-
-    // Empêche pushState lors du retour en arrière
     afficherPage.skipHistory = true;
     afficherPage(pageId);
     afficherPage.skipHistory = false;
@@ -2556,31 +2686,97 @@ window.addEventListener('popstate', function(event) {
 /* ===================================================== */
 /* ================= PULL TO REFRESH ================== */
 /* ===================================================== */
+const homeContent = document.querySelector('.home-content');
+const spinner = document.getElementById('pull-spinner');
+
 let touchStartY = 0;
-let touchEndY = 0;
+let isPulling = false;
 let isRefreshing = false;
 
-document.addEventListener('touchstart', (e) => {
-    if (window.scrollY === 0) {
-        touchStartY = e.touches[0].clientY;
+homeContent.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    isPulling = false; // reset à chaque début de touch
+});
+
+homeContent.addEventListener('touchmove', (e) => {
+    const touchCurrentY = e.touches[0].clientY;
+    const diff = touchCurrentY - touchStartY;
+
+    // Déclencher seulement si on est EXACTEMENT en haut ET qu'on tire vers le bas
+    if (homeContent.scrollTop === 0 && diff > 0 && !isRefreshing) {
+        isPulling = true;
+        spinner.style.transform = `translateX(-50%) translateY(${Math.min(diff - 50, 50)}px)`;
+        spinner.style.opacity = Math.min(diff / 100, 1);
+        if (diff > 70) spinner.classList.add('active');
+        else spinner.classList.remove('active');
+    } else if (diff <= 0 || homeContent.scrollTop > 0) {
+        // Si on scrolle vers le bas ou qu'on est pas en haut : reset
+        isPulling = false;
+        spinner.classList.remove('active');
+        spinner.style.transform = `translateX(-50%) translateY(-50px)`;
+        spinner.style.opacity = 0;
     }
 });
 
-document.addEventListener('touchmove', (e) => {
-    touchEndY = e.touches[0].clientY;
-});
+homeContent.addEventListener('touchend', (e) => {
+    if (!isPulling) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diff = touchEndY - touchStartY;
 
-document.addEventListener('touchend', () => {
-    if (!isRefreshing && window.scrollY === 0 && touchEndY - touchStartY > 50) {
+    if (diff > 70 && !isRefreshing) {
         isRefreshing = true;
-        showToast("info", "🔄 Actualisation...");
+        spinner.classList.add('active');
+        showToast("info", "Actualisation...");
 
         afficherAnnoncesParGroupes(villeSelectionnee)
             .finally(() => {
                 isRefreshing = false;
+                spinner.classList.remove('active');
+                spinner.style.transform = `translateX(-50%) translateY(-50px)`;
+                spinner.style.opacity = 0;
             });
+    } else {
+        spinner.classList.remove('active');
+        spinner.style.transform = `translateX(-50%) translateY(-50px)`;
+        spinner.style.opacity = 0;
     }
 
     touchStartY = 0;
-    touchEndY = 0;
+    isPulling = false;
 });
+
+/* ===================================================== */
+/* ======= SUPPRESSION AUTO ANNONCES EXPIRÉES ========= */
+/* ===================================================== */
+function verifierAnnoncesExpirees() {
+    const now = new Date();
+
+    // Chercher toutes les cartes d'annonces affichées
+    document.querySelectorAll(".annonce-card").forEach(card => {
+        const expireEl = card.querySelector(".expire-info");
+        if (!expireEl) return;
+
+        // Récupérer le texte d'expiration
+        const texte = expireEl.textContent;
+
+        // Si le texte indique 0 jour ou négatif, supprimer la carte
+        if (texte.includes("expire dans 0") || texte.includes("expire dans -")) {
+            card.style.transition = "opacity 0.5s ease";
+            card.style.opacity = "0";
+            setTimeout(() => {
+                card.remove();
+
+                // Si la row est vide, afficher message
+                const row = card.closest(".annonces-row");
+                if (row && row.children.length === 0) {
+                    row.innerHTML = `<p style="text-align:center; font-size:16px; margin-top:20px;">
+                        Aucune annonce disponible.
+                    </p>`;
+                }
+            }, 500);
+        }
+    });
+}
+
+// Vérifier toutes les minutes
+setInterval(verifierAnnoncesExpirees, 60 * 1000);

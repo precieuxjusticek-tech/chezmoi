@@ -15,7 +15,7 @@
     <meta name="google-site-verification" content="TXkLvGx0CZHxqbS2AdIRlpPsT9s2oJuaY7u_AXtpQfk" />
 
     <!-- Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- Favicon ChezMoi -->
     <link rel="icon" href="image/logo_ChezMoi1.ico" type="image/x-icon">
@@ -164,6 +164,9 @@
                 <div id="spinner" style="display:flex; justify-content:center; align-items:center; height:200px;">
                     <div class="loader-home"></div>
                 </div>
+
+                <div id="pull-spinner" class="pull-spinner"></div>
+
                 <div id="categoriesContainer">
                     <!-- Les groupes seront générés automatiquement via JS -->
                     <!-- Exemple de structure :
@@ -319,7 +322,6 @@
                 id="hiddenImageInput"
                 accept="image/*"
                 multiple
-                capture="environment"
                 style="display:none"
                 >
 

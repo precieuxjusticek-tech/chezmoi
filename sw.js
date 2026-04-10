@@ -41,6 +41,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
 
+  // Ignorer les requêtes POST, PUT, DELETE — impossibles à mettre en cache
+  if (request.method !== 'GET') return;
+
   // Forcer network-first pour fichiers critiques (JS, CSS, HTML)
   if (request.url.endsWith('.js') || request.url.endsWith('.css') || request.url.endsWith('index.html')) {
     event.respondWith(
