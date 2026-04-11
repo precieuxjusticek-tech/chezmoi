@@ -232,138 +232,199 @@
         <!-- AJOUTER UNE ANNONCE -->
         <!--  =====================  -->
         <section class="page" id="ajouter">
-            <h2>Ajouter une annonce</h2>
+
+            <!-- HEADER DE LA PAGE -->
+            <div class="ajouter-header">
+                <h2>📝 Publier une annonce</h2>
+                <p class="ajouter-subtitle">Remplissez les informations étape par étape</p>
+            </div>
+
+            <!-- BARRE DE PROGRESSION -->
+            <div class="wizard-progress">
+                <div class="wizard-step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <span>Type</span>
+                </div>
+                <div class="wizard-line"></div>
+                <div class="wizard-step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <span>Logement</span>
+                </div>
+                <div class="wizard-line"></div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <span>Lieu</span>
+                </div>
+                <div class="wizard-line"></div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <span>Détails</span>
+                </div>
+                <div class="wizard-line"></div>
+                <div class="wizard-step" data-step="5">
+                    <div class="step-circle">5</div>
+                    <span>Photos</span>
+                </div>
+            </div>
 
             <form id="formAjouter" enctype="multipart/form-data">
-                <!-- AJOUT DES ID POUR CHAQUE CHAMP -->
 
-                <label><strong>Type d'annonce :</strong></label>
-                <div class="type-radios" id="titre">
-                    <input type="radio" id="location" name="titre" value="Location">
-                    <label for="location">Location</label>
+                <!-- ÉTAPE 1 : TYPE D'ANNONCE -->
+                <div class="wizard-panel active" id="panel-1">
+                    <div class="panel-content">
+                        <div class="panel-icon">🏷️</div>
+                        <h3>Type d'annonce</h3>
+                        <p class="panel-desc">Vous souhaitez louer ou vendre votre bien ?</p>
+                        <div class="type-radios-wizard" id="titre">
+                            <input type="radio" id="location" name="titre" value="Location">
+                            <label for="location">
+                                <span class="option-icon">🔑</span>
+                                <span class="option-title">Location</span>
+                                <span class="option-desc">Louer votre bien</span>
+                            </label>
 
-                    <input type="radio" id="vente" name="titre" value="Vente">
-                    <label for="vente">Vente</label>
+                            <input type="radio" id="vente" name="titre" value="Vente">
+                            <label for="vente">
+                                <span class="option-icon">🏠</span>
+                                <span class="option-title">Vente</span>
+                                <span class="option-desc">Vendre votre bien</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- GROUPE DE RADIO -->
-                <label><strong>Type de logement :</strong></label>
-                <div class="type-radios">
-                    <input type="radio" id="studio" name="type" value="studio">
-                    <label for="studio">Studio</label>
+                <!-- ÉTAPE 2 : TYPE DE LOGEMENT -->
+                <div class="wizard-panel" id="panel-2">
+                    <div class="panel-content">
+                        <div class="panel-icon">🏢</div>
+                        <h3>Type de logement</h3>
+                        <p class="panel-desc">Quel type de bien proposez-vous ?</p>
+                        <div class="type-radios">
+                            <input type="radio" id="studio" name="type" value="studio">
+                            <label for="studio">Studio</label>
 
-                    <input type="radio" id="appartement" name="type" value="appartement">
-                    <label for="appartement">Appartement</label>
+                            <input type="radio" id="appartement" name="type" value="appartement">
+                            <label for="appartement">Appartement</label>
 
-                    <input type="radio" id="villa" name="type" value="villa">
-                    <label for="villa">Villa</label>
+                            <input type="radio" id="villa" name="type" value="villa">
+                            <label for="villa">Villa</label>
 
-                    <input type="radio" id="parcelle" name="type" value="parcelle">
-                    <label for="parcelle">Parcelle</label>
+                            <input type="radio" id="parcelle" name="type" value="parcelle">
+                            <label for="parcelle">Parcelle</label>
 
-                    <input type="radio" id="maisonSimple" name="type" value="maison simple">
-                    <label for="maisonSimple">Maison simple</label>
+                            <input type="radio" id="maisonSimple" name="type" value="maison simple">
+                            <label for="maisonSimple">Maison simple</label>
 
-                    <input type="radio" id="maison2Chambre" name="type" value="maison 2 chambre">
-                    <label for="maison2Chambre">Maison 2 chambre</label>
+                            <input type="radio" id="maison2Chambre" name="type" value="maison 2 chambre">
+                            <label for="maison2Chambre">Maison 2 ch.</label>
 
-                    <input type="radio" id="maison3Chambre" name="type" value="maison 3 chambre">
-                    <label for="maison3Chambre">Maison 3 chambre</label>
+                            <input type="radio" id="maison3Chambre" name="type" value="maison 3 chambre">
+                            <label for="maison3Chambre">Maison 3 ch.</label>
 
-                    <input type="radio" id="maison4Chambre" name="type" value="maison 4 chambre et plus">
-                    <label for="maison4Chambre">Maison 4 chambre et plus</label>
+                            <input type="radio" id="maison4Chambre" name="type" value="maison 4 chambre et plus">
+                            <label for="maison4Chambre">Maison 4+ ch.</label>
+                        </div>
+                    </div>
                 </div>
 
-                <label><strong>Ville :</strong></label>
-                <div class="type-radios">
-                    <input type="radio" id="brazzaville" name="ville" value="Brazzaville">
-                    <label for="brazzaville">Brazzaville</label>
+                <!-- ÉTAPE 3 : LOCALISATION -->
+                <div class="wizard-panel" id="panel-3">
+                    <div class="panel-content">
+                        <div class="panel-icon">📍</div>
+                        <h3>Localisation</h3>
+                        <p class="panel-desc">Où se trouve votre bien ?</p>
+                        <label class="field-label">Ville</label>
+                        <div class="type-radios">
+                            <input type="radio" id="brazzaville" name="ville" value="Brazzaville">
+                            <label for="brazzaville">Brazzaville</label>
 
-                    <input type="radio" id="pointeNoire" name="ville" value="Pointe-Noire">
-                    <label for="pointeNoire">Pointe-Noire</label>
+                            <input type="radio" id="pointeNoire" name="ville" value="Pointe-Noire">
+                            <label for="pointeNoire">Pointe-Noire</label>
 
-                    <input type="radio" id="dolisie" name="ville" value="Dolisie">
-                    <label for="dolisie">Dolisie</label>
+                            <input type="radio" id="dolisie" name="ville" value="Dolisie">
+                            <label for="dolisie">Dolisie</label>
 
-                    <input type="radio" id="nkayi" name="ville" value="Nkayi">
-                    <label for="nkayi">Nkayi</label>
+                            <input type="radio" id="nkayi" name="ville" value="Nkayi">
+                            <label for="nkayi">Nkayi</label>
+                        </div>
+                        <label class="field-label" style="margin-top:15px;">Quartier</label>
+                        <input type="text" id="quartier" placeholder="Ex: Moungali, Mfilou, Bacongo..." required>
+                    </div>
                 </div>
 
-                <label><strong>Quartier :</strong></label>
-                <input type="text" id="quartier" placeholder="Quartier (ex: Moungali, Mfilou, etc.)" required>
-                <label><strong>Douche :</strong></label>
+                <!-- ÉTAPE 4 : DÉTAILS -->
+                <div class="wizard-panel" id="panel-4">
+                    <div class="panel-content">
+                        <div class="panel-icon">📋</div>
+                        <h3>Détails du bien</h3>
+                        <p class="panel-desc">Renseignez les informations de votre annonce</p>
 
-                <div class="douche-radios">
+                        <label class="field-label">Type de douche</label>
+                        <div class="douche-radios">
+                            <input type="radio" id="interne" name="douche" value="interne">
+                            <label for="interne">🚿 Interne</label>
 
-                    <input type="radio" id="interne" name="douche" value="interne">
-                    <label for="interne">Interne</label>
+                            <input type="radio" id="externe" name="douche" value="externe">
+                            <label for="externe">🪣 Externe</label>
+                        </div>
 
-                    <input type="radio" id="externe" name="douche" value="externe">
-                    <label for="externe">Externe</label>
+                        <label class="field-label" style="margin-top:15px;">Prix (XAF)</label>
+                        <input type="number" id="prix" placeholder="Ex: 50000" required>
 
+                        <label class="field-label" style="margin-top:15px;">Description</label>
+                        <textarea id="description" placeholder="Décrivez votre bien (lumineux, jardin, parking...)" rows="4" required></textarea>
+
+                        <label class="field-label" style="margin-top:15px;">Numéro de contact</label>
+                        <input type="tel" id="contactAnnonce" placeholder="Ex: 06 000 0000" required pattern="[0-9]{8,15}">
+                    </div>
                 </div>
 
-                <label><strong>Prix (XAF) :</strong></label>
-                <input type="number" id="prix" placeholder="Prix (XAF)" required>
+                <!-- ÉTAPE 5 : PHOTOS -->
+                <div class="wizard-panel" id="panel-5">
+                    <div class="panel-content">
+                        <div class="panel-icon">📸</div>
+                        <h3>Photos</h3>
+                        <p class="panel-desc">Ajoutez des photos attractives de votre bien</p>
 
-                <label><strong>Description :</strong></label>
-                <textarea id="description" placeholder="Description du logement (ex: Appartement lumineux, jardin, etc.)" rows="5" required></textarea>
+                        <label id="imageText" class="field-label">
+                            Images : <span id="imageCounter">0</span> / <span id="imageMax">5</span>
+                        </label>
+                        <div id="imageGrid" class="image-grid"></div>
+                        <input type="file" id="hiddenImageInput" accept="image/*" multiple style="display:none">
 
-                <label><strong>Tel :</strong></label>
-                <input type="tel" id="contactAnnonce" placeholder="Numéro de contact" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
+                        <div class="extra-images-control" style="margin-top:15px;">
+                            <p>Images supplémentaires :</p>
+                            <input type="range" id="extraImagesSlider" min="0" max="10" value="0" step="1"/>
+                            <p>Choisies : <strong><span id="extraImagesValue">0</span></strong> (+200 XAF/image)</p>
+                        </div>
 
-                <label id="imageText">
-                Images ajoutées : <span id="imageCounter">0</span> sur <span id="imageMax">5</span> autorisées
-                </label>
-                <div id="imageGrid" class="image-grid"></div>
-
-                <input 
-                type="file"
-                id="hiddenImageInput"
-                accept="image/*"
-                multiple
-                style="display:none"
-                >
-
-                <!-- Sélecteur de packs d'images supplémentaires -->
-                <label><strong>Images supplémentaires :</strong></label>
-
-                <div class="extra-images-control">
-
-                <p>Choisissez combien d'images supplémentaires vous voulez :</p>
-
-                <input 
-                type="range"
-                id="extraImagesSlider"
-                min="0"
-                max="10"
-                value="0"
-                step="1"
-                />
-
-                <p>
-                Images supplémentaires choisies : 
-                <strong><span id="extraImagesValue">0</span></strong>
-                </p>
-
-                <p class="info-images">
-                5 images incluses gratuitement.<br>
-                Vous pouvez ajouter jusqu'à 10 images supplémentaires.
-                </p>
-
+                        <div class="prix-total-box">
+                            <span>💰 Total à payer :</span>
+                            <strong><span id="prixTotal">0</span> XAF</strong>
+                        </div>
+                    </div>
                 </div>
 
-                <p><strong>Prix total de l'annonce :</strong> <span id="prixTotal">0</span> XAF</p>
-                <button type="submit">Publier l'annonce</button>
+                <!-- BOUTONS NAVIGATION -->
+                <div class="wizard-nav">
+                    <button type="button" id="btnPrecedent" class="btn-wizard-prev" style="display:none;">
+                        ← Précédent
+                    </button>
+                    <button type="button" id="btnSuivant" class="btn-wizard-next">
+                        Suivant →
+                    </button>
+                    <button type="submit" id="btnPublier" style="display:none;">
+                        Publier l'annonce
+                    </button>
+                </div>
+
             </form>
 
-            <p class="link" data-page="home">
-                Retour à l'accueil
-            </p>
+            <p class="link" data-page="home">Retour à l'accueil</p>
 
             <div id="loader-pub">
                 <div class="spinner"></div>
-                <p>publication ...</p>
+                <p>Publication en cours...</p>
             </div>
 
         </section>

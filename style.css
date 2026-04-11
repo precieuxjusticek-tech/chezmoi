@@ -982,262 +982,447 @@ loader pour mot de passe oublié
 }
 
 /* ============================= */
-/* PAGE AJOUTER UNE ANNONCE      */
+/* PAGE AJOUTER UNE ANNONCE - WIZARD */
 /* ============================= */
 #ajouter {
+    display: none;
     flex-direction: column;
-    padding: 20px;
-    background-color: #f9f9f9;
+    padding: 0;
+    background: #f4f6f8;
     overflow-y: auto;
-    padding-bottom: 120px;
+    padding-bottom: 100px;
 }
 
-/* Titre de la page */
-#ajouter h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 20px;
+#ajouter.active {
+    display: flex;
+}
+
+/* HEADER */
+.ajouter-header {
+    background: linear-gradient(135deg, #233d4c, #2f5d73);
+    color: white;
+    padding: 20px;
     text-align: center;
 }
 
-/* Formulaire principal */
-#formAjouter {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 800px;
-    margin: 0 auto;
+.ajouter-header h2 {
+    color: white !important;
+    font-size: 20px;
+    margin-bottom: 4px;
 }
 
-/* Champs texte, nombre, tel, textarea */
-#formAjouter input[type="text"],
-#formAjouter input[type="number"],
-#formAjouter input[type="tel"],
-#formAjouter textarea {
-    padding: 12px 15px;
-    border-radius: 12px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    outline: none;
+.ajouter-subtitle {
+    color: rgba(255,255,255,0.7) !important;
+    font-size: 13px !important;
+    margin: 0 !important;
+}
+
+/* BARRE DE PROGRESSION */
+.wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    gap: 0;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.wizard-step .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
     transition: all 0.3s ease;
 }
 
-/* Focus effet sur champs */
-#formAjouter input:focus,
-#formAjouter textarea:focus {
-    border-color: #4CAF50;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+.wizard-step span {
+    font-size: 10px;
+    color: #999;
+    font-weight: 500;
+    transition: color 0.3s ease;
 }
 
-/* Labels pour radio et sections */
-#formAjouter label {
-    font-weight: 600;
-    margin-bottom: 5px;
+.wizard-step.active .step-circle {
+    background: #fd802e;
+    color: white;
+    box-shadow: 0 3px 10px rgba(253,128,46,0.4);
+}
+
+.wizard-step.active span {
+    color: #fd802e;
+    font-weight: 700;
+}
+
+.wizard-step.completed .step-circle {
+    background: #233d4c;
+    color: white;
+}
+
+.wizard-step.completed span {
+    color: #233d4c;
+}
+
+.wizard-line {
+    flex: 1;
+    height: 2px;
+    background: #e0e0e0;
+    margin: 0 4px;
+    margin-bottom: 16px;
+    transition: background 0.3s ease;
+    max-width: 30px;
+}
+
+.wizard-line.completed {
+    background: #233d4c;
+}
+
+/* PANELS */
+.wizard-panel {
+    display: none;
+    animation: fadeInUp 0.3s ease;
+}
+
+.wizard-panel.active {
     display: block;
+}
+
+.panel-content {
+    background: white;
+    margin: 15px;
+    border-radius: 20px;
+    padding: 25px 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.panel-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.panel-content h3 {
+    font-size: 20px;
+    color: #233d4c;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.panel-desc {
+    color: #888 !important;
+    font-size: 14px !important;
+    margin-bottom: 20px !important;
+}
+
+.field-label {
+    display: block;
+    text-align: left;
+    font-weight: 600;
     color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
-/* ============================= */
-/* RADIOS CUSTOM STYLÉ            */
-/* ============================= */
-
-/* Container type de logement - 4 par 4 */
-.type-radios {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+/* RADIOS WIZARD ÉTAPE 1 */
+.type-radios-wizard {
+    display: flex;
     gap: 15px;
-    margin-top: 5px;
+    justify-content: center;
+    margin-top: 10px;
 }
 
-/* Container douche - 2 par 1 */
-.douche-radios {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-top: 5px;
-}
-
-/* Masquer les radios natives */
-.type-radios input[type="radio"],
-.douche-radios input[type="radio"] {
+.type-radios-wizard input[type="radio"] {
     display: none;
 }
 
-#titre {
-    display: flex;
-    align-items: center;
-}
-
-/* Label stylé comme bouton */
-.type-radios label,
-.douche-radios label {
-    padding: 10px 12px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-    background-color: #fff;
+.type-radios-wizard label {
+    flex: 1;
+    max-width: 150px;
+    padding: 20px 15px;
+    border-radius: 16px;
+    border: 2px solid #e0e0e0;
+    background: #f9f9f9;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.type-radios-wizard label .option-icon {
+    font-size: 32px;
+}
+
+.type-radios-wizard label .option-title {
+    font-size: 16px;
+    font-weight: 700;
     color: #333;
-    text-align: center;
 }
 
-/* Radio sélectionnée */
-.type-radios input[type="radio"]:checked + label,
-.douche-radios input[type="radio"]:checked + label {
-    background-color: #fd802e;
-    color: #233d4c;
+.type-radios-wizard label .option-desc {
+    font-size: 12px;
+    color: #999;
+}
+
+.type-radios-wizard input[type="radio"]:checked + label {
     border-color: #fd802e;
+    background: rgba(253,128,46,0.08);
+    box-shadow: 0 4px 15px rgba(253,128,46,0.2);
 }
 
-/* Hover effet */
-.type-radios label:hover,
-.douche-radios label:hover {
-    background-color: #e6f4ea;
-    border-color: #4CAF50;
+.type-radios-wizard input[type="radio"]:checked + label .option-title {
+    color: #fd802e;
 }
 
-/* ============================= */
-/* GRILLE D'IMAGES / CARDS       */
-/* ============================= */
-.image-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.image-card {
-    width: 100px;
-    height: 100px;
-    border-radius: 12px;
-    position: relative;
-    overflow: hidden;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.image-card:hover {
-    transform: scale(1.05);
-}
-
-.image-card img {
+/* INPUTS DANS LES PANELS */
+.panel-content input[type="text"],
+.panel-content input[type="number"],
+.panel-content input[type="tel"],
+.panel-content textarea {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1.5px solid #e0e0e0;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: left;
+    background: #f9f9f9;
 }
 
-/* Bouton supprimer sur chaque image */
-.image-card .btnSuppr {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 20px;
-    height: 20px;
-    background: red;
+.panel-content input:focus,
+.panel-content textarea:focus {
+    border-color: #fd802e;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(253,128,46,0.1);
+}
+
+.panel-content textarea {
+    resize: none;
+}
+
+/* PRIX TOTAL BOX */
+.prix-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #233d4c, #2f5d73);
     color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
-    cursor: pointer;
+    padding: 15px 20px;
+    border-radius: 14px;
+    margin-top: 20px;
+    font-size: 15px;
 }
 
-/* Card “+” pour ajouter une nouvelle image */
-.image-card.plus {
-    font-size: 36px;
-    color: #666;
-    background: #ddd;
+.prix-total-box strong {
+    font-size: 20px;
+    color: #fd802e;
+}
+
+/* BOUTONS NAVIGATION WIZARD */
+.wizard-nav {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    gap: 12px;
+    padding: 0 15px 20px;
+    justify-content: space-between;
+}
+
+.btn-wizard-prev {
+    background: white !important;
+    color: #233d4c !important;
+    border: 2px solid #233d4c !important;
+    border-radius: 14px !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    flex: 1;
+    transition: all 0.3s ease !important;
+}
+
+.btn-wizard-prev:hover {
+    background: #233d4c !important;
+    color: white !important;
+}
+
+.btn-wizard-next {
+    background: linear-gradient(135deg, #fd802e, #ff5722) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    flex: 1;
+    box-shadow: 0 4px 15px rgba(253,128,46,0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-wizard-next:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(253,128,46,0.4) !important;
+}
+
+#btnPublier {
+    background: linear-gradient(135deg, #233d4c, #2f5d73) !important;
+    color: #fd802e !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    flex: 1;
+    box-shadow: 0 4px 15px rgba(35,61,76,0.3) !important;
+}
+
+#btnPublier:hover {
+    transform: translateY(-2px) !important;
 }
 
 /* ============================= */
-/* IMAGES SUPPLÉMENTAIRES SLIDER */
+/* RADIOS STYLE MODERNE */
 /* ============================= */
 
-.extra-images-control{
+.type-radios,
+.douche-radios{
+    display:grid;
+    grid-template-columns: repeat(2,1fr);
+    gap:12px;
     margin-top:10px;
-    padding:15px;
-    border:1px solid #ccc;
-    border-radius:12px;
-    background:#fff;
 }
 
-.extra-images-control p{
+.type-radios input[type="radio"],
+.douche-radios input[type="radio"]{
+    display:none;
+}
+
+.type-radios label,
+.douche-radios label{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px 12px;
+    border-radius:14px;
+    border:2px solid #e6e6e6;
+    background:#f9f9f9;
     font-size:14px;
-    margin:5px 0;
+    font-weight:600;
+    color:#333;
+    cursor:pointer;
+    transition:all 0.25s ease;
 }
 
-/* Slider */
-#extraImagesSlider{
+/* HOVER */
+.type-radios label:hover,
+.douche-radios label:hover{
+    border-color:#fd802e;
+    background:#fff;
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* RADIO SELECTIONNÉ */
+.type-radios input[type="radio"]:checked + label,
+.douche-radios input[type="radio"]:checked + label{
+    border-color:#fd802e;
+    background:rgba(253,128,46,0.08);
+    color:#fd802e;
+    font-weight:700;
+    box-shadow:0 4px 14px rgba(253,128,46,0.25);
+}
+
+/* EFFET CLIC */
+.type-radios label:active,
+.douche-radios label:active{
+    transform:scale(0.97);
+}
+
+/* MOBILE */
+@media(max-width:500px){
+
+    .type-radios{
+        grid-template-columns: repeat(2,1fr);
+    }
+
+}
+
+/* ============================= */
+/* IMAGE GRID MODERNE */
+/* ============================= */
+
+.image-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:10px;
+}
+
+.image-card{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    background:#f5f5f5;
+    aspect-ratio:1/1;
+    cursor:pointer;
+    transition:all .25s ease;
+}
+
+.image-card img{
     width:100%;
-    margin:10px 0;
+    height:100%;
+    object-fit:cover;
+}
+
+/* hover */
+.image-card:hover{
+    transform:scale(1.03);
+    box-shadow:0 6px 18px rgba(0,0,0,0.15);
+}
+
+/* bouton supprimer */
+.image-card .btnSuppr{
+    position:absolute;
+    top:6px;
+    right:6px;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:rgba(0,0,0,0.7);
+    color:white;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     cursor:pointer;
 }
 
-/* Nombre choisi */
-#extraImagesValue{
+/* carte ajouter image */
+.image-card.plus{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
     color:#fd802e;
-    font-size:18px;
+    border:2px dashed #fd802e;
+    background:#fff8f2;
 }
 
-/* Texte info */
-.info-images{
-    font-size:13px;
-    color:#666;
-}
-
-/* Prix total */
-#prixTotal {
-    font-weight: 700;
-    color: #fd802e;
-    margin-top: 5px;
-    display: inline-block;
-    font-size: 16px;
-}
-
-/* ============================= */
-/* BOUTON PUBLIER                 */
-/* ============================= */
-#formAjouter button[type="submit"] {
-    padding: 12px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 16px;
-    background-color: #233d4c;
-    color: #fd802e;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#formAjouter button[type="submit"]:hover {
-    background-color: #45a049;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-}
-
-/* ============================= */
-/* LIEN RETOUR À L'ACCUEIL       */
-/* ============================= */
-#ajouter .link {
-    text-align: center;
-    margin-top: 20px;
-    cursor: pointer;
-    color: #4CAF50;
-    font-weight: 600;
-}
-
-#ajouter .link:hover {
-    text-decoration: underline;
+.image-card.plus:hover{
+    background:#fff;
 }
 
 /* =========================== */

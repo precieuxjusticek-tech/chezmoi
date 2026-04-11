@@ -727,6 +727,114 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(showPwaPrompt, 2 * 60 * 1000);
 });
 
+/* ===================================================== */
+/* ================= WIZARD AJOUTER =================== */
+/* ===================================================== */
+let currentStep = 1;
+const totalSteps = 5;
+
+function goToStep(step) {
+    // Cacher panel actuel
+    document.getElementById(`panel-${currentStep}`).classList.remove("active");
+    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("active");
+    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("completed");
+
+    // Mettre à jour les lignes
+    const lines = document.querySelectorAll(".wizard-line");
+    if (step > currentStep) {
+        lines[currentStep - 1].classList.add("completed");
+    } else {
+        lines[step - 1].classList.remove("completed");
+        document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed");
+    }
+
+    currentStep = step;
+
+    // Afficher nouveau panel
+    document.getElementById(`panel-${currentStep}`).classList.add("active");
+    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed");
+    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("active");
+
+    // Gérer boutons
+    const btnPrev = document.getElementById("btnPrecedent");
+    const btnNext = document.getElementById("btnSuivant");
+    const btnPublier = document.getElementById("btnPublier");
+
+    btnPrev.style.display = currentStep === 1 ? "none" : "block";
+    btnNext.style.display = currentStep === totalSteps ? "none" : "block";
+    btnPublier.style.display = currentStep === totalSteps ? "block" : "none";
+
+    // Scroll en haut
+    document.getElementById("ajouter").scrollTop = 0;
+}
+
+function validerEtape(step) {
+    if (step === 1) {
+        const titre = document.querySelector('input[name="titre"]:checked');
+        if (!titre) { showToast("info", "Choisissez un type d'annonce."); return false; }
+    }
+    if (step === 2) {
+        const type = document.querySelector('input[name="type"]:checked');
+        if (!type) { showToast("info", "Choisissez un type de logement."); return false; }
+    }
+    if (step === 3) {
+        const ville = document.querySelector('input[name="ville"]:checked');
+        const quartier = document.getElementById("quartier").value.trim();
+        if (!ville) { showToast("info", "Choisissez une ville."); return false; }
+        if (!quartier) { showToast("info", "Entrez le quartier."); return false; }
+    }
+    if (step === 4) {
+        const douche = document.querySelector('input[name="douche"]:checked');
+        const prix = document.getElementById("prix").value;
+        const description = document.getElementById("description").value.trim();
+        const contact = document.getElementById("contactAnnonce").value.trim();
+        if (!douche) { showToast("info", "Choisissez le type de douche."); return false; }
+        if (!prix || prix <= 0) { showToast("info", "Entrez un prix valide."); return false; }
+        if (!description) { showToast("info", "Ajoutez une description."); return false; }
+        if (!contact) { showToast("info", "Ajoutez un numéro de contact."); return false; }
+    }
+    return true;
+}
+
+document.getElementById("btnSuivant").addEventListener("click", () => {
+    if (validerEtape(currentStep)) {
+        goToStep(currentStep + 1);
+    }
+});
+
+document.getElementById("btnPrecedent").addEventListener("click", () => {
+    goToStep(currentStep - 1);
+});
+
+// Reset wizard quand on quitte la page
+const originalResetFormulaire = window.resetFormulaire;
+function resetFormulaire() {
+    if(formAjouter) formAjouter.reset();
+    selectedFiles = [];
+    packSelectionne = 0;
+    if(extraImagesSlider) extraImagesSlider.value = 0;
+    if(extraImagesValue) extraImagesValue.textContent = 0;
+    renderGrid();
+    updatePrixTotal();
+    // Reset wizard à l'étape 1
+    if (currentStep !== 1) {
+        document.getElementById(`panel-${currentStep}`)?.classList.remove("active");
+        document.querySelector(`.wizard-step[data-step="${currentStep}"]`)?.classList.remove("active");
+        document.querySelector(`.wizard-step[data-step="${currentStep}"]`)?.classList.remove("completed");
+        currentStep = 1;
+        document.getElementById("panel-1")?.classList.add("active");
+        document.querySelector('.wizard-step[data-step="1"]')?.classList.add("active");
+        document.querySelectorAll(".wizard-step").forEach(s => s.classList.remove("completed"));
+        document.querySelectorAll(".wizard-line").forEach(l => l.classList.remove("completed"));
+        const btnPrev = document.getElementById("btnPrecedent");
+        const btnNext = document.getElementById("btnSuivant");
+        const btnPublier = document.getElementById("btnPublier");
+        if(btnPrev) btnPrev.style.display = "none";
+        if(btnNext) btnNext.style.display = "block";
+        if(btnPublier) btnPublier.style.display = "none";
+    }
+}
+
 /* ============================= */
 /* INSCRIPTION */
 const form = document.getElementById("formInscription");
@@ -1298,18 +1406,6 @@ if (formAjouter) {
 
 // Initialisation de la grille au chargement
 renderGrid();
-// ================= RESET COMPLET FORMULAIRE =================
-
-// Fonction pour tout remettre à zéro
-function resetFormulaire() {
-    if(formAjouter) formAjouter.reset(); // vider tous les champs texte, radios, selects
-    selectedFiles = [];                   // vider les images sélectionnées
-    packSelectionne = 0;                  // reset pack d'images
-    if(extraImagesSlider) extraImagesSlider.value = 0; // slider à zéro
-    if(extraImagesValue) extraImagesValue.textContent = 0; // compteur slider à zéro
-    renderGrid();                         // réafficher grille vide
-    updatePrixTotal();                    // remettre prix total à zéro
-}
 
 // Vider le formulaire dès que la page se charge
 window.addEventListener("DOMContentLoaded", () => {
