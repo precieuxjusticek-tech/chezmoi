@@ -48,69 +48,211 @@
 
         <!-- ACCUEIL -->
         <section class="page" id="accueil">
-            <div class="acl">
-                <h2 id="one">Trouve ton chez-toi !</h2>
-                <p>
-                    Une solution simple et rapide pour trouver un logement
-                    fiable et sécurisé adapté à ton budget.
+            <div class="acl-hero">
+                <div class="hero-badge">🇨🇬 N°1 au Congo</div>
+                <h2 class="hero-title">Votre prochain logement<br><span class="hero-accent">vous attend déjà.</span></h2>
+                <p class="hero-desc">
+                    Des milliers de Congolais ont déjà trouvé leur chez-soi ici.<br>
+                    <strong>Pourquoi pas vous ?</strong>
                 </p>
-
-                <div class="buttons">
-                    <button data-page="inscription" class="btn">Créer un compte</button>
-                    <button class="secondary btn" data-page="connexion">Se connecter</button>
-                    <!---page-->
-                    <button data-page="home" class="btn">visite</button>
+                <div class="hero-social-proof">
+                <div class="avatars-stack">
+                    <div class="av av1">VK</div>
+                    <div class="av av2">LG</div>
+                    <div class="av av3">LR</div>
+                    <div class="av av4">+</div>
+                </div>
+                <span class="proof-text">Rejoignez <strong>Plusieurs</strong> utilisateurs satisfaits</span>
+                </div>
+                <div class="hero-buttons">
+                <button data-page="inscription" class="btn btn-cta">
+                    Trouver mon logement <span class="btn-arrow">→</span>
+                </button>
+                <button class="btn btn-ghost" data-page="home">Voir les annonces</button>
+                </div>
+                <div class="hero-stats">
+                <div class="stat"><span class="stat-num">Explore</span><span class="stat-label"> des Annonces chaque jour</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat"><span class="stat-num">Brazzaville,</span><span class="stat-label">bientôt d'autres villes</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Sécurisé</span></div>
                 </div>
             </div>
-            <!--pour l'imgae-->
-            <div class="img">
-                <img src="image/logo_ChezMoi.png" alt="image du site">
+            <div class="hero-img-wrap">
+                <img src="image/logo_ChezMoi.png" alt="ChezMoi">
+                <div class="hero-float-card">
+                <span class="hfc-icon">🏠</span>
+                <div>
+                    <div class="hfc-title">Maison trouvée !</div>
+                    <div class="hfc-sub">Pointe-Noire · 120 .... XAF</div>
+                </div>
+                </div>
             </div>
-
         </section>
 
         <!-- INSCRIPTION -->
         <section class="page" id="inscription">
-            
-            <h2>Inscription</h2>
+            <div class="auth-layout">
 
-            <form id="formInscription">
-                <input type="text" placeholder="Nom complet" required>
-                <input type="email" placeholder="Adresse email" required>
-                <small style="color:#888; display:block; margin-top:5px;">
-                ⚠️ Utilisez un email valide pour récupérer votre compte en cas de perte de mot de passe.
-                </small>
-                <input type="password" placeholder="Mot de passe" required>
-                <input type="tel" id="contact" placeholder="Numéro de contact" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
-                <button type="submit" class="btn">S'inscrire</button>
-            </form>
+                <!-- PANNEAU GAUCHE -->
+                <div class="auth-left">
+                <div class="auth-left-inner">
+                    <div class="al-badge">Gratuit · Rapide · Fiable</div>
+                    <h3 class="al-title">Votre chez-soi<br>à portée de clic.</h3>
+                    <p class="al-desc">En moins de 2 minutes, accédez à des centaines d'annonces vérifiées partout au Congo.</p>
+                    <div class="al-features">
+                    <div class="al-feat"><span class="al-check">✓</span> Connexion sécurisée avec Google</div>
+                    <div class="al-feat"><span class="al-check">✓</span> Annonces publiées par de vrais propriétaires</div>
+                    <div class="al-feat"><span class="al-check">✓</span> Contact direct, sans intermédiaire</div>
+                    <div class="al-feat"><span class="al-check">✓</span> Favoris et historique sauvegardés</div>
+                    </div>
+                    <div class="al-testimonial">
+                    <div class="alt-avatar">PB</div>
+                    <div>
+                        <div class="alt-text">"J'ai trouvé mon appartement en 3 jours grâce à ChezMoi. Incroyable !"</div>
+                        <div class="alt-name">Prospere B. · Brazzaville</div>
+                    </div>
+                    </div>
+                </div>
+                </div>
 
-            <p class="link" data-page="connexion">
-                Déjà un compte ? Se connecter
-            </p>
+                <!-- PANNEAU DROIT : formulaire -->
+                <div class="auth-right">
+                    <div class="auth-form-card">
+
+                        <div class="auth-google-banner" id="bannerInscription">
+                        <span class="agb-icon">✓</span>
+                        <span>Infos Google importées — renseignez votre numéro pour terminer.</span>
+                        </div>
+
+                        <div class="auth-form-header">
+                        <h2 class="auth-title">Créer un compte</h2>
+                        <p class="auth-sub">Rejoignez ChezMoi en quelques secondes</p>
+                        </div>
+
+                        <button class="btn-google" id="btnGoogleInscription" type="button">
+                        <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continuer avec Google
+                        </button>
+
+                        <div class="auth-divider">
+                            <div class="adiv-line"></div>
+                            <span class="adiv-text">ou avec votre email</span>
+                            <div class="adiv-line"></div>
+                        </div>
+
+                        <form id="formInscription">
+                        <div class="auth-field">
+                            <label>Nom complet</label>
+                            <input type="text" id="ins-nom" placeholder="Ex : Jean Moukassa" required>
+                        </div>
+                        <div class="auth-field">
+                            <label>Adresse email</label>
+                            <input type="email" id="ins-email" placeholder="Ex : jean@email.com" required>
+                            <small class="auth-hint">⚠️ Utilisez un email valide pour récupérer votre compte.</small>
+                        </div>
+                        <div class="auth-field" id="ins-pwd-wrap">
+                            <label>Mot de passe</label>
+                            <input type="password" id="ins-password" placeholder="Minimum 6 caractères" required>
+                        </div>
+                        <div class="auth-field">
+                            <label>Numéro de contact</label>
+                            <input type="tel" id="contact" placeholder="Ex : 06 123 4567" required pattern="[0-9]{8,15}" title="Entrez un numéro valide">
+                        </div>
+                        <button type="submit" class="btn-auth-submit">Créer mon compte gratuitement</button>
+                        </form>
+
+                        <p class="auth-switch" data-page="connexion">
+                            Déjà un compte ? <span>Se connecter</span>
+                        </p>
+
+                    </div>
+                </div>
+            </div>
 
             <div id="loader" class="loader-overlay">
                 <div class="spinner"></div>
-                <p>Chargement...</p>
+                <p>Création du compte...</p>
             </div>
         </section>
 
         <!-- CONNEXION -->
         <section class="page" id="connexion">
-            <h2>Connexion</h2>
+            <div class="auth-layout">
 
-            <form id="formConnexion">
-                <input type="email" placeholder="Adresse email" required>
-                <input type="password" placeholder="Mot de passe" required>
-                <p class="forget">
-                    Mot de passe oublié !
-                </p>
-                <button type="submit" class="btn">Se connecter</button>
-            </form>
+                <!-- PANNEAU GAUCHE -->
+                <div class="auth-left">
+                    <div class="auth-left-inner">
+                        <div class="al-badge">Déjà membre ?</div>
+                        <h3 class="al-title">Bon retour<br>parmi nous !</h3>
+                        <p class="al-desc">Vos favoris, vos annonces, tout vous attend. Reconnectez-vous en un clic.</p>
+                        <div class="al-features">
+                        <div class="al-feat"><span class="al-check">✓</span> Accès instantané à vos favoris</div>
+                        <div class="al-feat"><span class="al-check">✓</span> Gérez vos annonces publiées</div>
+                        <div class="al-feat"><span class="al-check">✓</span> Connexion rapide via Google</div>
+                        </div>
+                        <div class="al-urgency">
+                        <span class="au-dot"></span>
+                        <span>des nouvelles annonces publiées aujourd'hui</span>
+                        </div>
+                    </div>
+                </div>
 
-            <p class="link" data-page="inscription">
-                Pas encore de compte ? S'inscrire
-            </p>
+                <!-- PANNEAU DROIT -->
+                <div class="auth-right">
+                    <div class="auth-form-card">
+
+                        <div class="auth-google-banner" id="bannerConnexion">
+                            <span class="agb-icon">✓</span>
+                            <span>Email importé depuis Google — entrez votre mot de passe.</span>
+                        </div>
+
+                        <div class="auth-form-header">
+                            <h2 class="auth-title">Connexion</h2>
+                            <p class="auth-sub">Content de vous revoir sur ChezMoi</p>
+                        </div>
+
+                        <button class="btn-google" id="btnGoogleConnexion" type="button">
+                            <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                        Continuer avec Google
+                        </button>
+
+                        <div class="auth-divider">
+                            <div class="adiv-line"></div>
+                            <span class="adiv-text">ou avec votre email</span>
+                            <div class="adiv-line"></div>
+                        </div>
+
+                        <form id="formConnexion">
+                        <div class="auth-field">
+                            <label>Adresse email</label>
+                            <input type="email" id="con-email" placeholder="Ex : jean@email.com" required>
+                        </div>
+                        <div class="auth-field">
+                            <label>Mot de passe</label>
+                            <input type="password" id="con-password" placeholder="Votre mot de passe" required>
+                        </div>
+                        <p class="forget">Mot de passe oublié !</p>
+                            <button type="submit" class="btn-auth-submit">Se connecter</button>
+                        </form>
+
+                        <p class="auth-switch" data-page="inscription">
+                        Pas encore de compte ? <span>S'inscrire gratuitement</span>
+                        </p>
+
+                    </div>
+                </div>
+            </div>
 
             <div id="loader-connexion" style="display:none;" class="loader-overlay">
                 <div class="spinner"></div>
@@ -242,28 +384,27 @@
             <!-- BARRE DE PROGRESSION -->
             <div class="wizard-progress">
                 <div class="wizard-step active" data-step="1">
-                    <div class="step-circle">1</div>
-                    <span>Type</span>
+                    <div class="step-circle">1</div><span>Type</span>
                 </div>
                 <div class="wizard-line"></div>
                 <div class="wizard-step" data-step="2">
-                    <div class="step-circle">2</div>
-                    <span>Logement</span>
+                    <div class="step-circle">2</div><span>Logement</span>
                 </div>
                 <div class="wizard-line"></div>
                 <div class="wizard-step" data-step="3">
-                    <div class="step-circle">3</div>
-                    <span>Lieu</span>
+                    <div class="step-circle">3</div><span>Lieu</span>
                 </div>
                 <div class="wizard-line"></div>
                 <div class="wizard-step" data-step="4">
-                    <div class="step-circle">4</div>
-                    <span>Détails</span>
+                    <div class="step-circle">4</div><span>Équipements</span>
                 </div>
                 <div class="wizard-line"></div>
                 <div class="wizard-step" data-step="5">
-                    <div class="step-circle">5</div>
-                    <span>Photos</span>
+                    <div class="step-circle">5</div><span>Infos & Prix</span>
+                </div>
+                <div class="wizard-line"></div>
+                <div class="wizard-step" data-step="6">
+                    <div class="step-circle">6</div><span>Photos</span>
                 </div>
             </div>
 
@@ -349,38 +490,303 @@
                         </div>
                         <label class="field-label" style="margin-top:15px;">Quartier</label>
                         <input type="text" id="quartier" placeholder="Ex: Moungali, Mfilou, Bacongo..." required>
+                        <label class="field-label" style="margin-top:15px;">
+                        📍 Repère / Point de référence
+                        <span style="font-size:11px; color:#999; font-weight:400;"> (aide les locataires à te trouver)</span>
+                        </label>
+                        <input type="text" id="repere" placeholder="Ex: Près du marché Total, Avenue de l'Indépendance...">
                     </div>
                 </div>
 
-                <!-- ÉTAPE 4 : DÉTAILS -->
+                <!-- ÉTAPE 4 : ÉQUIPEMENTS -->
                 <div class="wizard-panel" id="panel-4">
                     <div class="panel-content">
-                        <div class="panel-icon">📋</div>
-                        <h3>Détails du bien</h3>
-                        <p class="panel-desc">Renseignez les informations de votre annonce</p>
+                        <div class="panel-icon">🛠️</div>
+                        <h3>Équipements du bien</h3>
+                        <p class="panel-desc">Ces détails font la différence — les biens bien décrits partent 3x plus vite ✅</p>
 
-                        <label class="field-label">Type de douche</label>
+                        <!-- DOUCHE -->
+                        <label class="field-label">🚿 Type de douche</label>
                         <div class="douche-radios">
                             <input type="radio" id="interne" name="douche" value="interne">
                             <label for="interne">🚿 Interne</label>
-
                             <input type="radio" id="externe" name="douche" value="externe">
                             <label for="externe">🪣 Externe</label>
                         </div>
 
-                        <label class="field-label" style="margin-top:15px;">Prix (XAF)</label>
-                        <input type="number" id="prix" placeholder="Ex: 50000" required>
+                        <!-- NOMBRE DE DOUCHES -->
+                        <label class="field-label" style="margin-top:15px;">
+                            🚿 Nombre de douches
+                            <span class="field-hint">Préciser ça rassure les familles</span>
+                        </label>
+                        <input type="number" id="nbDouches" placeholder="Ex: 2 — les familles adorent savoir ça" min="0">
 
-                        <label class="field-label" style="margin-top:15px;">Description</label>
-                        <textarea id="description" placeholder="Décrivez votre bien (lumineux, jardin, parking...)" rows="4" required></textarea>
+                        <!-- TOILETTES (bug 2) -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🚽 Toilettes ?
+                            <span class="field-hint">Interne ou externe — les locataires adorent le savoir</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="toilettesInterne" name="toilettes" value="interne">
+                            <label for="toilettesInterne" class="toggle-oui">🏠 Interne</label>
+                            <input type="radio" id="toilettesExterne" name="toilettes" value="externe">
+                            <label for="toilettesExterne" class="toggle-non">🪣 Externe</label>
+                        </div>
 
-                        <label class="field-label" style="margin-top:15px;">Numéro de contact</label>
-                        <input type="tel" id="contactAnnonce" placeholder="Ex: 06 000 0000" required pattern="[0-9]{8,15}">
+                        <!-- CLIMATISEUR -->
+                        <label class="field-label" style="margin-top:12px;">
+                            ❄️ Climatiseur ?
+                            <span class="field-hint">Un vrai atout à Pointe-Noire et Brazzaville !</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="climOui" name="climatiseur" value="oui">
+                            <label for="climOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="climNon" name="climatiseur" value="non">
+                            <label for="climNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- BALCON -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🌿 Balcon / Terrasse ?
+                            <span class="field-hint">Les locataires adorent ça</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="balconOui" name="balcon" value="oui">
+                            <label for="balconOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="balconNon" name="balcon" value="non">
+                            <label for="balconNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- GROUPE ÉLECTROGÈNE -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🔋 Groupe électrogène ?
+                            <span class="field-hint">Critique en cas de coupures fréquentes</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="groupeOui" name="groupe_electrogene" value="oui">
+                            <label for="groupeOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="groupeNon" name="groupe_electrogene" value="non">
+                            <label for="groupeNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- FORAGE -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🪣 Forage / Puits ?
+                            <span class="field-hint">Indispensable si l'eau courante est irrégulière</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="forageOui" name="forage" value="oui">
+                            <label for="forageOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="forageNon" name="forage" value="non">
+                            <label for="forageNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- MEUBLÉ (bug 2) -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🛋️ Logement meublé ?
+                            <span class="field-hint">Un logement meublé se loue 2x plus vite !</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="meubleOui" name="meuble" value="oui">
+                            <label for="meubleOui" class="toggle-oui">✅ Oui, meublé</label>
+                            <input type="radio" id="meubleNon" name="meuble" value="non">
+                            <label for="meubleNon" class="toggle-non">❌ Non meublé</label>
+                        </div>
+
+                        <!-- WIFI (bug 2) -->
+                        <label class="field-label" style="margin-top:12px;">
+                            📶 Internet / WiFi disponible ?
+                            <span class="field-hint">Critère n°1 pour les jeunes actifs et étudiants</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="wifiOui" name="wifi" value="oui">
+                            <label for="wifiOui" class="toggle-oui">✅ Oui, WiFi inclus</label>
+                            <input type="radio" id="wifiNon" name="wifi" value="non">
+                            <label for="wifiNon" class="toggle-non">❌ Pas de WiFi</label>
+                        </div>
+
+                        <!-- CUISINE -->
+                        <label class="field-label" style="margin-top:12px;">
+                            🍳 Cuisine disponible ?
+                            <span class="field-hint">Les étudiants et jeunes actifs adorent savoir ça</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="cuisineNon" name="cuisine" value="non">
+                            <label for="cuisineNon" class="toggle-non">❌ Non</label>
+                            <input type="radio" id="cuisineOui" name="cuisine" value="oui">
+                            <label for="cuisineOui" class="toggle-oui">✅ Oui</label>
+                        </div>
+                        <div id="typeCuisineBlock" style="display:none; margin-top:10px; padding:14px; background:rgba(253,128,46,0.07); border:1px dashed rgba(253,128,46,0.4); border-radius:12px;">
+                            <p style="font-size:12px; color:#fd802e; font-weight:600; margin-bottom:10px;">🍽️ Quel type de cuisine ?</p>
+                            <div class="toggle-radios">
+                                <input type="radio" id="cuisineSimple" name="type_cuisine" value="simple">
+                                <label for="cuisineSimple" class="toggle-oui" style="border-color:#f5a623; color:#f5a623;">🟡 Simple</label>
+                                <input type="radio" id="cuisineEquipee" name="type_cuisine" value="équipée">
+                                <label for="cuisineEquipee" class="toggle-oui">🟢 Équipée / Moderne</label>
+                            </div>
+                        </div>
+
+                        <!-- EAU -->
+                        <label class="field-label" style="margin-top:12px;">💧 Eau disponible ?
+                            <span class="field-hint">Les locataires demandent toujours ça en premier</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="eauOui" name="eau" value="oui">
+                            <label for="eauOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="eauNon" name="eau" value="non">
+                            <label for="eauNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- ELECTRICITE -->
+                        <label class="field-label" style="margin-top:12px;">⚡ Électricité disponible ?
+                            <span class="field-hint">Critère n°1 pour 9 locataires sur 10</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="electriciteOui" name="electricite" value="oui">
+                            <label for="electriciteOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="electriciteNon" name="electricite" value="non">
+                            <label for="electriciteNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- PARKING -->
+                        <label class="field-label" style="margin-top:12px;">🚗 Parking disponible ?</label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="parkingOui" name="parking" value="oui">
+                            <label for="parkingOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="parkingNon" name="parking" value="non">
+                            <label for="parkingNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- GARDIEN -->
+                        <label class="field-label" style="margin-top:12px;">🔒 Gardien / Sécurité ?
+                            <span class="field-hint">Rassure les familles</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="gardienOui" name="gardien" value="oui">
+                            <label for="gardienOui" class="toggle-oui">✅ Oui</label>
+                            <input type="radio" id="gardienNon" name="gardien" value="non">
+                            <label for="gardienNon" class="toggle-non">❌ Non</label>
+                        </div>
+
+                        <!-- CHARGES INCLUSES -->
+                        <label class="field-label" style="margin-top:12px;">
+                            💡 Charges incluses dans le loyer ?
+                        </label>
+                        <span class="field-hint">
+                            Cochez ce qui est déjà compris — ça rassure et attire plus de locataires sérieux.
+                        </span>
+                        <div class="toggle-radios" style="grid-template-columns: 1fr 1fr; margin-top:10px;">
+                            <input type="checkbox" id="chargesEau" value="eau">
+                            <label for="chargesEau" class="toggle-oui">💧 Eau incluse</label>
+                            <input type="checkbox" id="chargesElec" value="electricite">
+                            <label for="chargesElec" class="toggle-oui">⚡ Électricité incluse</label>
+                        </div>
+
+                        <!-- DISPONIBILITÉ (bug 2) -->
+                        <label class="field-label" style="margin-top:12px;">
+                            📅 Disponibilité
+                            <span class="field-hint">Dites quand le bien est prêt — les locataires planifient à l'avance</span>
+                        </label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="dispoMaintenant" name="disponibilite" value="maintenant">
+                            <label for="dispoMaintenant" class="toggle-oui">⚡ Disponible maintenant</label>
+                            <input type="radio" id="dispoDate" name="disponibilite" value="date">
+                            <label for="dispoDate" class="toggle-non">📆 À une date précise</label>
+                        </div>
+                        <div id="dispoDateBlock" style="display:none; margin-top:10px;">
+                            <input type="date" id="disponibiliteDate" style="width:100%; padding:12px; border-radius:12px; border:1.5px solid #e0e0e0;">
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- ÉTAPE 5 : PHOTOS -->
+                <!-- ÉTAPE 6 : PHOTOS -->
                 <div class="wizard-panel" id="panel-5">
+                    <div class="panel-content">
+                        <div class="panel-icon">💰</div>
+                        <h3>Infos & Prix</h3>
+                        <p class="panel-desc">Ces infos déterminent si votre annonce est contactée aujourd'hui ou ignorée 📊</p>
+
+                        <!-- CHAMBRES & PIECES -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+                            <div>
+                                <label class="field-label">🛏️ Nb de chambres <span class="champ-requis">*</span></label>
+                                <input type="number" id="nbChambres" placeholder="Ex: 2 — soyez précis !" min="0" required>
+                            </div>
+                            <div>
+                                <label class="field-label">🚪 Nb de pièces <span class="champ-requis">*</span></label>
+                                <input type="number" id="nbPieces" placeholder="Ex: 4 — plus c'est clair, mieux c'est" min="0" required>
+                            </div>
+                        </div>
+
+                        <!-- SALONS & SURFACE -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                            <div>
+                                <label class="field-label">🛋️ Nb de salons</label>
+                                <input type="number" id="nbSalons" placeholder="Ex: 1" min="0">
+                            </div>
+                            <div>
+                                <label class="field-label">📐 Surface (m²)</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="surface" placeholder="Ex: 80" min="0">
+                                    <span class="unit-label">m²</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ETAGE -->
+                        <label class="field-label" style="margin-top:15px;">🏢 Le bien est à un étage ?</label>
+                        <div class="toggle-radios">
+                            <input type="radio" id="etageOui" name="etage" value="oui">
+                            <label for="etageOui" class="toggle-oui">Oui, avec étage</label>
+                            <input type="radio" id="etageNon" name="etage" value="non">
+                            <label for="etageNon" class="toggle-non">Non, plain-pied</label>
+                        </div>
+
+                        <!-- CAUTION & AVANCE -->
+                        <div class="location-only" id="locationOnlyFields" style="display:none;">
+                            <div style="background:rgba(253,128,46,0.07); border:1px dashed rgba(253,128,46,0.4); border-radius:12px; padding:14px; margin-top:15px;">
+                                <p style="font-size:12px; color:#fd802e; font-weight:600; margin-bottom:12px;">🔑 Conditions financières de la location</p>
+                                <label class="field-label">💰 Caution (nombre de mois)
+                                    <span class="field-hint">Ex: 2 = vous demandez 2 mois de loyer en caution</span>
+                                </label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="caution" placeholder="Ex: 2 mois — soyez transparent" min="0" max="12">
+                                    <span class="unit-label">mois</span>
+                                </div>
+                                <label class="field-label" style="margin-top:12px;">📅 Avance acceptée (mois)
+                                    <span class="field-hint">Nombre de mois que le locataire peut payer à l'avance</span>
+                                </label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="avanceMax" placeholder="Ex: 3" min="0" max="24">
+                                    <span class="unit-label">mois</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PRIX -->
+                        <label class="field-label" style="margin-top:15px;">💵 Prix (XAF) <span class="champ-requis">*</span>
+                            <span class="field-hint">Soyez compétitif — un bon prix attire 5x plus de contacts</span>
+                        </label>
+                        <input type="number" id="prix" placeholder="Ex: 50000 XAF — restez dans les prix du marché" required>
+
+                        <!-- DESCRIPTION -->
+                        <label class="field-label" style="margin-top:15px;">📝 Description <span class="champ-requis">*</span>
+                            <span class="field-hint">Les annonces avec une bonne description reçoivent 3x plus de contacts</span>
+                        </label>
+                        <textarea id="description" placeholder="Décrivez votre bien : lumineux, jardin, vue, matériaux, accès... Plus c'est détaillé, plus vite vous trouvez !" rows="4" required></textarea>
+
+                        <!-- CONTACT -->
+                        <label class="field-label" style="margin-top:15px;">📞 Numéro de contact <span class="champ-requis">*</span>
+                            <span class="field-hint">Votre numéro sera masqué jusqu'au paiement du locataire</span>
+                        </label>
+                        <input type="tel" id="contactAnnonce" placeholder="Ex: 06 000 0000" required pattern="[0-9]{8,15}">
+
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 6 : PHOTOS -->
+                <div class="wizard-panel" id="panel-6">
                     <div class="panel-content">
                         <div class="panel-icon">📸</div>
                         <h3>Photos</h3>
@@ -594,10 +1000,11 @@
                         </div>
                     </div>
 
+                    <!-- STATS -->
                     <div class="profil-stats">
-                        <p><strong>Nombre d'annonces publiées :</strong> <span id="userAnnonces">0</span></p>
-                        <p><strong>Favoris :</strong> <span id="favorisCount">0</span></p> <!-- compteur des favoris -->
-                        <p><strong>Autres statistiques :</strong> <span id="userStats">-</span></p>
+                        <p><strong id="userAnnonces">0</strong>Annonces</p>
+                        <p><strong id="favorisCount">0</strong>Favoris</p>
+                        <p><strong id="userStats">🏆</strong>Actif</p>
                     </div>
 
                     <!-- Bouton pour voir la page Favoris -->
@@ -750,6 +1157,16 @@
     </div>
 
     <!-- JS principal -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJ2hPkbpHyvclTckyuC1zi5vHDgn-vmNo",
+            authDomain: "chezmoi-fa88b.firebaseapp.com",
+            projectId: "chezmoi-fa88b",
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
     <script type="module" src="app.js"></script>
 </body>
 </html>

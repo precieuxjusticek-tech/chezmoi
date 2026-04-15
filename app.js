@@ -26,13 +26,13 @@ function showToast(type = "info", customMessage = "") {
     imageMissing: "⚠️ Veuillez sélectionner au moins une image."
   };
 
-  // couleur selon type
-  let color;
-  if(type === "success" || type === "clipboardSuccess") color = "#4CAF50";   // vert
-  else if(type === "error" || type === "loadFail" || type === "clipboardFail") color = "#f44336"; // rouge
-  else if(type === "info") color = "#2196F3";      // bleu
-  else if(type === "warning") color = "#ffc107";   // jaune/orange
-  else color = "#2196F3"; // fallback bleu
+    // couleur selon type
+    let color;
+    if(type === "success" || type === "clipboardSuccess") color = "#233d4c";     // bleu foncé ChezMoi
+    else if(type === "error" || type === "loadFail" || type === "clipboardFail") color = "#c62828"; // rouge
+    else if(type === "info") color = "#fd802e";     // orange ChezMoi ← couleur principale
+    else if(type === "warning") color = "#233d4c";  // bleu foncé
+    else color = "#fd802e"; // fallback orange
 
   // message final : message du dictionnaire ou message personnalisé
   const message = messages[type] || customMessage;
@@ -44,11 +44,13 @@ function showToast(type = "info", customMessage = "") {
     position: "center",
     stopOnFocus: true,
     style: { 
-      background: color,
-      borderRadius: "8px", 
-      boxShadow: "0 4px 8px rgba(0,0,0,0.2)", 
-      fontSize: "15px", 
-      color: "#fff"
+        background: color,
+        borderRadius: "14px",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.25)", 
+        fontSize: "15px", 
+        fontWeight: "600",
+        color: "#fff",
+        padding: "12px 18px"
     }
   }).showToast();
 }
@@ -731,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ================= WIZARD AJOUTER =================== */
 /* ===================================================== */
 let currentStep = 1;
-const totalSteps = 5;
+const totalSteps = 6; // étapes 1 à 6 (6 = photos)
 
 function goToStep(step) {
     // Cacher panel actuel
@@ -783,15 +785,26 @@ function validerEtape(step) {
         if (!ville) { showToast("info", "Choisissez une ville."); return false; }
         if (!quartier) { showToast("info", "Entrez le quartier."); return false; }
     }
+
     if (step === 4) {
         const douche = document.querySelector('input[name="douche"]:checked');
+        if (!douche) { showToast("info", "Choisissez le type de douche."); return false; }
+    }
+    if (step === 5) {
+        const chambres = document.getElementById("nbChambres").value;
+        const pieces = document.getElementById("nbPieces").value;
         const prix = document.getElementById("prix").value;
         const description = document.getElementById("description").value.trim();
         const contact = document.getElementById("contactAnnonce").value.trim();
-        if (!douche) { showToast("info", "Choisissez le type de douche."); return false; }
+        if (!chambres || chambres < 0) { showToast("info", "Indiquez le nombre de chambres."); return false; }
+        if (!pieces || pieces < 0) { showToast("info", "Indiquez le nombre de pièces."); return false; }
         if (!prix || prix <= 0) { showToast("info", "Entrez un prix valide."); return false; }
         if (!description) { showToast("info", "Ajoutez une description."); return false; }
         if (!contact) { showToast("info", "Ajoutez un numéro de contact."); return false; }
+    }
+    if (step === 6) {
+        const photos = document.getElementById("photos").files;
+        if (photos.length === 0) { showToast("info", "Ajoutez au moins une photo."); return false; }
     }
     return true;
 }
@@ -836,110 +849,220 @@ function resetFormulaire() {
 }
 
 /* ============================= */
-/* INSCRIPTION */
+/* GOOGLE AUTH                   */
+/* ============================= */
+let _googleIdToken = null;
+
+async function loginAvecGoogle(mode) {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    try {
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        const idToken = await user.getIdToken();
+        const nom = user.displayName || "";
+        const email = user.email || "";
+
+        if (mode === "inscription") {
+            // Pré-remplir nom et email
+            const nomInput = document.getElementById("ins-nom");
+            const emailInput = document.getElementById("ins-email");
+            nomInput.value = nom;
+            emailInput.value = email;
+            nomInput.classList.add("google-prefilled");
+            emailInput.classList.add("google-prefilled");
+
+            // Cacher le mot de passe
+            const pwdWrap = document.getElementById("ins-pwd-wrap");
+            if (pwdWrap) pwdWrap.style.display = "none";
+            const pwdInput = document.getElementById("ins-password");
+            if (pwdInput) pwdInput.removeAttribute("required");
+
+            // Stocker le token
+            _googleIdToken = idToken;
+
+            // Afficher le banner
+            document.getElementById("bannerInscription").classList.add("show");
+
+            // Focus sur le numéro
+            document.getElementById("contact").focus();
+
+            showToast("info", "✅ Infos Google importées ! Renseignez juste votre numéro.");
+
+        } else {
+            // CONNEXION directe
+            const loaderCon = document.getElementById("loader-connexion");
+            if (loaderCon) loaderCon.style.display = "flex";
+
+            try {
+                const res = await fetch(`${API_URL}/api/google-auth`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ idToken })
+                });
+
+                const data = await res.json();
+                if (loaderCon) loaderCon.style.display = "none";
+
+                if (!res.ok) {
+                    if (data.message === "user_not_found") {
+                        showToast("info", "Compte introuvable. Créez un compte d'abord !");
+                        const nomInput = document.getElementById("ins-nom");
+                        const emailInput = document.getElementById("ins-email");
+                        if (nomInput) { nomInput.value = nom; nomInput.classList.add("google-prefilled"); }
+                        if (emailInput) { emailInput.value = email; emailInput.classList.add("google-prefilled"); }
+                        const pwdWrap = document.getElementById("ins-pwd-wrap");
+                        if (pwdWrap) pwdWrap.style.display = "none";
+                        const pwdInput = document.getElementById("ins-password");
+                        if (pwdInput) pwdInput.removeAttribute("required");
+                        _googleIdToken = idToken;
+                        document.getElementById("bannerInscription").classList.add("show");
+                        afficherPage("inscription");
+                        return;
+                    }
+                    throw new Error(data.message);
+                }
+
+                currentUserUid = data.uid;
+                localStorage.setItem("uid", data.uid);
+
+                try {
+                    const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
+                    favorisLocal = await favRes.json();
+                } catch { favorisLocal = []; }
+
+                showToast("info", "✅ Connecté avec Google !");
+                afficherPage("home");
+                afficherAnnoncesParGroupes(villeSelectionnee);
+
+            } catch (err) {
+                if (loaderCon) loaderCon.style.display = "none";
+                showToast("loadFail");
+            }
+        }
+
+    } catch (err) {
+        if (err.code === "auth/popup-closed-by-user") return;
+        showToast("loadFail");
+    }
+}
+
+// Attacher les boutons Google
+const btnGoogleIns = document.getElementById("btnGoogleInscription");
+const btnGoogleCon = document.getElementById("btnGoogleConnexion");
+if (btnGoogleIns) btnGoogleIns.addEventListener("click", () => loginAvecGoogle("inscription"));
+if (btnGoogleCon) btnGoogleCon.addEventListener("click", () => loginAvecGoogle("connexion"));
+
+/* ============================= */
+/* INSCRIPTION                   */
+/* ============================= */
 const form = document.getElementById("formInscription");
 const loader = document.getElementById("loader");
 
 form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // empêche rechargement page
-
-    // Afficher le loader
+    e.preventDefault();
     loader.classList.add("show");
 
-    const inputs = form.querySelectorAll("input");
-    const nom = inputs[0].value;
-    const email = inputs[1].value;
-    const password = inputs[2].value;
-    const inscontact = inputs[3].value;
+    const nom = document.getElementById("ins-nom").value.trim();
+    const email = document.getElementById("ins-email").value.trim();
+    const inscontact = document.getElementById("contact").value.trim();
+
+    // CAS 1 : venu via Google
+    if (_googleIdToken) {
+        try {
+            const res = await fetch(`${API_URL}/api/google-auth`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken: _googleIdToken, inscontact })
+            });
+            const data = await res.json();
+            loader.classList.remove("show");
+            if (!res.ok) throw new Error(data.message);
+
+            _googleIdToken = null;
+            currentUserUid = data.uid;
+            localStorage.setItem("uid", data.uid);
+
+            try {
+                const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
+                favorisLocal = await favRes.json();
+            } catch { favorisLocal = []; }
+
+            showToast("info", "🎉 Compte créé avec Google !");
+            afficherPage("home");
+
+        } catch (err) {
+            loader.classList.remove("show");
+            showToast("loadFail");
+        }
+        return;
+    }
+
+    // CAS 2 : inscription classique
+    const password = document.getElementById("ins-password").value;
 
     try {
         const res = await fetch(`${API_URL}/api/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, email, password, inscontact,})
+            body: JSON.stringify({ nom, email, password, inscontact })
         });
-
         const data = await res.json();
-
-        // Cacher le loader
         loader.classList.remove("show");
-
         if (!res.ok) throw new Error(data.message);
 
-        // toast de succès
-        showToast("info", "Inscription réussie !");
-
+        showToast("info", "🎉 Inscription réussie !");
         currentUserUid = data.uid;
         localStorage.setItem("uid", data.uid);
 
         try {
             const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
             favorisLocal = await favRes.json();
-        } catch(err){
-            // toast d'erreur
-            showToast("loadFail");
-            favorisLocal = [];
-        }
+        } catch { favorisLocal = []; }
 
         afficherPage("home");
 
     } catch (err) {
         loader.classList.remove("show");
-        // toast d'erreur
         showToast("loadFail");
     }
 });
 
 /* ============================= */
-/* CONNEXION */
+/* CONNEXION                     */
+/* ============================= */
 async function loginUser() {
-    const form = document.getElementById("formConnexion");
-    const inputs = form.querySelectorAll("input");
-    const email = inputs[0].value;
-    const password = inputs[1].value;
-
-    const loader = document.getElementById("loader-connexion");
+    const email = document.getElementById("con-email").value.trim();
+    const password = document.getElementById("con-password").value;
+    const loaderCon = document.getElementById("loader-connexion");
 
     try {
-        loader.style.display = "flex"; // Affiche le loader
+        loaderCon.style.display = "flex";
         const res = await fetch(`${API_URL}/api/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
-
         const data = await res.json();
-        loader.style.display = "none"; // Masque le loader après réponse
-
+        loaderCon.style.display = "none";
         if (!res.ok) throw new Error(data.message);
 
-        // toast de succès 
-        showToast("info", "Connexion réussie !");
-        
+        showToast("info", "✅ Connexion réussie !");
         currentUserUid = data.uid;
         localStorage.setItem("uid", data.uid);
 
-        // Chargement des favoris de l'utilisateur
         try {
             const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
             favorisLocal = await favRes.json();
-        } catch (err) {
-
-            // toast d'erreur
-            showToast("loadFail");
-            
-            favorisLocal = [];
-        }
+        } catch { favorisLocal = []; }
 
         afficherPage("home");
         afficherAnnoncesParGroupes(villeSelectionnee);
 
     } catch (err) {
-        loader.style.display = "none"; // Masque le loader en cas d'erreur
-        
-        // toast d'erreur plus visible que alert()
+        loaderCon.style.display = "none";
         showToast("loadFail");
-
     }
 }
 
@@ -1177,6 +1300,27 @@ const typeRadios = document.querySelectorAll('input[name="titre"]'); // Note le 
 typeRadios.forEach(radio => {
     radio.addEventListener("change", () => {
         updatePrixTotal();
+
+        const locationFields = document.getElementById("locationOnlyFields");
+        if (locationFields) {
+            locationFields.style.display = radio.value === "Location" ? "block" : "none";
+        }
+    });
+});
+
+// ================= ACTUALISER TYPE DE CUISINE =================
+document.querySelectorAll('input[name="cuisine"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+        const block = document.getElementById("typeCuisineBlock");
+        if(block) block.style.display = radio.value === "oui" ? "block" : "none";
+    });
+});
+
+// ================= ACTUALISER DISPONIBILITÉ =================
+document.querySelectorAll('input[name="disponibilite"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+        const block = document.getElementById("dispoDateBlock");
+        if(block) block.style.display = radio.value === "date" ? "block" : "none";
     });
 });
 
@@ -1346,16 +1490,68 @@ if (formAjouter) {
 
             // Création de FormData pour tout envoyer
             const formData = new FormData();
+            // uid de l'utilisateur pour associer l'annonce à son compte
             formData.append("uid", currentUserUid);
+            // les champs principaux
             formData.append("titre", titre);
+
             formData.append("type_annonce", type);
             formData.append("description", description);
+
             formData.append("prix", prix);
             formData.append("ville", ville);
+
             formData.append("quartier", quartier);
             formData.append("douche", douche);
+            
             formData.append("contact", contact);
+            formData.append("repere", document.getElementById("repere")?.value?.trim() || "");
+            
+            formData.append("nbChambres", document.getElementById("nbChambres")?.value || "");
+            formData.append("nbPieces", document.getElementById("nbPieces")?.value || "");
+            
+            formData.append("nbSalons", document.getElementById("nbSalons")?.value || "");
+            formData.append("surface", document.getElementById("surface")?.value || "");
+            
+            formData.append("etage", document.querySelector('input[name="etage"]:checked')?.value || "");
+            formData.append("eau", document.querySelector('input[name="eau"]:checked')?.value || "");
+            
+            formData.append("electricite", document.querySelector('input[name="electricite"]:checked')?.value || "");
+            formData.append("parking", document.querySelector('input[name="parking"]:checked')?.value || "");
+            
+            formData.append("gardien", document.querySelector('input[name="gardien"]:checked')?.value || "");
+            formData.append("nbDouches", document.getElementById("nbDouches")?.value || "");
+            
+            const chargesCocher = [];
+            if(document.getElementById("chargesEau")?.checked) chargesCocher.push("eau");
+            if(document.getElementById("chargesElec")?.checked) chargesCocher.push("electricite");
+            formData.append("charges", chargesCocher.join(","));
+
+            formData.append("climatiseur", document.querySelector('input[name="climatiseur"]:checked')?.value || "");
+            
+            formData.append("balcon", document.querySelector('input[name="balcon"]:checked')?.value || "");
+            formData.append("groupe_electrogene", document.querySelector('input[name="groupe_electrogene"]:checked')?.value || "");
+            
+            // champs spécifiques pour les locations
+            formData.append("forage", document.querySelector('input[name="forage"]:checked')?.value || "");
+            formData.append("cuisine", document.querySelector('input[name="cuisine"]:checked')?.value || "");
+            
+            // si cuisine oui, type de cuisine
+            formData.append("type_cuisine", document.querySelector('input[name="type_cuisine"]:checked')?.value || "");
+            formData.append("caution", document.getElementById("caution")?.value || "");
+
+            // Avance max pour les locations
+            formData.append("avanceMax", document.getElementById("avanceMax")?.value || "");
             formData.append("packSelectionne", packSelectionne || 0);
+            
+            // équipements
+            formData.append("toilettes", document.querySelector('input[name="toilettes"]:checked')?.value || "");
+            formData.append("meuble", document.querySelector('input[name="meuble"]:checked')?.value || "");
+            formData.append("disponibilite", document.querySelector('input[name="disponibilite"]:checked')?.value || "");
+            formData.append("disponibiliteDate", document.getElementById("disponibiliteDate")?.value || "");
+            formData.append("wifi", document.querySelector('input[name="wifi"]:checked')?.value || "");
+            
+            // champs de gestion
             formData.append("statut", "pending_payment");
             formData.append("statut_numero", "verrouille"); // le numéro est masqué par défaut
             formData.append("date_deblocage", "");// pas encore débloqué
@@ -2822,7 +3018,6 @@ homeContent.addEventListener('touchend', (e) => {
     if (diff > 70 && !isRefreshing) {
         isRefreshing = true;
         spinner.classList.add('active');
-        showToast("info", "Actualisation...");
 
         afficherAnnoncesParGroupes(villeSelectionnee)
             .finally(() => {
