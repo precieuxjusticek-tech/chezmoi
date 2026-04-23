@@ -3,101 +3,66 @@
 /* ===================================================== */
 const API_URL = "https://chezmoi-backend.onrender.com";
 let currentUserUid = null;
-// Vérifier si utilisateur déjà connecté au rechargement
 const savedUid = localStorage.getItem("uid");
-if(savedUid){
-    currentUserUid = savedUid;
-}
+if (savedUid) currentUserUid = savedUid;
+
 let villeSelectionnee = "Toutes les villes";
 let selectedImages = [];
-let favorisLocal = []; // tableau pour stocker les IDs d'annonces favorites
+let favorisLocal = [];
 
+/* ===================================================== */
+/* ================= TOAST ============================= */
+/* ===================================================== */
 function showToast(type = "info", customMessage = "") {
-  // dictionnaire des messages en français
   const messages = {
     offline: "⚠️ Impossible de se connecter. Vérifiez votre connexion internet.",
     loadFail: "❌ Échec du chargement. Veuillez réessayer.",
     success: "✅ Action effectuée avec succès !",
-    paymentFail: "❌ Le paiement a échoué. Veuillez réessayer.",
     formIncomplete: "⚠️ Veuillez remplir tous les champs requis.",
     serverDown: "⚠️ Le serveur ne répond pas. Réessayez plus tard.",
-    clipboardSuccess: "✅ Lien copié dans le presse-papiers ! Partage-le avec tes amis !",
-    clipboardFail: "❌ Impossible de copier le lien. Veuillez réessayer.",
+    clipboardSuccess: "✅ Lien copié dans le presse-papiers !",
+    clipboardFail: "❌ Impossible de copier le lien.",
     imageMissing: "⚠️ Veuillez sélectionner au moins une image."
   };
 
-    // couleur selon type
-    let color;
-    if(type === "success" || type === "clipboardSuccess") color = "#233d4c";     // bleu foncé ChezMoi
-    else if(type === "error" || type === "loadFail" || type === "clipboardFail") color = "#c62828"; // rouge
-    else if(type === "info") color = "#fd802e";     // orange ChezMoi ← couleur principale
-    else if(type === "warning") color = "#233d4c";  // bleu foncé
-    else color = "#fd802e"; // fallback orange
+  let color;
+  if (type === "success" || type === "clipboardSuccess") color = "#233d4c";
+  else if (type === "error" || type === "loadFail" || type === "clipboardFail") color = "#c62828";
+  else if (type === "info") color = "#fd802e";
+  else color = "#fd802e";
 
-  // message final : message du dictionnaire ou message personnalisé
   const message = messages[type] || customMessage;
-
   Toastify({
     text: message,
     duration: 3500,
     gravity: "bottom",
     position: "center",
     stopOnFocus: true,
-    style: { 
-        background: color,
-        borderRadius: "14px",
-        boxShadow: "0 6px 20px rgba(0,0,0,0.25)", 
-        fontSize: "15px", 
-        fontWeight: "600",
-        color: "#fff",
-        padding: "12px 18px"
+    style: {
+      background: color,
+      borderRadius: "14px",
+      boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+      fontSize: "15px",
+      fontWeight: "600",
+      color: "#fff",
+      padding: "12px 18px"
     }
   }).showToast();
 }
 
-// Setup global de la connexion
 function setupConnectionWatcher() {
-    if (!navigator.onLine) {
-        showToast("info", "⚠️ Vous êtes hors ligne. Vérifiez votre connexion internet.");
-    }
-    window.addEventListener('offline', () => {
-        showToast("info", "⚠️ Vous êtes hors ligne. Vérifiez votre connexion internet.");
-    });
-    window.addEventListener('online', () => {
-        showToast("success", "✅ Connexion rétablie !");
-    });
+  if (!navigator.onLine) showToast("info", "⚠️ Vous êtes hors ligne.");
+  window.addEventListener('offline', () => showToast("info", "⚠️ Vous êtes hors ligne."));
+  window.addEventListener('online', () => showToast("success", "✅ Connexion rétablie !"));
 }
-setupConnectionWatcher(); // appel dès le démarrage
+setupConnectionWatcher();
 
-// calcule les jours avant expiration
-function getJoursRestants(expireAt){
-    if(!expireAt) return null;
-
-    const now = new Date();
-    const expireDate = new Date(expireAt._seconds * 1000);
-
-    const diff = expireDate - now;
-
-    const jours = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-    return jours;
-}
-
-// =====================
-// LOGIQUE ICONES ACTIVES (Home / Explore)
-// =====================
-
-const homeBtn = document.querySelector('[data-page="home"]');
-const exploreBtn = document.querySelector('[data-page="explore"]');
-
-function updateIconActive(pageId) {
-    // Désactive tous les boutons
-    const allNavButtons = document.querySelectorAll('.app-nav-item');
-    allNavButtons.forEach(btn => btn.classList.remove('active'));
-
-    // Active uniquement le bouton correspondant à la page
-    const activeBtn = document.querySelector(`.app-nav-item[data-page="${pageId}"]`);
-    if(activeBtn) activeBtn.classList.add('active');
+function getJoursRestants(expireAt) {
+  if (!expireAt) return null;
+  const now = new Date();
+  const expireDate = new Date(expireAt._seconds * 1000);
+  const diff = expireDate - now;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 /* ===================================================== */
@@ -106,1226 +71,907 @@ function updateIconActive(pageId) {
 const triggers = document.querySelectorAll("[data-page]");
 const pages = document.querySelectorAll(".page");
 const nav = document.querySelector(".app-nav");
-const pagesSansNav = [
-    "accueil", "inscription", "connexion", "recherche", "ajouter", "detail",
-    "signalerProbleme", "proposerIdee", "paiementDeblocage", "paiementPublication"
+const pagesSansNav = ["accueil", "inscription", "connexion", "recherche", "ajouter", "detail", "signalerProbleme", "proposerIdee"];
 
-];
+function updateIconActive(pageId) {
+  document.querySelectorAll('.app-nav-item').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.querySelector(`.app-nav-item[data-page="${pageId}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+}
 
 function afficherPage(id) {
-    // Vider le formulaire si on quitte la page "ajouter"
-    const pageActive = document.querySelector(".page.active");
-    if (pageActive && pageActive.id === "ajouter" && id !== "ajouter") {
-        resetFormulaire();
-    }
+  const pageActive = document.querySelector(".page.active");
+  if (pageActive && pageActive.id === "ajouter" && id !== "ajouter") resetFormulaire();
 
-    pages.forEach(page => page.classList.remove("active"));
+  pages.forEach(page => page.classList.remove("active"));
 
-    const accueil = document.getElementById("accueil");
-    if (accueil) accueil.style.display = (id === "accueil") ? "flex" : "none";
+  const accueil = document.getElementById("accueil");
+  if (accueil) accueil.style.display = (id === "accueil") ? "flex" : "none";
 
-    const currentPage = document.getElementById(id);
-    if (currentPage) currentPage.classList.add("active");
-    if(nav){
-        nav.style.display = pagesSansNav.includes(id) ? "none" : "flex";
-    }
+  const currentPage = document.getElementById(id);
+  if (currentPage) currentPage.classList.add("active");
+  if (nav) nav.style.display = pagesSansNav.includes(id) ? "none" : "flex";
 
-    if(id === "home") afficherAnnoncesParGroupes(villeSelectionnee);
-    
-    if (!afficherPage.skipHistory) {
-        history.pushState({page: id}, '', '#' + id);
-    }
-
-    updateIconActive(id);
+  if (id === "home") afficherAnnoncesParGroupes(villeSelectionnee);
+  if (!afficherPage.skipHistory) history.pushState({ page: id }, '', '#' + id);
+  updateIconActive(id);
 }
 
 triggers.forEach(el => {
-    el.addEventListener("click", () => {
-        const pageId = el.getAttribute("data-page");
-        afficherPage(pageId);
-    });
+  el.addEventListener("click", () => {
+    const pageId = el.getAttribute("data-page");
+    afficherPage(pageId);
+  });
 });
 
 window.addEventListener("DOMContentLoaded", async () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 
-    // ===== Service Worker =====
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            window.location.reload();
-                        }
-                    });
-                });
-                showToast("success");
-            })
-            .catch(err => showToast("loadFail"));
-    }
+  const savedUid = localStorage.getItem("uid");
+  if (savedUid) currentUserUid = savedUid;
 
-    // ===== Vérifier utilisateur =====
-    const savedUid = localStorage.getItem("uid");
-    if(savedUid){
-        currentUserUid = savedUid;
+  const hash = window.location.hash;
+  if (hash.startsWith("#annonce-")) {
+    const annonceId = hash.replace("#annonce-", "");
+    try {
+      const res = await fetch(`${API_URL}/api/annonces/${annonceId}`);
+      if (!res.ok) throw new Error("Annonce introuvable");
+      const annonce = await res.json();
+      localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+      afficherPage("detail");
+      afficherDetailAnnonce();
+    } catch (err) {
+      showToast("loadFail");
+      afficherPage(savedUid ? "home" : "accueil");
     }
-
-    // ===== Charger hash annonce si présent =====
-    const hash = window.location.hash;
-    if(hash.startsWith("#annonce-")){
-        const annonceId = hash.replace("#annonce-", "");
-        try {
-            const res = await fetch(`${API_URL}/api/annonces/${annonceId}`);
-            if(!res.ok) throw new Error("Annonce introuvable");
-            const annonce = await res.json();
-            localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-            afficherPage("detail");
-            afficherDetailAnnonce();
-        } catch(err){
-            console.error(err);
-            showToast("loadFail");
-            afficherPage(savedUid ? "home" : "accueil");
-        }
-    } else {
-        // pas de hash => page par défaut
-        afficherPage(savedUid ? "home" : "accueil");
-        if(savedUid) afficherAnnoncesParGroupes(villeSelectionnee);
-    }
+  } else {
+    afficherPage(savedUid ? "home" : "accueil");
+    if (savedUid) afficherAnnoncesParGroupes(villeSelectionnee);
+  }
 });
 
-// === Fonction toggle favoris ===
+/* ===================================================== */
+/* ============ SURVEILLANCE CONNEXION ================== */
+/* ===================================================== */
+
+let lastToastTime = 0;
+
+function safeToast(type, message = "") {
+  const now = Date.now();
+  if (now - lastToastTime > 5000) {
+    showToast(type, message);
+    lastToastTime = now;
+  }
+}
+
+window.addEventListener("offline", () => {
+  safeToast("offline");
+});
+
+window.addEventListener("online", () => {
+  safeToast("success", "🌐 Connexion rétablie !");
+});
+
+/* BUG-4 FIX: Suppression du checkConnectionSpeed qui causait une erreur 404
+   car le serveur Render ne répond pas aux requêtes HEAD sur /
+   On garde juste la surveillance offline/online native du navigateur */
+let lastStatus = navigator.onLine;
+
+function checkInstability() {
+  if (navigator.onLine !== lastStatus) {
+    safeToast("info", "⚠️ Connexion instable...");
+    lastStatus = navigator.onLine;
+  }
+}
+
+setInterval(checkInstability, 5000);
+
+/* ===================================================== */
+/* ================= FAVORIS ========================== */
+/* ===================================================== */
 async function toggleFavorite(uid, annonceId, isFavorite) {
   try {
-
-    const url = "https://chezmoi-backend.onrender.com/api/favorites";
-
-    let response;
-
-    if (isFavorite) {
-      response = await fetch(url, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, annonceId })
-      });
-    } else {
-      response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, annonceId })
-      });
-    }
-
-    if(!response.ok){
-        throw new Error("Erreur serveur favoris");
-    }
-
+    const url = `${API_URL}/api/favorites`;
+    const response = await fetch(url, {
+      method: isFavorite ? "DELETE" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, annonceId })
+    });
+    if (!response.ok) throw new Error("Erreur serveur favoris");
     return !isFavorite;
-
   } catch (err) {
-    // toast
     showToast("loadFail");
     return isFavorite;
   }
 }
 
-/* ========================= */
-/* SETUP BOUTON FAVORIS =====*/
 function setupFavoriButton(btn, annonce) {
-    let isFavorite = favorisLocal.includes(annonce.id);
+  let isFavorite = favorisLocal.includes(annonce.id);
+  btn.textContent = isFavorite ? "❤️" : "🤍";
+  btn.addEventListener("click", async () => {
+    if (!currentUserUid) { showToast("info", "Vous devez être connecté."); return; }
+    isFavorite = await toggleFavorite(currentUserUid, annonce.id, isFavorite);
+    if (isFavorite) { if (!favorisLocal.includes(annonce.id)) favorisLocal.push(annonce.id); }
+    else { favorisLocal = favorisLocal.filter(id => id !== annonce.id); }
     btn.textContent = isFavorite ? "❤️" : "🤍";
-
-    btn.addEventListener("click", async () => {
-        if(!currentUserUid){
-            showToast("offline");
-            return;
-        }
-
-        // Appel serveur pour ajouter/supprimer
-        isFavorite = await toggleFavorite(currentUserUid, annonce.id, isFavorite);
-
-        // Mettre à jour favorisLocal
-        if(isFavorite){
-            if(!favorisLocal.includes(annonce.id)) favorisLocal.push(annonce.id);
-        } else {
-            favorisLocal = favorisLocal.filter(id => id !== annonce.id);
-        }
-
-        // Mettre à jour l’affichage du bouton
-        btn.textContent = isFavorite ? "❤️" : "🤍";
-        const favorisCount = document.getElementById("favorisCount");
-        if(favorisCount){
-            favorisCount.textContent = favorisLocal.length;
-        }
-    });
+    const favorisCount = document.getElementById("favorisCount");
+    if (favorisCount) favorisCount.textContent = favorisLocal.length;
+  });
 }
 
 /* ===================================================== */
-/* ================= AFFICHAGE ANNONCES ================= */
+/* ================= AFFICHAGE ANNONCES ================ */
 /* ===================================================== */
-
-// ====== Fonction globale de partage ======
 function partagerAnnonce(annonce) {
-    const titre = annonce.titre; // ex: "Location" ou "Vente"
-    const prix = annonce.prix;
-    const ville = annonce.ville;
-    const type = annonce.type_annonce; // ex: "Appartement", "Maison"
-
-    // Emoji selon type de bien
-    const emojiBien = type.toLowerCase().includes("appartement") ? "🏢" :
-                      type.toLowerCase().includes("maison") ? "🏠" :
-                      type.toLowerCase().includes("terrain") ? "🌳" : "🏡";
-
-    // Lien vers l'annonce sur ton site Netlify
-    const url = `https://chezmoi-app.netlify.app#annonce-${annonce.id}`;
-
-    // Texte attractif
-    const texte = `🚨 Nouvelle ${titre} : ${type} ${emojiBien} à ${ville} !\n` +
-                  `Prix : ${prix} XAF\n` +
-                  `Découvre vite cette annonce sur ChezMoi 👉`;
-
-    if (navigator.share) {
-        navigator.share({
-            title: `ChezMoi 🌟: ${titre} - ${type}`,
-            text: texte,
-            url: url
-        })
-        .catch((error) => showToast("loadFail"));
-    } else {
-        navigator.clipboard.writeText(url)
-            .then(() => showToast("clipboardSuccess")) // message spécifique presse-papiers
-            .catch(() => showToast("clipboardFail"));  // message échec copie
-    }
+  const url = `https://chezmoi-app.netlify.app#annonce-${annonce.id}`;
+  const texte = `🚨 ${annonce.titre} : ${annonce.type_annonce} à ${annonce.ville} !\nPrix : ${annonce.prix} XAF\n👉 `;
+  if (navigator.share) {
+    navigator.share({ title: `ChezMoi: ${annonce.titre}`, text: texte, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast("clipboardSuccess")).catch(() => showToast("clipboardFail"));
+  }
 }
 
-// ====== Affichage des annonces par groupes ======
 async function afficherAnnoncesParGroupes(ville) {
+  const container = document.getElementById("categoriesContainer");
+  const spinner = document.getElementById("spinner");
+  if (!container || !spinner) return;
 
-    const container = document.getElementById("categoriesContainer");
-    const spinner = document.getElementById("spinner"); 
+  spinner.style.display = "flex";
+  container.style.display = "none";
 
-    if(!container || !spinner) return;
+  try {
+    const response = await fetch(`${API_URL}/api/annonces`);
+    if (!response.ok) throw new Error("Erreur serveur");
+    const annonces = await response.json();
 
-    // Afficher le spinner et cacher le contenu
-    spinner.style.display = "flex";
-    container.style.display = "none";
+    const annoncesFiltrees = ville.toLowerCase() === "toutes les villes"
+      ? annonces
+      : annonces.filter(a => a.ville?.toLowerCase() === ville.toLowerCase());
 
-    try {
-        const response = await fetch(`${API_URL}/api/annonces`);
-        if(!response.ok) throw new Error("Erreur serveur");
-
-        const annonces = await response.json();
-
-        const annoncesFiltrees = ville.toLowerCase() === "toutes les villes".toLowerCase()
-            ? annonces
-            : annonces.filter(a => a.ville.toLowerCase() === ville.toLowerCase());
-
-
-        // ===== CHARGER LES FAVORIS =====
-        const uid = currentUserUid;
-        let favorisUtilisateur = [];
-
-        if(uid){
-            try{
-                const favRes = await fetch(`${API_URL}/api/favorites/${uid}`);
-                favorisUtilisateur = await favRes.json();
-                favorisLocal = favorisUtilisateur;
-            }catch(err){
-                showToast("loadFail");
-                favorisLocal = [];
-            }
-        }
-
-        container.innerHTML = "";
-
-        if(annoncesFiltrees.length === 0){
-            spinner.style.display = "none";
-            container.style.display = "block";
-            container.innerHTML = `<p style="text-align:center; font-size:18px; margin-top:50px;">
-                Aucune annonce publiée pour le moment.
-            </p>`;
-            return;
-        }
-
-        function getCouleur(titre) {
-            if(!titre) return "#777";
-            const t = titre.toLowerCase();
-            if (t.includes("vente") || t.includes("vendre")) return "green";
-            if (t.includes("location") || t.includes("louer")) return "blue";
-            return "#777";
-        }
-
-        // ====== Catégories ======
-        const groupedCategories = [
-            ["studio","appartement"],
-            ["villa","maison simple"],
-            ["2-3-4 chambres et plus"],
-            ["parcelle","terrain"]
-        ];
-
-        groupedCategories.forEach(group => {
-
-            const section = document.createElement("div");
-            section.className = "categorie-section";
-
-            const titre = document.createElement("h3");
-            titre.className = "categorie-title";
-            titre.textContent = group.join(" & ");
-            section.appendChild(titre);
-
-            const row = document.createElement("div");
-            row.className = "annonces-row";
-
-            let annoncesDuo;
-
-            if(group[0] === "2-3-4 chambres et plus"){
-                annoncesDuo = annoncesFiltrees.filter(a => {
-                    const t = a.type_annonce?.toLowerCase();
-                    return t === "maison 2 chambre" || t === "maison 3 chambre" || t === "maison 4 chambre et plus";
-                });
-            } else {
-                annoncesDuo = annoncesFiltrees.filter(a =>
-                    group.some(c => a.type_annonce?.toLowerCase() === c.toLowerCase())
-                );
-            }
-
-            if(annoncesDuo.length === 0){
-                row.innerHTML = `<p style="text-align:center; font-size:16px; margin-top:20px;">
-                    Aucune annonce pour ${group.join(" & ")}.
-                </p>`;
-            } else {
-
-                annoncesDuo.forEach((annonce) => {
-
-                    const joursRestants = getJoursRestants(annonce.expireAt);
-                    const card = document.createElement("div");
-                    card.className = "annonce-card";
-
-                    const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
-                    const couleur = getCouleur(annonce.titre);
-
-                    card.innerHTML = `
-                        <span class="annonce-type" style="background:${couleur}; color:white;">
-                            ${annonce.titre}
-                        </span>
-
-                        ${joursRestants !== null && joursRestants <= 7
-                            ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
-                                ${joursRestants <= 2 
-                                    ? `⚠ expire dans ${joursRestants} jour(s)` 
-                                    : `expire dans ${joursRestants} jour(s)`
-                                }
-                            </div>` 
-                        : ""}
-
-                        <img class="annonce-img" src="${imgSrc}" alt="${annonce.titre}">
-
-                        <div class="type-annonce">
-                            <span class="annonce-quartier">${annonce.quartier}</span> -
-                            <span class="annonce-type-text">${annonce.type_annonce || ""}</span>
-                        </div>
-
-                        <div class="annonce-footer">
-
-                            <div class="annonce-info">
-                                <span class="ville">${annonce.ville}</span>
-                                <span class="prix">${annonce.prix} XAF</span>
-                            </div>
-
-                            <button class="btn-details">Voir</button>
-
-                            <button class="btn-share">
-                                <img src="image/partager.png" alt="Partager" class="share-icon">
-                            </button>
-
-                            <button class="btn-fav" data-id="${annonce.id}">🤍</button>
-
-                        </div>
-                    `;
-
-                    row.appendChild(card);
-
-                    // ===== BOUTON VOIR =====
-                    card.querySelector(".btn-details").addEventListener("click", () => {
-                        localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-                        afficherPage("detail");
-                        afficherDetailAnnonce();
-                    });
-
-                    // ===== BOUTON PARTAGER =====
-                    card.querySelector(".btn-share").addEventListener("click", () => {
-                        partagerAnnonce(annonce);
-                    });
-
-                    // ===== BOUTON FAVORI =====
-                    let favBtn = card.querySelector(".btn-fav");
-
-                    favBtn.replaceWith(favBtn.cloneNode(true));
-                    favBtn = card.querySelector(".btn-fav");
-
-                    setupFavoriButton(favBtn, annonce);
-
-                });
-
-            }
-
-            section.appendChild(row);
-            container.appendChild(section);
-
-        });
-
-        spinner.style.display = "none";
-        container.style.display = "block";
-
-    } catch(error){
-
-        spinner.style.display = "none";
-        container.style.display = "block";
-
-        container.innerHTML = `
-            <div style="text-align:center; margin-top:50px; padding:20px; background:#ffe6e6; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
-                <p style="font-size:18px; color:#cc0000; margin-bottom:20px;">
-                    ⚠️ Erreur de chargement des annonces.<br>
-                    Veuillez vérifier votre connexion internet !
-                </p>
-                <button id="retryBtn" style="
-                    padding:10px 20px;
-                    font-size:16px;
-                    background:#233d4c;
-                    color:#fff;
-                    border:none;
-                    border-radius:5px;
-                    cursor:pointer;
-                    transition: background 0.3s;
-                " onmouseover="this.style.background='#1a2a3b'" onmouseout="this.style.background='#233d4c'">
-                    🔄 Actualiser
-                </button>
-            </div>
-        `;
-
-        // Ajouter l'événement pour le bouton actualiser
-        document.getElementById("retryBtn").addEventListener("click", () => {
-            location.reload();
-        });
-        showToast("loadFail");
+    if (currentUserUid) {
+      try {
+        const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
+        favorisLocal = await favRes.json();
+      } catch { favorisLocal = []; }
     }
+
+    container.innerHTML = "";
+
+    if (annoncesFiltrees.length === 0) {
+      spinner.style.display = "none";
+      container.style.display = "block";
+      container.innerHTML = `<p style="text-align:center;font-size:18px;margin-top:50px;">Aucune annonce publiée pour le moment.</p>`;
+      return;
+    }
+
+    const groupedCategories = [
+      ["studio", "appartement"],
+      ["villa", "maison simple"],
+      ["2-3-4 chambres et plus"],
+      ["parcelle", "terrain"]
+    ];
+
+    groupedCategories.forEach(group => {
+      const section = document.createElement("div");
+      section.className = "categorie-section";
+
+      const titre = document.createElement("h3");
+      titre.className = "categorie-title";
+      titre.textContent = group.join(" & ");
+      section.appendChild(titre);
+
+      const row = document.createElement("div");
+      row.className = "annonces-row";
+
+      let annoncesDuo;
+      if (group[0] === "2-3-4 chambres et plus") {
+        annoncesDuo = annoncesFiltrees.filter(a => {
+          const t = a.type_annonce?.toLowerCase();
+          return t === "maison 2 chambre" || t === "maison 3 chambre" || t === "maison 4 chambre et plus";
+        });
+      } else {
+        annoncesDuo = annoncesFiltrees.filter(a => group.some(c => a.type_annonce?.toLowerCase() === c.toLowerCase()));
+      }
+
+      if (annoncesDuo.length === 0) {
+        row.innerHTML = `<p style="text-align:center;font-size:16px;margin-top:20px;">Aucune annonce pour ${group.join(" & ")}.</p>`;
+      } else {
+        annoncesDuo.forEach(annonce => {
+          const joursRestants = getJoursRestants(annonce.expireAt);
+          const card = document.createElement("div");
+          card.className = "annonce-card";
+
+          const imgs = annonce.images?.slice(0, 3) || [];
+          if (imgs.length === 0) imgs.push("image/logo_ChezMoi.png");
+
+          const slidesHTML = imgs.map((src, i) =>
+            `<img class="card-slide" src="${src}" alt="${annonce.titre}" style="flex:0 0 100%;width:100%;height:160px;object-fit:cover;scroll-snap-align:start;">`
+          ).join("");
+
+          const dotsHTML = imgs.length > 1
+            ? `<div class="card-dots">${imgs.map((_, i) => `<span class="card-dot${i===0?' active':''}"></span>`).join("")}</div>`
+            : "";
+
+          const navsHTML = imgs.length > 1
+            ? `<button class="card-nav card-nav-prev">‹</button><button class="card-nav card-nav-next">›</button>`
+            : "";
+
+          card.innerHTML = `
+            <div class="card-carousel" style="position:relative;overflow:hidden;border-radius:20px 20px 0 0;">
+              <div class="card-slides" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+                ${slidesHTML}
+              </div>
+              ${dotsHTML}
+              ${navsHTML}
+              ${joursRestants !== null && joursRestants <= 7
+                ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
+                    ${joursRestants <= 2 ? `⚠ ${joursRestants}j` : `⏳ ${joursRestants}j`}
+                  </div>` : ""}
+            </div>
+            <div class="annonce-content">
+              <span class="annonce-type">${annonce.titre}</span>
+              <span class="annonce-quartier">${annonce.quartier || ""}</span>
+              <span class="annonce-type-text">${annonce.type_annonce || ""}</span>
+            </div>
+            <div class="annonce-footer">
+              <div class="annonce-info">
+                <span class="ville">${annonce.ville}</span>
+                <span class="prix">${Number(annonce.prix).toLocaleString("fr-FR")} XAF</span>
+              </div>
+              <button class="btn-details">Voir →</button>
+            </div>
+            <button class="btn-fav" data-id="${annonce.id}">🤍</button>`;
+
+          row.appendChild(card);
+
+          const slidesEl = card.querySelector(".card-slides");
+          const dots = card.querySelectorAll(".card-dot");
+
+          function updateDots() {
+            const idx = Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
+            dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+          }
+          slidesEl?.addEventListener("scroll", updateDots);
+
+          card.querySelector(".card-nav-prev")?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            slidesEl.scrollBy({ left: -slidesEl.clientWidth, behavior: "smooth" });
+          });
+          card.querySelector(".card-nav-next")?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            slidesEl.scrollBy({ left: slidesEl.clientWidth, behavior: "smooth" });
+          });
+
+          card.querySelector(".btn-details").addEventListener("click", () => {
+            localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+            afficherPage("detail");
+            afficherDetailAnnonce();
+          });
+
+          let favBtn = card.querySelector(".btn-fav");
+          favBtn.replaceWith(favBtn.cloneNode(true));
+          favBtn = card.querySelector(".btn-fav");
+          setupFavoriButton(favBtn, annonce);
+        });
+      }
+
+      section.appendChild(row);
+      container.appendChild(section);
+    });
+
+    spinner.style.display = "none";
+    container.style.display = "block";
+
+  } catch (error) {
+    spinner.style.display = "none";
+    container.style.display = "block";
+    container.innerHTML = `
+      <div style="text-align:center;margin-top:50px;padding:20px;background:#ffe6e6;border-radius:10px;">
+        <p style="font-size:18px;color:#cc0000;margin-bottom:20px;">⚠️ Erreur de chargement. Vérifiez votre connexion !</p>
+        <button id="retryBtn" style="padding:10px 20px;font-size:16px;background:#233d4c;color:#fff;border:none;border-radius:5px;cursor:pointer;">🔄 Actualiser</button>
+      </div>`;
+    document.getElementById("retryBtn")?.addEventListener("click", () => location.reload());
+    showToast("loadFail");
+  }
 }
 
 /* ===================================================== */
-/* ================= DROPDOWN VILLES ================= */
+/* ================= DROPDOWN VILLES ================== */
+/* ===================================================== */
 const dropbtn = document.querySelector(".dropbtn");
 const dropdownContent = document.getElementById("cityDropdown");
 
-// Ouvrir / fermer le dropdown au clic
-dropbtn.addEventListener("click", () => {
+if (dropbtn && dropdownContent) {
+  dropbtn.addEventListener("click", () => {
     dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
-});
-
-// Fermer le dropdown si clic en dehors
-window.addEventListener("click", (e) => {
-    if (!e.target.matches(".dropbtn")) {
-        dropdownContent.style.display = "none";
-    }
-});
-
-// Quand on sélectionne une ville
-dropdownContent.querySelectorAll("a").forEach(a => {
+  });
+  window.addEventListener("click", (e) => {
+    if (!e.target.matches(".dropbtn")) dropdownContent.style.display = "none";
+  });
+  dropdownContent.querySelectorAll("a").forEach(a => {
     a.addEventListener("click", (e) => {
-        e.preventDefault();
-
-        // Mettre à jour la ville sélectionnée
-        villeSelectionnee = a.textContent;
-        dropbtn.textContent = villeSelectionnee + " ▼";
-
-        // Fermer le dropdown
-        dropdownContent.style.display = "none";
-
-        // Recharger les annonces filtrées
-        afficherAnnoncesParGroupes(villeSelectionnee);
+      e.preventDefault();
+      villeSelectionnee = a.textContent;
+      dropbtn.textContent = villeSelectionnee + " ▼";
+      dropdownContent.style.display = "none";
+      afficherAnnoncesParGroupes(villeSelectionnee);
     });
-});
+  });
+}
 
-let deferredPrompt; 
+/* ===================================================== */
+/* ================= PWA MULTI-PLATEFORME ============= */
+/* ===================================================== */
+let deferredPrompt;
 const pwaPrompt = document.getElementById('pwaPrompt');
 const installBtn = document.getElementById('installBtn');
 const dismissBtn = document.getElementById('dismissBtn');
 
-// Création overlay spinner pour l'installation
-const loaderOverlay = document.createElement('div');
-loaderOverlay.id = "loader-install";
-loaderOverlay.style.position = "fixed";
-loaderOverlay.style.top = "0";
-loaderOverlay.style.left = "0";
-loaderOverlay.style.width = "100%";
-loaderOverlay.style.height = "100%";
-loaderOverlay.style.background = "rgba(255,255,255,0.85)";
-loaderOverlay.style.backdropFilter = "blur(3px)";
-loaderOverlay.style.display = "flex";
-loaderOverlay.style.flexDirection = "column";
-loaderOverlay.style.justifyContent = "center";
-loaderOverlay.style.alignItems = "center";
-loaderOverlay.style.zIndex = "2000";
-loaderOverlay.style.display = "none"; // caché par défaut
-loaderOverlay.innerHTML = `
-    <div class="spinner" style="
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #233d4c;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 15px;
-    "></div>
-    <p style="font-size:18px; color:#233d4c; font-weight:bold;">Installation en cours...</p>
-`;
-document.body.appendChild(loaderOverlay);
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+const isDesktop = !isIOS && !isAndroid;
 
-// Animation CSS du spinner
-const style = document.createElement('style');
-style.innerHTML = `
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}`;
-document.head.appendChild(style);
-
-// Intercepter l'événement beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); 
-    deferredPrompt = e;  
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isPwaInstalled()) setTimeout(showPwaPrompt, 2500);
 });
 
-// Vérifier si PWA déjà installée
 function isPwaInstalled() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-function isIOS() {
-    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-}
-
-function showIOSPrompt() {
-    if (isPwaInstalled()) return;
-    if (!isIOS()) return;
-
-    // Vérifier si déjà montré récemment
-    const lastShown = localStorage.getItem("iosPromptShown");
-    if (lastShown && Date.now() - Number(lastShown) < 24 * 60 * 60 * 1000) return;
-
-    const iosOverlay = document.createElement("div");
-    iosOverlay.id = "iosInstallPrompt";
-    iosOverlay.style.cssText = `
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #fff;
-        border-radius: 20px 20px 0 0;
-        padding: 25px 20px;
-        box-shadow: 0 -5px 30px rgba(0,0,0,0.2);
-        z-index: 99999;
-        text-align: center;
-        font-family: 'Segoe UI', sans-serif;
-        animation: slideUp 0.3s ease;
-    `;
-
-    iosOverlay.innerHTML = `
-        <div style="width:40px; height:4px; background:#ddd; border-radius:2px; margin:0 auto 15px;"></div>
-        <img src="icons/chezmoi_icon512.png" style="width:60px; height:60px; border-radius:14px; margin-bottom:10px;">
-        <h3 style="font-size:18px; color:#233d4c; margin-bottom:8px;">Installer ChezMoi</h3>
-        <p style="font-size:14px; color:#555; margin-bottom:20px; line-height:1.6;">
-            Pour installer l'app sur votre iPhone :
-        </p>
-        <div style="display:flex; flex-direction:column; gap:12px; text-align:left; background:#f9f9f9; padding:15px; border-radius:12px; margin-bottom:20px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:22px;">1️⃣</span>
-                <span style="font-size:14px; color:#333;">Appuyez sur <strong>Partager</strong> <span style="font-size:16px;">⬆️</span> en bas de Safari</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:22px;">2️⃣</span>
-                <span style="font-size:14px; color:#333;">Faites défiler et appuyez sur <strong>"Sur l'écran d'accueil"</strong></span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:22px;">3️⃣</span>
-                <span style="font-size:14px; color:#333;">Appuyez sur <strong>"Ajouter"</strong> en haut à droite</span>
-            </div>
-        </div>
-        <button id="closeIOSPrompt" style="
-            width:100%;
-            padding:14px;
-            background:#233d4c;
-            color:#fd802e;
-            border:none;
-            border-radius:12px;
-            font-size:16px;
-            font-weight:600;
-            cursor:pointer;
-        ">J'ai compris !</button>
-    `;
-
-    document.body.appendChild(iosOverlay);
-    localStorage.setItem("iosPromptShown", Date.now().toString());
-
-    document.getElementById("closeIOSPrompt").addEventListener("click", () => {
-        iosOverlay.style.animation = "slideDown 0.3s ease";
-        setTimeout(() => iosOverlay.remove(), 300);
-    });
-}
-
-// Afficher le popup
 function showPwaPrompt() {
-    if (!isPwaInstalled()) {
-        pwaPrompt.style.display = "flex";
-        setTimeout(() => pwaPrompt.classList.add("show"), 50);
-    }
+  if (isPwaInstalled()) return;
+  if (isIOS || deferredPrompt || isDesktop) {
+    pwaPrompt.style.display = "flex";
+    setTimeout(() => pwaPrompt.classList.add("show"), 50);
+    mettreAJourContenuPWA();
+  }
 }
 
-// Cacher le popup
+function mettreAJourContenuPWA() {
+  const titre = pwaPrompt.querySelector("h3");
+  const texte = pwaPrompt.querySelector("p");
+  const btn = document.getElementById("installBtn");
+
+  if (isIOS) {
+    if (titre) titre.textContent = "Installer ChezMoi sur iOS";
+    if (texte) texte.innerHTML = `
+      <div style="text-align:left;font-size:14px;line-height:1.8;">
+        <p style="font-weight:700;color:#233d4c;margin-bottom:8px;">Suivez ces etapes :</p>
+        <p>1. Appuyez sur <strong>Partager</strong> <span style="font-size:16px;">⬆️</span> en bas de Safari</p>
+        <p>2. Choisissez <strong>"Sur l'ecran d'accueil"</strong> 📱</p>
+        <p>3. Appuyez sur <strong>Ajouter</strong></p>
+      </div>`;
+    if (btn) btn.textContent = "Compris !";
+  } else if (isAndroid) {
+    if (titre) titre.textContent = "Installer ChezMoi";
+    if (texte) texte.textContent = "Installez l'app pour un acces rapide et une meilleure experience.";
+    if (btn) btn.textContent = "Installer";
+  } else {
+    if (titre) titre.textContent = "Installer ChezMoi";
+    if (texte) texte.innerHTML = `
+      <div style="text-align:left;font-size:14px;line-height:1.8;">
+        <p>Cliquez sur <strong>Installer</strong> pour ajouter ChezMoi a votre bureau.</p>
+        <p style="font-size:12px;color:#888;margin-top:6px;">Ou cliquez sur l'icone <strong>+</strong> dans la barre d'adresse de votre navigateur.</p>
+      </div>`;
+    if (btn) btn.textContent = "Installer";
+  }
+}
+
 function hidePwaPrompt() {
-    pwaPrompt.classList.remove("show");
-    setTimeout(() => pwaPrompt.style.display = "none", 300);
+  pwaPrompt.classList.remove("show");
+  setTimeout(() => pwaPrompt.style.display = "none", 300);
 }
 
-// Bouton Installer
-installBtn.addEventListener('click', async () => {
-    hidePwaPrompt();
-    if (!deferredPrompt) {
-        showToast("info", "⚠️ Impossible d’installer. Rafraîchissez la page et réessayez.");
-        return;
-    }
-
-    // Afficher le spinner
-    loaderOverlay.style.display = "flex";
-
-    // Lancer l'installation
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    // Cacher le spinner
-    loaderOverlay.style.display = "none";
-
-    if (outcome === "accepted") {
-        showToast("info", "✅ Installation acceptée !");
-    } else {
-        showToast("info", "Installation annulée par l'utilisateur.");
-    }
-
-    deferredPrompt = null;
+installBtn?.addEventListener('click', async () => {
+  if (isIOS) { hidePwaPrompt(); return; }
+  hidePwaPrompt();
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
 });
 
-// Détecter PWA installée
-window.addEventListener('appinstalled', () => {
-    loaderOverlay.style.display = "none"; // s'assure que le spinner est caché
-    showToast("info", "✅ ChezMoi est maintenant installé sur votre appareil !");
-});
+dismissBtn?.addEventListener('click', hidePwaPrompt);
 
-// Bouton Fermer
-dismissBtn.addEventListener('click', hidePwaPrompt);
-
-// Affichage automatique toutes les 2 minutes (au lieu de 5)
 document.addEventListener('DOMContentLoaded', () => {
-    showPwaPrompt();
-    showIOSPrompt();
-    setInterval(showPwaPrompt, 2 * 60 * 1000);
+  if (isPwaInstalled()) return;
+  if (isIOS) {
+    setTimeout(showPwaPrompt, 4000);
+    setInterval(showPwaPrompt, 5 * 60 * 1000);
+  } else if (isDesktop) {
+    setTimeout(showPwaPrompt, 3000);
+    setInterval(showPwaPrompt, 10 * 60 * 1000);
+  }
 });
 
 /* ===================================================== */
 /* ================= WIZARD AJOUTER =================== */
 /* ===================================================== */
 let currentStep = 1;
-const totalSteps = 6; // étapes 1 à 6 (6 = photos)
+const totalSteps = 6;
+
+/* BUG-1 FIX: Gestion des champs spécifiques aux parcelles/terrains */
+function toggleChampsParcelle() {
+  const typeChecked = document.querySelector('input[name="type"]:checked')?.value || "";
+  const isParcelle = typeChecked === "parcelle" || typeChecked === "terrain";
+
+  // Champs à masquer pour parcelle/terrain
+  const champsNonParcelle = [
+    "nbChambres", "nbPieces", "nbSalons", "nbDouches"
+  ];
+
+  // Champs spécifiques parcelle
+  const champsParcelle = document.getElementById("parcelle-fields");
+
+  // Labels et wrappers des champs normaux dans panel-5
+  champsNonParcelle.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const wrapper = el.closest(".field-wrapper-normal") || el.parentElement;
+    if (wrapper) wrapper.style.display = isParcelle ? "none" : "block";
+    if (el) el.required = !isParcelle;
+  });
+
+  if (champsParcelle) {
+    champsParcelle.style.display = isParcelle ? "block" : "none";
+  }
+
+  // Masquer aussi douche/toilettes/équipements intérieurs pour parcelle
+  const panelEquipements = document.getElementById("panel-4");
+  if (panelEquipements) {
+    const equipInterieurs = panelEquipements.querySelectorAll(".equip-interieur");
+    equipInterieurs.forEach(el => {
+      el.style.display = isParcelle ? "none" : "block";
+    });
+    const parcelleInfo = panelEquipements.querySelector(".parcelle-info");
+    if (parcelleInfo) parcelleInfo.style.display = isParcelle ? "block" : "none";
+  }
+}
+
+// Écouter changements du type de bien
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+  radio.addEventListener("change", toggleChampsParcelle);
+});
 
 function goToStep(step) {
-    // Cacher panel actuel
-    document.getElementById(`panel-${currentStep}`).classList.remove("active");
-    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("active");
-    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("completed");
+  document.getElementById(`panel-${currentStep}`).classList.remove("active");
+  document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("active");
+  document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("completed");
 
-    // Mettre à jour les lignes
-    const lines = document.querySelectorAll(".wizard-line");
-    if (step > currentStep) {
-        lines[currentStep - 1].classList.add("completed");
-    } else {
-        lines[step - 1].classList.remove("completed");
-        document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed");
-    }
+  const lines = document.querySelectorAll(".wizard-line");
+  if (step > currentStep) lines[currentStep - 1].classList.add("completed");
+  else { lines[step - 1].classList.remove("completed"); document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed"); }
 
-    currentStep = step;
+  currentStep = step;
+  document.getElementById(`panel-${currentStep}`).classList.add("active");
+  document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed");
+  document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("active");
 
-    // Afficher nouveau panel
-    document.getElementById(`panel-${currentStep}`).classList.add("active");
-    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.remove("completed");
-    document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add("active");
+  document.getElementById("btnPrecedent").style.display = currentStep === 1 ? "none" : "block";
+  document.getElementById("btnSuivant").style.display = currentStep === totalSteps ? "none" : "block";
+  document.getElementById("btnPublier").style.display = currentStep === totalSteps ? "block" : "none";
+  document.getElementById("ajouter").scrollTop = 0;
 
-    // Gérer boutons
-    const btnPrev = document.getElementById("btnPrecedent");
-    const btnNext = document.getElementById("btnSuivant");
-    const btnPublier = document.getElementById("btnPublier");
-
-    btnPrev.style.display = currentStep === 1 ? "none" : "block";
-    btnNext.style.display = currentStep === totalSteps ? "none" : "block";
-    btnPublier.style.display = currentStep === totalSteps ? "block" : "none";
-
-    // Scroll en haut
-    document.getElementById("ajouter").scrollTop = 0;
+  // Recalculer les champs à chaque changement d'étape
+  if (step === 4 || step === 5) toggleChampsParcelle();
 }
 
 function validerEtape(step) {
-    if (step === 1) {
-        const titre = document.querySelector('input[name="titre"]:checked');
-        if (!titre) { showToast("info", "Choisissez un type d'annonce."); return false; }
-    }
-    if (step === 2) {
-        const type = document.querySelector('input[name="type"]:checked');
-        if (!type) { showToast("info", "Choisissez un type de logement."); return false; }
-    }
-    if (step === 3) {
-        const ville = document.querySelector('input[name="ville"]:checked');
-        const quartier = document.getElementById("quartier").value.trim();
-        if (!ville) { showToast("info", "Choisissez une ville."); return false; }
-        if (!quartier) { showToast("info", "Entrez le quartier."); return false; }
+  if (step === 1 && !document.querySelector('input[name="titre"]:checked')) { showToast("info", "Choisissez un type d'annonce."); return false; }
+  if (step === 2 && !document.querySelector('input[name="type"]:checked')) { showToast("info", "Choisissez un type de logement."); return false; }
+  if (step === 3) {
+    if (!document.querySelector('input[name="ville"]:checked')) { showToast("info", "Choisissez une ville."); return false; }
+    if (!document.getElementById("quartier").value.trim()) { showToast("info", "Entrez le quartier."); return false; }
+  }
+
+  // BUG-1: Validation douche seulement si pas parcelle/terrain
+  const typeChecked = document.querySelector('input[name="type"]:checked')?.value || "";
+  const isParcelle = typeChecked === "parcelle" || typeChecked === "terrain";
+
+  if (step === 4 && !isParcelle && !document.querySelector('input[name="douche"]:checked')) {
+    showToast("info", "Choisissez le type de douche."); return false;
+  }
+
+  if (step === 5) {
+    const prix = document.getElementById("prix").value;
+    const description = document.getElementById("description").value.trim();
+    const contact = document.getElementById("contactAnnonce").value.trim();
+
+    if (!isParcelle) {
+      const chambres = document.getElementById("nbChambres").value;
+      const pieces = document.getElementById("nbPieces").value;
+      if (!chambres || chambres < 0) { showToast("info", "Indiquez le nombre de chambres."); return false; }
+      if (!pieces || pieces < 0) { showToast("info", "Indiquez le nombre de pièces."); return false; }
+    } else {
+      // Pour parcelle, vérifier surface
+      const surface = document.getElementById("surface").value;
+      if (!surface || surface <= 0) { showToast("info", "Indiquez la surface de la parcelle."); return false; }
     }
 
-    if (step === 4) {
-        const douche = document.querySelector('input[name="douche"]:checked');
-        if (!douche) { showToast("info", "Choisissez le type de douche."); return false; }
-    }
-    if (step === 5) {
-        const chambres = document.getElementById("nbChambres").value;
-        const pieces = document.getElementById("nbPieces").value;
-        const prix = document.getElementById("prix").value;
-        const description = document.getElementById("description").value.trim();
-        const contact = document.getElementById("contactAnnonce").value.trim();
-        if (!chambres || chambres < 0) { showToast("info", "Indiquez le nombre de chambres."); return false; }
-        if (!pieces || pieces < 0) { showToast("info", "Indiquez le nombre de pièces."); return false; }
-        if (!prix || prix <= 0) { showToast("info", "Entrez un prix valide."); return false; }
-        if (!description) { showToast("info", "Ajoutez une description."); return false; }
-        if (!contact) { showToast("info", "Ajoutez un numéro de contact."); return false; }
-    }
-    if (step === 6) {
-        const photos = document.getElementById("photos").files;
-        if (photos.length === 0) { showToast("info", "Ajoutez au moins une photo."); return false; }
-    }
-    return true;
+    if (!prix || prix <= 0) { showToast("info", "Entrez un prix valide."); return false; }
+    if (!description) { showToast("info", "Ajoutez une description."); return false; }
+    if (!contact) { showToast("info", "Ajoutez un numéro de contact."); return false; }
+  }
+  return true;
 }
 
-document.getElementById("btnSuivant").addEventListener("click", () => {
-    if (validerEtape(currentStep)) {
-        goToStep(currentStep + 1);
-    }
+document.getElementById("btnSuivant")?.addEventListener("click", () => {
+  if (validerEtape(currentStep)) goToStep(currentStep + 1);
 });
+document.getElementById("btnPrecedent")?.addEventListener("click", () => goToStep(currentStep - 1));
 
-document.getElementById("btnPrecedent").addEventListener("click", () => {
-    goToStep(currentStep - 1);
-});
-
-// Reset wizard quand on quitte la page
-const originalResetFormulaire = window.resetFormulaire;
 function resetFormulaire() {
-    if(formAjouter) formAjouter.reset();
-    selectedFiles = [];
-    packSelectionne = 0;
-    if(extraImagesSlider) extraImagesSlider.value = 0;
-    if(extraImagesValue) extraImagesValue.textContent = 0;
-    renderGrid();
-    updatePrixTotal();
-    // Reset wizard à l'étape 1
-    if (currentStep !== 1) {
-        document.getElementById(`panel-${currentStep}`)?.classList.remove("active");
-        document.querySelector(`.wizard-step[data-step="${currentStep}"]`)?.classList.remove("active");
-        document.querySelector(`.wizard-step[data-step="${currentStep}"]`)?.classList.remove("completed");
-        currentStep = 1;
-        document.getElementById("panel-1")?.classList.add("active");
-        document.querySelector('.wizard-step[data-step="1"]')?.classList.add("active");
-        document.querySelectorAll(".wizard-step").forEach(s => s.classList.remove("completed"));
-        document.querySelectorAll(".wizard-line").forEach(l => l.classList.remove("completed"));
-        const btnPrev = document.getElementById("btnPrecedent");
-        const btnNext = document.getElementById("btnSuivant");
-        const btnPublier = document.getElementById("btnPublier");
-        if(btnPrev) btnPrev.style.display = "none";
-        if(btnNext) btnNext.style.display = "block";
-        if(btnPublier) btnPublier.style.display = "none";
-    }
+  const formAjouter = document.getElementById("formAjouter");
+  if (formAjouter) formAjouter.reset();
+  selectedFiles = [];
+
+  renderGrid();
+  if (currentStep !== 1) {
+    document.getElementById(`panel-${currentStep}`)?.classList.remove("active");
+    document.querySelector(`.wizard-step[data-step="${currentStep}"]`)?.classList.remove("active", "completed");
+    currentStep = 1;
+    document.getElementById("panel-1")?.classList.add("active");
+    document.querySelector('.wizard-step[data-step="1"]')?.classList.add("active");
+    document.querySelectorAll(".wizard-step").forEach(s => s.classList.remove("completed"));
+    document.querySelectorAll(".wizard-line").forEach(l => l.classList.remove("completed"));
+    document.getElementById("btnPrecedent").style.display = "none";
+    document.getElementById("btnSuivant").style.display = "block";
+    document.getElementById("btnPublier").style.display = "none";
+  }
+
+  // Réinitialiser l'affichage des champs
+  toggleChampsParcelle();
 }
 
-/* ============================= */
-/* GOOGLE AUTH                   */
-/* ============================= */
+/* ===================================================== */
+/* ================= GOOGLE AUTH ====================== */
+/* ===================================================== */
+
 let _googleIdToken = null;
+let _googlePendingMode = null;
 
 async function loginAvecGoogle(mode) {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
 
-    try {
-        const result = await firebase.auth().signInWithPopup(provider);
-        const user = result.user;
-        const idToken = await user.getIdToken();
-        const nom = user.displayName || "";
-        const email = user.email || "";
+  sessionStorage.setItem("googleAuthMode", mode);
 
-        if (mode === "inscription") {
-            // Pré-remplir nom et email
-            const nomInput = document.getElementById("ins-nom");
-            const emailInput = document.getElementById("ins-email");
-            nomInput.value = nom;
-            emailInput.value = email;
-            nomInput.classList.add("google-prefilled");
-            emailInput.classList.add("google-prefilled");
-
-            // Cacher le mot de passe
-            const pwdWrap = document.getElementById("ins-pwd-wrap");
-            if (pwdWrap) pwdWrap.style.display = "none";
-            const pwdInput = document.getElementById("ins-password");
-            if (pwdInput) pwdInput.removeAttribute("required");
-
-            // Stocker le token
-            _googleIdToken = idToken;
-
-            // Afficher le banner
-            document.getElementById("bannerInscription").classList.add("show");
-
-            // Focus sur le numéro
-            document.getElementById("contact").focus();
-
-            showToast("info", "✅ Infos Google importées ! Renseignez juste votre numéro.");
-
-        } else {
-            // CONNEXION directe
-            const loaderCon = document.getElementById("loader-connexion");
-            if (loaderCon) loaderCon.style.display = "flex";
-
-            try {
-                const res = await fetch(`${API_URL}/api/google-auth`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ idToken })
-                });
-
-                const data = await res.json();
-                if (loaderCon) loaderCon.style.display = "none";
-
-                if (!res.ok) {
-                    if (data.message === "user_not_found") {
-                        showToast("info", "Compte introuvable. Créez un compte d'abord !");
-                        const nomInput = document.getElementById("ins-nom");
-                        const emailInput = document.getElementById("ins-email");
-                        if (nomInput) { nomInput.value = nom; nomInput.classList.add("google-prefilled"); }
-                        if (emailInput) { emailInput.value = email; emailInput.classList.add("google-prefilled"); }
-                        const pwdWrap = document.getElementById("ins-pwd-wrap");
-                        if (pwdWrap) pwdWrap.style.display = "none";
-                        const pwdInput = document.getElementById("ins-password");
-                        if (pwdInput) pwdInput.removeAttribute("required");
-                        _googleIdToken = idToken;
-                        document.getElementById("bannerInscription").classList.add("show");
-                        afficherPage("inscription");
-                        return;
-                    }
-                    throw new Error(data.message);
-                }
-
-                currentUserUid = data.uid;
-                localStorage.setItem("uid", data.uid);
-
-                try {
-                    const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
-                    favorisLocal = await favRes.json();
-                } catch { favorisLocal = []; }
-
-                showToast("info", "✅ Connecté avec Google !");
-                afficherPage("home");
-                afficherAnnoncesParGroupes(villeSelectionnee);
-
-            } catch (err) {
-                if (loaderCon) loaderCon.style.display = "none";
-                showToast("loadFail");
-            }
-        }
-
-    } catch (err) {
-        if (err.code === "auth/popup-closed-by-user") return;
-        showToast("loadFail");
+  try {
+    const result = await firebase.auth().signInWithPopup(provider);
+    await handleGoogleResult(result, mode);
+  } catch (err) {
+    if (err.code === "auth/popup-blocked" || err.code === "auth/unauthorized-domain" || err.code === "auth/operation-not-allowed") {
+      try {
+        await firebase.auth().signInWithRedirect(provider);
+      } catch (redirectErr) {
+        showToast("info", "⚠️ Connexion Google indisponible. Utilisez email/mot de passe.");
+      }
+    } else if (err.code === "auth/popup-closed-by-user") {
+      return;
+    } else {
+      showToast("loadFail");
     }
+  }
 }
 
-// Attacher les boutons Google
-const btnGoogleIns = document.getElementById("btnGoogleInscription");
-const btnGoogleCon = document.getElementById("btnGoogleConnexion");
-if (btnGoogleIns) btnGoogleIns.addEventListener("click", () => loginAvecGoogle("inscription"));
-if (btnGoogleCon) btnGoogleCon.addEventListener("click", () => loginAvecGoogle("connexion"));
+firebase.auth().getRedirectResult().then(async (result) => {
+  if (!result || !result.user) return;
+  const mode = sessionStorage.getItem("googleAuthMode") || "connexion";
+  sessionStorage.removeItem("googleAuthMode");
+  await handleGoogleResult(result, mode);
+}).catch(() => {});
 
-/* ============================= */
-/* INSCRIPTION                   */
-/* ============================= */
-const form = document.getElementById("formInscription");
+async function handleGoogleResult(result, mode) {
+  const user = result.user;
+  const idToken = await user.getIdToken();
+  const nom = user.displayName || "";
+  const email = user.email || "";
+
+  if (mode === "inscription") {
+    const nomInput = document.getElementById("ins-nom");
+    const emailInput = document.getElementById("ins-email");
+    if (nomInput) { nomInput.value = nom; nomInput.classList.add("google-prefilled"); }
+    if (emailInput) { emailInput.value = email; emailInput.classList.add("google-prefilled"); }
+
+    const pwdWrap = document.getElementById("ins-pwd-wrap");
+    if (pwdWrap) pwdWrap.style.display = "none";
+    const pwdInput = document.getElementById("ins-password");
+    if (pwdInput) pwdInput.removeAttribute("required");
+
+    _googleIdToken = idToken;
+    document.getElementById("bannerInscription")?.classList.add("show");
+    document.getElementById("ins-contact")?.focus();
+    showToast("info", "✅ Infos Google importées ! Renseignez votre numéro.");
+
+  } else {
+    const loaderCon = document.getElementById("loader-connexion");
+    if (loaderCon) loaderCon.style.display = "flex";
+    try {
+      const res = await fetch(`${API_URL}/api/google-auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken })
+      });
+      const data = await res.json();
+      if (loaderCon) loaderCon.style.display = "none";
+
+      if (!res.ok) {
+        if (data.message === "user_not_found" || data.message === "contact_required") {
+          showToast("info", "Compte introuvable. Créez un compte d'abord !");
+          _googleIdToken = idToken;
+          afficherPage("inscription");
+          return;
+        }
+        throw new Error(data.message);
+      }
+
+      currentUserUid = data.uid;
+      localStorage.setItem("uid", data.uid);
+      try { const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`); favorisLocal = await favRes.json(); }
+      catch { favorisLocal = []; }
+      showToast("info", "✅ Connecté avec Google !");
+      afficherPage("home");
+      afficherAnnoncesParGroupes(villeSelectionnee);
+
+    } catch (err) {
+      if (loaderCon) loaderCon.style.display = "none";
+      showToast("loadFail");
+    }
+  }
+}
+
+document.getElementById("btnGoogleInscription")?.addEventListener("click", () => loginAvecGoogle("inscription"));
+document.getElementById("btnGoogleConnexion")?.addEventListener("click", () => loginAvecGoogle("connexion"));
+
+/* ===================================================== */
+/* ================= INSCRIPTION ====================== */
+/* ===================================================== */
+
+const formInscription = document.getElementById("formInscription");
 const loader = document.getElementById("loader");
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    loader.classList.add("show");
+formInscription?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loader.classList.add("show");
 
-    const nom = document.getElementById("ins-nom").value.trim();
-    const email = document.getElementById("ins-email").value.trim();
-    const inscontact = document.getElementById("contact").value.trim();
+  const nom = document.getElementById("ins-nom").value.trim();
+  const email = document.getElementById("ins-email").value.trim();
+  const inscontact = document.getElementById("contact").value.trim();
 
-    // CAS 1 : venu via Google
-    if (_googleIdToken) {
-        try {
-            const res = await fetch(`${API_URL}/api/google-auth`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken: _googleIdToken, inscontact })
-            });
-            const data = await res.json();
-            loader.classList.remove("show");
-            if (!res.ok) throw new Error(data.message);
-
-            _googleIdToken = null;
-            currentUserUid = data.uid;
-            localStorage.setItem("uid", data.uid);
-
-            try {
-                const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
-                favorisLocal = await favRes.json();
-            } catch { favorisLocal = []; }
-
-            showToast("info", "🎉 Compte créé avec Google !");
-            afficherPage("home");
-
-        } catch (err) {
-            loader.classList.remove("show");
-            showToast("loadFail");
-        }
-        return;
-    }
-
-    // CAS 2 : inscription classique
-    const password = document.getElementById("ins-password").value;
-
+  if (_googleIdToken) {
     try {
-        const res = await fetch(`${API_URL}/api/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, email, password, inscontact })
-        });
-        const data = await res.json();
-        loader.classList.remove("show");
-        if (!res.ok) throw new Error(data.message);
+      const res = await fetch(`${API_URL}/api/google-auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: _googleIdToken, inscontact })
+      });
+      const data = await res.json();
+      loader.classList.remove("show");
+      if (!res.ok) throw new Error(data.message);
 
-        showToast("info", "🎉 Inscription réussie !");
-        currentUserUid = data.uid;
-        localStorage.setItem("uid", data.uid);
-
-        try {
-            const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
-            favorisLocal = await favRes.json();
-        } catch { favorisLocal = []; }
-
-        afficherPage("home");
-
+      _googleIdToken = null;
+      currentUserUid = data.uid;
+      localStorage.setItem("uid", data.uid);
+      try { const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`); favorisLocal = await favRes.json(); }
+      catch { favorisLocal = []; }
+      showToast("info", "🎉 Compte créé avec Google !");
+      afficherPage("home");
     } catch (err) {
-        loader.classList.remove("show");
-        showToast("loadFail");
+      loader.classList.remove("show");
+      showToast("loadFail");
     }
+    return;
+  }
+
+  const password = document.getElementById("ins-password").value;
+
+  if (!nom || !email || !password || !inscontact) {
+    loader.classList.remove("show");
+    showToast("formIncomplete");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom, email, password, inscontact })
+    });
+    const data = await res.json();
+    loader.classList.remove("show");
+    if (!res.ok) throw new Error(data.message || "Erreur inscription");
+
+    showToast("info", "🎉 Inscription réussie !");
+    currentUserUid = data.uid;
+    localStorage.setItem("uid", data.uid);
+    try { const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`); favorisLocal = await favRes.json(); }
+    catch { favorisLocal = []; }
+    afficherPage("home");
+
+  } catch (err) {
+    loader.classList.remove("show");
+    showToast("info", `❌ ${err.message}`);
+  }
 });
 
-/* ============================= */
-/* CONNEXION                     */
-/* ============================= */
+/* ===================================================== */
+/* ================= CONNEXION ======================== */
+/* ===================================================== */
+
 async function loginUser() {
-    const email = document.getElementById("con-email").value.trim();
-    const password = document.getElementById("con-password").value;
-    const loaderCon = document.getElementById("loader-connexion");
+  const email = document.getElementById("con-email").value.trim();
+  const password = document.getElementById("con-password").value;
+  const loaderCon = document.getElementById("loader-connexion");
 
-    try {
-        loaderCon.style.display = "flex";
-        const res = await fetch(`${API_URL}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        loaderCon.style.display = "none";
-        if (!res.ok) throw new Error(data.message);
+  if (!email || !password) {
+    showToast("formIncomplete");
+    return;
+  }
 
-        showToast("info", "✅ Connexion réussie !");
-        currentUserUid = data.uid;
-        localStorage.setItem("uid", data.uid);
+  try {
+    loaderCon.style.display = "flex";
 
-        try {
-            const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
-            favorisLocal = await favRes.json();
-        } catch { favorisLocal = []; }
-
-        afficherPage("home");
-        afficherAnnoncesParGroupes(villeSelectionnee);
-
-    } catch (err) {
-        loaderCon.style.display = "none";
-        showToast("loadFail");
-    }
-}
-
-/* ===========================
-/* ==== mot de passe oublié
-/* ========================= */
-function openModal() {
-    document.getElementById("resetModal").style.display = "flex";
-}
-
-function closeModal() {
-    document.getElementById("resetModal").style.display = "none";
-}
-
-function showModalLoader(show = true) {
-    document.getElementById("modalLoader").style.display = show ? "flex" : "none";
-}
-
-async function sendReset() {
-    const email = document.getElementById("resetEmail").value.trim();
-    if (!email) {
-        showToast("formIncomplete");
-        return;
-    }
-
-    showModalLoader(true); // bloque l'écran et montre loader
-
-    try {
-        const res = await fetch(`${API_URL}/api/password-reset`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email })
-        });
-
-        const data = await res.json();
-        showModalLoader(false);
-
-        if (!res.ok) throw new Error(data.message);
-
-        showToast("info", `✅ Email de réinitialisation envoyé à ${email}`);
-        closeModal();
-
-    } catch (err) {
-        showModalLoader(false);
-        showToast(loadFail);
-    }
-}
-
-// Lien bouton envoyer
-document.getElementById("sendResetBtn").addEventListener("click", sendReset);
-
-/* ============================= */
-/* ÉVÉNEMENTS FORMULAIRES */
-
-const formConnexion = document.getElementById("formConnexion");
-if (formConnexion) {
-    formConnexion.addEventListener("submit", e => {
-        e.preventDefault();
-        loginUser();
+    const res = await fetch(`${API_URL}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
     });
+    const data = await res.json();
+    loaderCon.style.display = "none";
+    if (!res.ok) throw new Error(data.message || "Erreur connexion");
+
+    showToast("info", "✅ Connexion réussie !");
+    currentUserUid = data.uid;
+    localStorage.setItem("uid", data.uid);
+    try { const favRes = await fetch(`${API_URL}/api/favorites/${currentUserUid}`); favorisLocal = await favRes.json(); }
+    catch { favorisLocal = []; }
+    afficherPage("home");
+    afficherAnnoncesParGroupes(villeSelectionnee);
+
+  } catch (err) {
+    loaderCon.style.display = "none";
+    showToast("info", `❌ ${err.message}`);
+  }
 }
 
-// ===============================
-// pour la publication
-// ===============================
+document.getElementById("formConnexion")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  loginUser();
+});
+
+/* ===================================================== */
+/* ================= MOT DE PASSE OUBLIÉ ============= */
+/* ===================================================== */
+document.getElementById("forgotPasswordBtn")?.addEventListener("click", () => {
+  document.getElementById("resetModal").style.display = "flex";
+});
+
+document.getElementById("closeResetModal")?.addEventListener("click", () => {
+  document.getElementById("resetModal").style.display = "none";
+});
+
+document.getElementById("sendResetBtn")?.addEventListener("click", async () => {
+  const email = document.getElementById("resetEmail").value.trim();
+  if (!email) { showToast("formIncomplete"); return; }
+
+  document.getElementById("loader-reset").style.display = "flex";
+  try {
+    const res = await fetch(`${API_URL}/api/password-reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    document.getElementById("loader-reset").style.display = "none";
+    if (!res.ok) throw new Error(data.message);
+    showToast("info", `✅ Email de réinitialisation envoyé à ${email}`);
+    document.getElementById("resetModal").style.display = "none";
+  } catch (err) {
+    document.getElementById("loader-reset").style.display = "none";
+    showToast("loadFail");
+  }
+});
+
+/* ===================================================== */
+/* ================= IMAGE GRID WIZARD ================ */
+/* ===================================================== */
 const imageGrid = document.getElementById("imageGrid");
 const hiddenInput = document.getElementById("hiddenImageInput");
 const imageCounter = document.getElementById("imageCounter");
 const imageMax = document.getElementById("imageMax");
-const prixTotalSpan = document.getElementById("prixTotal");
-
 let selectedFiles = [];
-let packSelectionne = 0; // nombre d'images supplémentaires
 
-const extraImagesSlider = document.getElementById("extraImagesSlider");
-const extraImagesValue = document.getElementById("extraImagesValue");
-
-if(extraImagesSlider){
-
-    extraImagesSlider.addEventListener("input", () => {
-
-        packSelectionne = Number(extraImagesSlider.value);
-
-        if(extraImagesValue){
-            extraImagesValue.textContent = packSelectionne;
-        }
-
-        updateImageCounter();
-        updatePrixTotal();
-
-        const maxImages = 5 + packSelectionne;
-
-        if(selectedFiles.length > maxImages){
-            selectedFiles = selectedFiles.slice(0, maxImages);
-            renderGrid();
-        }
-
-    });
-
+if (hiddenInput) {
+  hiddenInput.setAttribute("max", 15);
 }
 
-function updateImageCounter(){
-    const maxImages = Math.min(5 + Number(packSelectionne), 15);
-
-    if(imageCounter){
-        imageCounter.textContent = selectedFiles.length;
-    }
-
-    if(imageMax){
-        imageMax.textContent = maxImages;
-    }
+function updateImageCounter() {
+  const maxImages = 15;
+  if (imageCounter) imageCounter.textContent = selectedFiles.length;
+  if (imageMax) imageMax.textContent = maxImages;
 }
 
-// ================= CALCULER PRIX TOTAL =================
-const prixBaseAnnonce = {
-    location: 1000,
-    vente: 3000
-};
-
-const fraisYabetoo = 6; // % de frais
-
-function updatePrixTotal() {
-    const selectedType = document.querySelector('input[name="titre"]:checked')?.value?.toLowerCase();
-    if(!selectedType) return;
-
-    const base = prixBaseAnnonce[selectedType] || 0;
-    const packPrix = Number(packSelectionne) * 200; // 200 XAF par image supplémentaire
-
-    let total = base + packPrix;
-
-    // appliquer les frais Yabetoo pour retrouver montant affiché
-    total = total / (1 - fraisYabetoo/100);
-
-    // arrondir au multiple de 5 supérieur
-    total = Math.ceil(total / 5) * 5;
-
-    if(prixTotalSpan){
-        prixTotalSpan.textContent = total;
-    }
-
-    return total;
-}
-
-// ================= MODIFIER LA GRILLE =================
 function renderGrid() {
-    imageGrid.innerHTML = "";
+  if (!imageGrid) return;
+  imageGrid.innerHTML = "";
+  const maxImages = 15;
 
-    const maxImages = Math.min(5 + Number(packSelectionne), 15);
+  selectedFiles.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const card = document.createElement("div");
+      card.classList.add("image-card");
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      card.appendChild(img);
+      img.addEventListener("click", (ev) => { ev.stopPropagation(); afficherPleinEcran(e.target.result); });
+      const btnSuppr = document.createElement("div");
+      btnSuppr.classList.add("btnSuppr");
+      btnSuppr.textContent = "✖";
+      btnSuppr.addEventListener("click", (ev) => { ev.stopPropagation(); selectedFiles.splice(index, 1); renderGrid(); updateImageCounter(); });
+      card.appendChild(btnSuppr);
+      imageGrid.appendChild(card);
+    };
+    reader.readAsDataURL(file);
+  });
 
-    selectedFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const card = document.createElement("div");
-            card.classList.add("image-card");
-
-            const img = document.createElement("img");
-            img.src = e.target.result;
-            card.appendChild(img);
-
-            img.addEventListener("click", (ev) => {
-                ev.stopPropagation(); // évite conflit avec d’autres clics
-                afficherPleinEcran(e.target.result);
-            });
-
-            const btnSuppr = document.createElement("div");
-            btnSuppr.classList.add("btnSuppr");
-            btnSuppr.textContent = "✖";
-            btnSuppr.title = "Supprimer";
-            btnSuppr.addEventListener("click", (ev) => {
-                ev.stopPropagation();
-                selectedFiles.splice(index, 1);
-                renderGrid();
-                updateImageCounter();
-            });
-
-            card.appendChild(btnSuppr);
-            imageGrid.appendChild(card);
-        };
-        reader.readAsDataURL(file);
-    });
-
-    if (selectedFiles.length < maxImages) {
-        const plusCard = document.createElement("div");
-        plusCard.classList.add("image-card", "plus");
-        plusCard.textContent = "+";
-        plusCard.addEventListener("click", () => hiddenInput.click());
-        imageGrid.appendChild(plusCard);
-    }
-
-    updateImageCounter();
-    updatePrixTotal();
+  if (selectedFiles.length < maxImages) {
+    const plusCard = document.createElement("div");
+    plusCard.classList.add("image-card", "plus");
+    plusCard.textContent = "+";
+    plusCard.addEventListener("click", () => hiddenInput.click());
+    imageGrid.appendChild(plusCard);
+  }
+  updateImageCounter();
 }
 
-// ================= AJOUTER IMAGE =================
-hiddenInput.addEventListener("change", () => {
-    if(!hiddenInput.files.length) return;
+hiddenInput?.addEventListener("change", () => {
+  if (!hiddenInput.files.length) return;
+  const files = Array.from(hiddenInput.files);
+  const maxImages = 15;
 
-    const files = Array.from(hiddenInput.files);
-    const maxImages = Math.min(5 + Number(packSelectionne), 15);
-    const MAX_TOTAL_IMAGES = 15;
-    const MAX_SIZE_MB = 20;
+  for (let file of files) {
+    const supported = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!supported.includes(file.type)) { showToast("info", `Format non supporté: ${file.name}`); hiddenInput.value = ""; return; }
+    if (file.size > 20 * 1024 * 1024) { showToast("info", `Image trop lourde: ${file.name}`); hiddenInput.value = ""; return; }
+  }
 
-    for (let file of files) {
-
-        const supportedFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-        
-        if (!supportedFormats.includes(file.type)) {
-            alert(`Le fichier "${file.name}" n'est pas supporté. Formats autorisés : JPEG, PNG, GIF, WEBP`);
-            hiddenInput.value = "";
-            return;
-        }
-
-        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-            alert(`L'image "${file.name}" dépasse 20MB`);
-            hiddenInput.value = "";
-            return;
-        }
-
-    }
-
-    if(selectedFiles.length + files.length > Math.min(maxImages, MAX_TOTAL_IMAGES)){
-        alert(`Maximum ${Math.min(maxImages, MAX_TOTAL_IMAGES)} images autorisées selon le pack choisi.`);
-        hiddenInput.value = "";
-        return;
-    }
-
-    selectedFiles = [...selectedFiles, ...files].slice(0, MAX_TOTAL_IMAGES);
-    renderGrid();
-    hiddenInput.value = "";
+  if (selectedFiles.length + files.length > maxImages) { showToast("info", `Tu peux ajouter maximum ${maxImages} images au total.`); }
+  selectedFiles = [...selectedFiles, ...files].slice(0, maxImages);
+  renderGrid();
+  hiddenInput.value = "";
 });
 
-// ================= ACTUALISER PRIX QUAND TYPE CHANGE =================
-const typeRadios = document.querySelectorAll('input[name="titre"]'); // Note le All
-
-typeRadios.forEach(radio => {
-    radio.addEventListener("change", () => {
-        updatePrixTotal();
-
-        const locationFields = document.getElementById("locationOnlyFields");
-        if (locationFields) {
-            locationFields.style.display = radio.value === "Location" ? "block" : "none";
-        }
-    });
+document.querySelectorAll('input[name="titre"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    const locationFields = document.getElementById("locationOnlyFields");
+    const venteFields = document.getElementById("venteOnlyFields");
+    if (locationFields) locationFields.style.display = radio.value === "Location" ? "block" : "none";
+    if (venteFields) venteFields.style.display = radio.value === "Vente" ? "block" : "none";
+  });
 });
 
-// ================= ACTUALISER TYPE DE CUISINE =================
 document.querySelectorAll('input[name="cuisine"]').forEach(radio => {
-    radio.addEventListener("change", () => {
-        const block = document.getElementById("typeCuisineBlock");
-        if(block) block.style.display = radio.value === "oui" ? "block" : "none";
-    });
+  radio.addEventListener("change", () => {
+    const block = document.getElementById("typeCuisineBlock");
+    if (block) block.style.display = radio.value === "oui" ? "block" : "none";
+  });
 });
 
-// ================= ACTUALISER DISPONIBILITÉ =================
 document.querySelectorAll('input[name="disponibilite"]').forEach(radio => {
-    radio.addEventListener("change", () => {
-        const block = document.getElementById("dispoDateBlock");
-        if(block) block.style.display = radio.value === "date" ? "block" : "none";
-    });
+  radio.addEventListener("change", () => {
+    const block = document.getElementById("dispoDateBlock");
+    if (block) block.style.display = radio.value === "date" ? "block" : "none";
+  });
 });
 
 updateImageCounter();
-updatePrixTotal();
 
 /* ===================================================== */
 /* ================= PLEIN ÉCRAN ====================== */
@@ -1333,1741 +979,1521 @@ updatePrixTotal();
 let overlayPleinEcran = null;
 
 function afficherPleinEcran(src) {
-    // Crée l'overlay si inexistant
-    if (!overlayPleinEcran) {
-        overlayPleinEcran = document.createElement("div");
-        overlayPleinEcran.id = "overlayPleinEcran";
-        Object.assign(overlayPleinEcran.style, {
-            position: "fixed",
-            top: "0",
-            left: "0",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.9)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: "9999",
-        });
-
-        const img = document.createElement("img");
-        img.id = "imagePleinEcran";
-        img.style.maxWidth = "90%";
-        img.style.maxHeight = "90%";
-        overlayPleinEcran.appendChild(img);
-
-        // Fermer au clic
-        overlayPleinEcran.addEventListener("click", () => fermerPleinEcran());
-
-        document.body.appendChild(overlayPleinEcran);
-    }
-
-    const img = document.getElementById("imagePleinEcran");
-    img.src = src;
-    overlayPleinEcran.style.display = "flex";
-
-    // Empile dans l'historique pour capter le bouton retour
-    history.pushState({fullscreen: true}, '', '#fullscreen');
+  if (!overlayPleinEcran) {
+    overlayPleinEcran = document.createElement("div");
+    overlayPleinEcran.id = "overlayPleinEcran";
+    Object.assign(overlayPleinEcran.style, { position: "fixed", top: "0", left: "0", width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: "9999" });
+    const img = document.createElement("img");
+    img.id = "imagePleinEcran";
+    img.style.maxWidth = "90%";
+    img.style.maxHeight = "90%";
+    overlayPleinEcran.appendChild(img);
+    overlayPleinEcran.addEventListener("click", () => fermerPleinEcran());
+    document.body.appendChild(overlayPleinEcran);
+  }
+  document.getElementById("imagePleinEcran").src = src;
+  overlayPleinEcran.style.display = "flex";
+  history.pushState({ fullscreen: true }, '', '#fullscreen');
 }
 
 function fermerPleinEcran(fromPopState = false) {
-    if (!overlayPleinEcran) return;
-
-    overlayPleinEcran.style.display = "none";
-
-    // Ne fait history.back() que si ce n'est pas déclenché par popstate
-    if (!fromPopState && window.location.hash === "#fullscreen") {
-        history.back();
-    }
-}
-
-// compression d'image avant upload pour réduire la taille et accélérer le processus
-async function compressImage(file, maxSizeMB = 5) {
-    return new Promise((resolve, reject) => {
-
-        const img = new Image();
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const reader = new FileReader();
-
-        reader.onload = (e) => img.src = e.target.result;
-
-        img.onload = () => {
-            let width = img.width;
-            let height = img.height;
-            const maxWidth = 1200;
-
-            // redimension proportionnel si trop large
-            if (width > maxWidth) {
-                height *= maxWidth / width;
-                width = maxWidth;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-
-            let quality = 0.8; // qualité initiale
-            function tryCompress() {
-                canvas.toBlob((blob) => {
-                    if (!blob) return reject("Erreur compression");
-
-                    // Si taille OK ou qualité min atteinte, ok
-                    if (blob.size / 1024 / 1024 <= maxSizeMB || quality <= 0.3) {
-                        resolve(new File([blob], file.name, {
-                            type: "image/jpeg",
-                            lastModified: Date.now()
-                        }));
-                    } else {
-                        // sinon on réduit la qualité et recommence
-                        quality -= 0.1;
-                        tryCompress();
-                    }
-                }, "image/jpeg", quality);
-            }
-
-            tryCompress();
-        };
-
-        img.onerror = (err) => reject(err);
-        reader.readAsDataURL(file);
-
-    });
+  if (!overlayPleinEcran) return;
+  overlayPleinEcran.style.display = "none";
+  if (!fromPopState && window.location.hash === "#fullscreen") history.back();
 }
 
 /* ===================================================== */
-/* ================= PUBLIER ANNONCE =================== */
+/* ================= COMPRESSION IMAGE ================ */
+/* ===================================================== */
+async function compressImage(file, maxSizeMB = 5) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const reader = new FileReader();
+    reader.onload = (e) => img.src = e.target.result;
+    img.onload = () => {
+      let width = img.width, height = img.height;
+      if (width > 1200) { height *= 1200 / width; width = 1200; }
+      canvas.width = width; canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      let quality = 0.8;
+      function tryCompress() {
+        canvas.toBlob((blob) => {
+          if (!blob) return reject("Erreur compression");
+          if (blob.size / 1024 / 1024 <= maxSizeMB || quality <= 0.3) {
+            resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() }));
+          } else { quality -= 0.1; tryCompress(); }
+        }, "image/jpeg", quality);
+      }
+      tryCompress();
+    };
+    img.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ===================================================== */
+/* ================= PUBLIER ANNONCE ================== */
 /* ===================================================== */
 const formAjouter = document.getElementById("formAjouter");
 const chargementpub = document.getElementById("loader-pub");
 
-if (formAjouter) {
-    formAjouter.addEventListener("submit", async (e) => {
-        e.preventDefault();
+formAjouter?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
 
-        if (!currentUserUid) {
-            showToast("info", "Vous devez être connecté pour publier une annonce.");
-            afficherPage("inscription");
-            return;
-        }
+  const titre = document.querySelector('input[name="titre"]:checked')?.value;
+  const type = document.querySelector('input[name="type"]:checked')?.value;
+  const ville = document.querySelector('input[name="ville"]:checked')?.value;
+  const quartier = document.getElementById("quartier").value.trim();
+  const douche = document.querySelector('input[name="douche"]:checked')?.value;
+  const prix = document.getElementById("prix").value;
+  const description = document.getElementById("description").value.trim();
+  const contact = document.getElementById("contactAnnonce").value.trim();
 
-        const titre = document.querySelector('input[name="titre"]:checked')?.value;
-        const type = document.querySelector('input[name="type"]:checked')?.value;
-        const ville = document.querySelector('input[name="ville"]:checked')?.value;
-        const quartier = document.getElementById("quartier").value.trim();
-        const douche = document.querySelector('input[name="douche"]:checked')?.value;
-        const prix = document.getElementById("prix").value;
-        const description = document.getElementById("description").value.trim();
-        const contact = document.getElementById("contactAnnonce").value.trim();
+  const isParcelle = type === "parcelle" || type === "terrain";
 
-        if (!titre || !type || !ville || !quartier || !douche || !prix || !description || !contact) {
-            showToast("formIncomplete");
-            return;
-        }
+  // BUG-1: Validation adaptée selon le type
+  if (!titre || !type || !ville || !quartier || !prix || !description || !contact) { showToast("formIncomplete"); return; }
+  if (!isParcelle && !douche) { showToast("formIncomplete"); return; }
+  if (isNaN(prix) || prix <= 0) { showToast("info", "Veuillez entrer un prix valide supérieur à 0"); return; }
+  if (selectedFiles.length === 0) { showToast("info", "Veuillez sélectionner au moins une image."); return; }
 
-        if (isNaN(prix) || prix <= 0) {
-            showToast("info", "Veuillez entrer un prix valide supérieur à 0");
-            return;
-        }
+  chargementpub.style.display = "flex";
 
-        if (selectedFiles.length === 0) {
-            showToast("info", "Veuillez sélectionner au moins une image.");
-            return;
-        }
+  try {
+    const formData = new FormData();
+    formData.append("uid", currentUserUid);
+    formData.append("titre", titre);
+    formData.append("type_annonce", type);
+    formData.append("description", description);
+    formData.append("prix", prix);
+    formData.append("ville", ville);
+    formData.append("quartier", quartier);
+    formData.append("douche", isParcelle ? "" : (douche || ""));
+    formData.append("contact", contact);
+    formData.append("repere", document.getElementById("repere")?.value?.trim() || "");
+    formData.append("nbChambres", isParcelle ? "" : (document.getElementById("nbChambres")?.value || ""));
+    formData.append("nbPieces", isParcelle ? "" : (document.getElementById("nbPieces")?.value || ""));
+    formData.append("nbSalons", isParcelle ? "" : (document.getElementById("nbSalons")?.value || ""));
+    formData.append("surface", document.getElementById("surface")?.value || "");
+    formData.append("etage", document.querySelector('input[name="etage"]:checked')?.value || "");
+    formData.append("eau", document.querySelector('input[name="eau"]:checked')?.value || "");
+    formData.append("electricite", document.querySelector('input[name="electricite"]:checked')?.value || "");
+    formData.append("parking", document.querySelector('input[name="parking"]:checked')?.value || "");
+    formData.append("gardien", document.querySelector('input[name="gardien"]:checked')?.value || "");
+    formData.append("nbDouches", isParcelle ? "" : (document.getElementById("nbDouches")?.value || ""));
 
-        chargementpub.style.display = "flex";
+    // BUG-1 Champs spécifiques parcelle
+    formData.append("type_sol", isParcelle ? (document.querySelector('input[name="type_sol"]:checked')?.value || "") : "");
+    formData.append("voirie", isParcelle ? (document.querySelector('input[name="voirie"]:checked')?.value || "") : "");
+    formData.append("cloture", isParcelle ? (document.querySelector('input[name="cloture"]:checked')?.value || "") : "");
+    formData.append("viabilisee", isParcelle ? (document.querySelector('input[name="viabilisee"]:checked')?.value || "") : "");
 
-        try {
-            // Validation rapide des formats (optionnel si déjà fait)
-            const supportedFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-            for (let file of selectedFiles) {
-                if (!supportedFormats.includes(file.type)) {
-                    showToast("info", `L'image "${file.name}" n'est pas supportée.`);
-                    chargementpub.style.display = "none";
-                    return;
-                }
-            }
+    const chargesCocher = [];
+    if (document.getElementById("chargesEau")?.checked) chargesCocher.push("eau");
+    if (document.getElementById("chargesElec")?.checked) chargesCocher.push("electricite");
+    formData.append("charges", chargesCocher.join(","));
+    formData.append("climatiseur", isParcelle ? "" : (document.querySelector('input[name="climatiseur"]:checked')?.value || ""));
+    formData.append("balcon", isParcelle ? "" : (document.querySelector('input[name="balcon"]:checked')?.value || ""));
+    formData.append("groupe_electrogene", document.querySelector('input[name="groupe_electrogene"]:checked')?.value || "");
+    formData.append("forage", document.querySelector('input[name="forage"]:checked')?.value || "");
+    formData.append("cuisine", isParcelle ? "" : (document.querySelector('input[name="cuisine"]:checked')?.value || ""));
+    formData.append("type_cuisine", isParcelle ? "" : (document.querySelector('input[name="type_cuisine"]:checked')?.value || ""));
+    formData.append("caution", document.getElementById("caution")?.value || "");
+    formData.append("avanceMax", document.getElementById("avanceMax")?.value || "");
+    formData.append("toilettes", isParcelle ? "" : (document.querySelector('input[name="toilettes"]:checked')?.value || ""));
+    formData.append("meuble", isParcelle ? "" : (document.querySelector('input[name="meuble"]:checked')?.value || ""));
+    formData.append("disponibilite", document.querySelector('input[name="disponibilite"]:checked')?.value || "");
+    formData.append("disponibiliteDate", document.getElementById("disponibiliteDate")?.value || "");
+    formData.append("wifi", isParcelle ? "" : (document.querySelector('input[name="wifi"]:checked')?.value || ""));
+    formData.append("fraisVisite", document.getElementById("fraisVisite")?.value || "");
+    formData.append("titre_propriete", document.querySelector('input[name="titre_propriete"]:checked')?.value || "");
+    formData.append("negociable", document.querySelector('input[name="negociable"]:checked')?.value || "");
+    formData.append("delai_vente", document.querySelector('input[name="delai_vente"]:checked')?.value || "");
+    formData.append("statut", "published");
+    formData.append("statut_numero", "verrouille");
 
-            // Création de FormData pour tout envoyer
-            const formData = new FormData();
-            // uid de l'utilisateur pour associer l'annonce à son compte
-            formData.append("uid", currentUserUid);
-            // les champs principaux
-            formData.append("titre", titre);
+    for (let file of selectedFiles) {
+      const compressedFile = await compressImage(file);
+      formData.append("images", compressedFile);
+    }
 
-            formData.append("type_annonce", type);
-            formData.append("description", description);
+    const annonceResponse = await fetch(`${API_URL}/api/annonces`, { method: "POST", body: formData });
+    const annonceData = await annonceResponse.json();
+    if (!annonceResponse.ok) throw new Error(annonceData.message);
 
-            formData.append("prix", prix);
-            formData.append("ville", ville);
+    chargementpub.style.display = "none";
+    showToast("info", "✅ Annonce publiée avec succès ! Elle sera visible 30 jours.");
+    resetFormulaire();
+    afficherPage("home");
+    afficherAnnoncesParGroupes(villeSelectionnee);
 
-            formData.append("quartier", quartier);
-            formData.append("douche", douche);
-            
-            formData.append("contact", contact);
-            formData.append("repere", document.getElementById("repere")?.value?.trim() || "");
-            
-            formData.append("nbChambres", document.getElementById("nbChambres")?.value || "");
-            formData.append("nbPieces", document.getElementById("nbPieces")?.value || "");
-            
-            formData.append("nbSalons", document.getElementById("nbSalons")?.value || "");
-            formData.append("surface", document.getElementById("surface")?.value || "");
-            
-            formData.append("etage", document.querySelector('input[name="etage"]:checked')?.value || "");
-            formData.append("eau", document.querySelector('input[name="eau"]:checked')?.value || "");
-            
-            formData.append("electricite", document.querySelector('input[name="electricite"]:checked')?.value || "");
-            formData.append("parking", document.querySelector('input[name="parking"]:checked')?.value || "");
-            
-            formData.append("gardien", document.querySelector('input[name="gardien"]:checked')?.value || "");
-            formData.append("nbDouches", document.getElementById("nbDouches")?.value || "");
-            
-            const chargesCocher = [];
-            if(document.getElementById("chargesEau")?.checked) chargesCocher.push("eau");
-            if(document.getElementById("chargesElec")?.checked) chargesCocher.push("electricite");
-            formData.append("charges", chargesCocher.join(","));
+  } catch (error) {
+    showToast("loadFail");
+    chargementpub.style.display = "none";
+  }
+});
 
-            formData.append("climatiseur", document.querySelector('input[name="climatiseur"]:checked')?.value || "");
-            
-            formData.append("balcon", document.querySelector('input[name="balcon"]:checked')?.value || "");
-            formData.append("groupe_electrogene", document.querySelector('input[name="groupe_electrogene"]:checked')?.value || "");
-            
-            // champs spécifiques pour les locations
-            formData.append("forage", document.querySelector('input[name="forage"]:checked')?.value || "");
-            formData.append("cuisine", document.querySelector('input[name="cuisine"]:checked')?.value || "");
-            
-            // si cuisine oui, type de cuisine
-            formData.append("type_cuisine", document.querySelector('input[name="type_cuisine"]:checked')?.value || "");
-            formData.append("caution", document.getElementById("caution")?.value || "");
-
-            // Avance max pour les locations
-            formData.append("avanceMax", document.getElementById("avanceMax")?.value || "");
-            formData.append("packSelectionne", packSelectionne || 0);
-            
-            // équipements
-            formData.append("toilettes", document.querySelector('input[name="toilettes"]:checked')?.value || "");
-            formData.append("meuble", document.querySelector('input[name="meuble"]:checked')?.value || "");
-            formData.append("disponibilite", document.querySelector('input[name="disponibilite"]:checked')?.value || "");
-            formData.append("disponibiliteDate", document.getElementById("disponibiliteDate")?.value || "");
-            formData.append("wifi", document.querySelector('input[name="wifi"]:checked')?.value || "");
-            
-            // champs de gestion
-            formData.append("statut", "pending_payment");
-            formData.append("statut_numero", "verrouille"); // le numéro est masqué par défaut
-            formData.append("date_deblocage", "");// pas encore débloqué
-
-            for (let file of selectedFiles) {
-
-                const compressedFile = await compressImage(file);
-
-                formData.append("images", compressedFile);
-
-            }
-
-            // Envoi au backend
-            const annonceResponse = await fetch(`${API_URL}/api/annonces`, {
-                method: "POST",
-                body: formData
-            });
-
-            const annonceData = await annonceResponse.json();
-            if (!annonceResponse.ok) throw new Error(annonceData.message);
-
-            // Ensuite tu peux créer la session de paiement comme avant
-            const paiementResponse = await fetch(`${API_URL}/api/create-annonce-payment`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    uid: currentUserUid,
-                    titre: titre,
-                    packSelectionne: packSelectionne || 0,
-                    annonceId: annonceData.id ,
-                })
-            });
-
-            const paiementData = await paiementResponse.json();
-            if (!paiementResponse.ok) throw new Error(paiementData.message);
-
-            // On remplace l'état actuel pour enlever la page de paiement de l'historique
-            history.replaceState({ page: "home" }, '', '#home');
-            window.location.replace(paiementData.redirectUrl);
-
-        } catch (error) {
-            console.error("Erreur JS :", error);
-            showToast("loadFail");
-            chargementpub.style.display = "none";
-        }
-    });
-}
-
-// Initialisation de la grille au chargement
 renderGrid();
-
-// Vider le formulaire dès que la page se charge
-window.addEventListener("DOMContentLoaded", () => {
-    resetFormulaire();
-});
-
-// Vider le formulaire si l'utilisateur quitte la page
-window.addEventListener("beforeunload", () => {
-    resetFormulaire();
-});
+window.addEventListener("DOMContentLoaded", () => resetFormulaire());
+window.addEventListener("beforeunload", () => resetFormulaire());
 
 /* ===================================================== */
-/* ================= AFFICHAGE DÉTAIL ================= */
+/* ================= DÉTAIL ANNONCE ======= */
 /* ===================================================== */
+
 async function afficherDetailAnnonce() {
-    const data = localStorage.getItem("annonceDetail");
-    if (!data) return;
+  const data = localStorage.getItem("annonceDetail");
+  if (!data) return;
+  const annonce = JSON.parse(data);
 
-    const annonce = JSON.parse(data);
+  const expirationEl = document.getElementById("detailexpiration");
+  const joursRestants = getJoursRestants(annonce.expireAt);
+  const urgencyBar = document.getElementById("detailUrgencyBar");
+  const urgencyText = document.getElementById("detailUrgencyText");
 
-    // Calculer jours restants
-    const expirationEl = document.getElementById("detailexpiration");
-    const joursRestants = getJoursRestants(annonce.expireAt);
-
-    if (joursRestants <= 0) {
-        expirationEl.textContent = "Annonce expirée";
-        expirationEl.style.color = "red";
-        expirationEl.style.display = "inline";
-    } else if (joursRestants <= 2) {
-        expirationEl.textContent = "⚠️ Expire dans " + joursRestants + " jours";
-        expirationEl.style.color = "red";
-        expirationEl.style.display = "inline";
-    } else if (joursRestants <= 7) {
-        expirationEl.textContent = "Expire dans " + joursRestants + " jours";
-        expirationEl.style.color = "orange";
-        expirationEl.style.display = "inline";
+  if (expirationEl) {
+    if (joursRestants !== null && joursRestants <= 0) {
+      expirationEl.textContent = "❌ Annonce expirée";
+      expirationEl.className = "detail-expire-badge expire-urgent";
+    } else if (joursRestants !== null && joursRestants <= 2) {
+      expirationEl.textContent = `⚠️ Expire dans ${joursRestants} jour(s)`;
+      expirationEl.className = "detail-expire-badge expire-urgent";
+      if (urgencyBar && urgencyText) {
+        urgencyText.textContent = `⚡ Plus que ${joursRestants} jour(s) pour voir cette annonce !`;
+        urgencyBar.style.display = "flex";
+      }
+    } else if (joursRestants !== null && joursRestants <= 7) {
+      expirationEl.textContent = `⏳ Expire dans ${joursRestants} jour(s)`;
+      expirationEl.className = "detail-expire-badge expire-warning";
     } else {
-        expirationEl.style.display = "none";
+      expirationEl.textContent = "";
+      expirationEl.className = "";
+    }
+  }
+
+  const titrEl = document.getElementById("detailTitre");
+  if (titrEl) titrEl.textContent = annonce.titre || "";
+
+  const typeBadge = document.getElementById("detailTypeBadge");
+  if (typeBadge) {
+    typeBadge.textContent = annonce.type_annonce || "";
+    typeBadge.className = "detail-type-badge " + ((annonce.titre || "").toLowerCase().includes("location") ? "location" : "vente");
+  }
+
+  const pricePeriod = document.getElementById("detailPricePeriod");
+  if (pricePeriod) {
+    pricePeriod.textContent = (annonce.titre || "").toLowerCase().includes("vente") ? "" : "/mois";
+  }
+
+  const villeQuartier = document.getElementById("detailVilleQuartier");
+  if (villeQuartier) {
+    const parts = [annonce.ville, annonce.quartier].filter(Boolean);
+    villeQuartier.textContent = parts.join(", ");
+  }
+
+  const prixEl = document.getElementById("detailPrix");
+  if (prixEl) {
+    const prix = Number(annonce.prix);
+    prixEl.textContent = prix ? prix.toLocaleString("fr-FR") : annonce.prix || "";
+  }
+
+  const descEl = document.getElementById("detailDescription");
+  if (descEl) descEl.textContent = annonce.description || "Aucune description fournie.";
+
+  /* BUG-2 FIX: Stats rapides adaptées selon le type de bien */
+  const isParcelle = annonce.type_annonce?.toLowerCase() === "parcelle" || annonce.type_annonce?.toLowerCase() === "terrain";
+  const quickStats = document.getElementById("detailQuickStats");
+  if (quickStats) {
+    quickStats.innerHTML = "";
+    let stats;
+
+    if (isParcelle) {
+      // Stats spécifiques aux parcelles/terrains
+      stats = [
+        { icon: "📐", value: annonce.surface ? annonce.surface + " m²" : "—", label: "Surface" },
+        { icon: "🏗️", value: annonce.viabilisee === "oui" ? "Oui" : annonce.viabilisee === "non" ? "Non" : "—", label: "Viabilisée" },
+        { icon: "🧱", value: annonce.cloture === "oui" ? "Oui" : annonce.cloture === "non" ? "Non" : "—", label: "Clôturée" },
+        { icon: "🛣️", value: annonce.voirie === "oui" ? "Oui" : annonce.voirie === "non" ? "Non" : "—", label: "Voirie" },
+        { icon: "🌱", value: annonce.type_sol || "—", label: "Type de sol" },
+      ];
+    } else {
+      stats = [
+        { icon: "🛏️", value: annonce.nbChambres || "—", label: "Chambres" },
+        { icon: "🚪", value: annonce.nbPieces || "—", label: "Pièces" },
+        { icon: "🛋️", value: annonce.nbSalons || "—", label: "Salons" },
+        { icon: "📐", value: annonce.surface ? annonce.surface + " m²" : "—", label: "Surface" },
+        { icon: "🚿", value: annonce.nbDouches || "—", label: "Douches" },
+      ];
     }
 
-    // Remplir les champs
-    document.getElementById("detailTitre").textContent = annonce.titre || "";
-    document.getElementById("detaillogement").textContent = annonce.type_annonce || "";
-    document.getElementById("detailDescription").textContent = annonce.description || "";
-    document.getElementById("detailVille").textContent = annonce.ville || "";
-    document.getElementById("detailQuartier").textContent = annonce.quartier || "";
-    document.getElementById("detailDouche").textContent = annonce.douche || "";
-    document.getElementById("detailPrix").textContent = annonce.prix || "";
-    const contactEl = document.getElementById("detailContact");
+    stats.forEach(s => {
+      const el = document.createElement("div");
+      el.className = "detail-stat-item";
+      el.innerHTML = `<span class="detail-stat-icon">${s.icon}</span><span class="detail-stat-value">${s.value}</span><span class="detail-stat-label">${s.label}</span>`;
+      quickStats.appendChild(el);
+    });
+  }
 
-    // Afficher les images en slider
-    const imagesContainer = document.getElementById("detailImages");
-    const paginationContainer = document.getElementById("sliderPagination");
-    imagesContainer.innerHTML = "";
-    paginationContainer.innerHTML = "";
+  const locGrid = document.getElementById("detailLocalisationGrid");
+  if (locGrid) {
+    locGrid.innerHTML = "";
+    const locFields = [
+      { label: "Ville", value: annonce.ville },
+      { label: "Quartier", value: annonce.quartier },
+      { label: "Repère", value: annonce.repere || "Non précisé" },
+      { label: "Étage", value: annonce.etage === "oui" ? "Oui, avec étage" : annonce.etage === "non" ? "Plain-pied" : "—" },
+    ];
+    locFields.forEach(f => {
+      if (!f.value) return;
+      const el = document.createElement("div");
+      el.className = "detail-info-item";
+      el.innerHTML = `<span class="info-label">${f.label}</span><span class="info-value">${f.value}</span>`;
+      locGrid.appendChild(el);
+    });
+  }
 
-    const images = (annonce.images && annonce.images.length > 0) ? annonce.images : ["image/logo_ChezMoi.png"];
+  /* BUG-2 FIX: Équipements adaptés selon parcelle ou logement */
+  const equipGrid = document.getElementById("detailEquipementsGrid");
+  if (equipGrid) {
+    equipGrid.innerHTML = "";
+    const yesNo = (val) => val === "oui" ? "oui" : val === "non" ? "non" : null;
 
-    // imagesContainer et paginationContainer déjà définis
-    images.forEach((img, index) => {
-        const imageEl = document.createElement("img");
-        imageEl.src = img;
-        imageEl.alt = annonce.titre;
-        imagesContainer.appendChild(imageEl);
+    let equipements;
+    if (isParcelle) {
+      equipements = [
+        { icon: "💧", label: "Eau", val: yesNo(annonce.eau) },
+        { icon: "⚡", label: "Électricité", val: yesNo(annonce.electricite) },
+        { icon: "🔋", label: "Groupe élec.", val: yesNo(annonce.groupe_electrogene) },
+        { icon: "🪣", label: "Forage/Puits", val: yesNo(annonce.forage) },
+        { icon: "🚗", label: "Accès route", val: yesNo(annonce.voirie) },
+        { icon: "🔒", label: "Gardien", val: yesNo(annonce.gardien) },
+        { icon: "🧱", label: "Clôturée", val: yesNo(annonce.cloture) },
+        { icon: "🏗️", label: "Viabilisée", val: yesNo(annonce.viabilisee) },
+      ];
+    } else {
+      equipements = [
+        { icon: "💧", label: "Eau", val: yesNo(annonce.eau) },
+        { icon: "⚡", label: "Électricité", val: yesNo(annonce.electricite) },
+        { icon: "🚿", label: `Douche (${annonce.douche || "—"})`, val: annonce.douche ? "oui" : null },
+        { icon: "🚽", label: `Toilettes (${annonce.toilettes || "—"})`, val: annonce.toilettes ? "oui" : null },
+        { icon: "❄️", label: "Climatiseur", val: yesNo(annonce.climatiseur) },
+        { icon: "🌿", label: "Balcon/Terrasse", val: yesNo(annonce.balcon) },
+        { icon: "🔋", label: "Groupe élec.", val: yesNo(annonce.groupe_electrogene) },
+        { icon: "🪣", label: "Forage/Puits", val: yesNo(annonce.forage) },
+        { icon: "🛋️", label: "Meublé", val: yesNo(annonce.meuble) },
+        { icon: "📶", label: "WiFi", val: yesNo(annonce.wifi) },
+        { icon: "🍳", label: annonce.type_cuisine ? `Cuisine (${annonce.type_cuisine})` : "Cuisine", val: yesNo(annonce.cuisine) },
+        { icon: "🚗", label: "Parking", val: yesNo(annonce.parking) },
+        { icon: "🔒", label: "Gardien", val: yesNo(annonce.gardien) },
+      ];
+    }
 
-        imageEl.addEventListener("click", () => afficherImageFullscreen(img));
-
-        // point pagination
-        const dot = document.createElement("span");
-        if (index === 0) dot.classList.add("active");
-        paginationContainer.appendChild(dot);
+    equipements.forEach(eq => {
+      if (eq.val === null) return;
+      const el = document.createElement("div");
+      el.className = `detail-equip-chip ${eq.val}`;
+      el.innerHTML = `<span class="equip-icon">${eq.icon}</span><span>${eq.label}</span><span>${eq.val === "oui" ? "✅" : "❌"}</span>`;
+      equipGrid.appendChild(el);
     });
 
-    // Pagination dynamique
-    function updatePagination() {
-        const scrollLeft = imagesContainer.scrollLeft;
-        const imageWidth = imagesContainer.clientWidth; // largeur visible du slider
-        const index = Math.round(scrollLeft / imageWidth);
-
-        const dots = paginationContainer.querySelectorAll("span");
-        dots.forEach((dot, i) => {
-            dot.classList.toggle("active", i === index);
-        });
+    if (!isParcelle && annonce.charges) {
+      const chargesArr = annonce.charges.split(",").filter(Boolean);
+      if (chargesArr.length > 0) {
+        const el = document.createElement("div");
+        el.className = "detail-equip-chip oui";
+        el.innerHTML = `<span class="equip-icon">💡</span><span>Charges incluses</span><span>${chargesArr.map(c => c === "eau" ? "💧" : "⚡").join("")}</span>`;
+        equipGrid.appendChild(el);
+      }
     }
+  }
 
-    imagesContainer.addEventListener("scroll", updatePagination);
-    window.addEventListener("resize", updatePagination); // recalcul si resize
+  const isVente = (annonce.titre || "").toLowerCase().includes("vente");
 
-    const indicator = document.getElementById("detailImagesIndicator");
+  const condSection = document.getElementById("detailConditionsSection");
+  const condGrid = document.getElementById("detailConditionsGrid");
+  if (condSection && condGrid) {
+    condGrid.innerHTML = "";
 
-    function updateIndicator() {
-        const scrollLeft = imagesContainer.scrollLeft;
-        const imageWidth = imagesContainer.clientWidth;
-        const index = Math.round(scrollLeft / imageWidth) + 1; // +1 pour que ça commence à 1
-        const total = images.length;
+    if (isVente) {
+      const hasVenteInfo = annonce.titre_propriete || annonce.negociable || annonce.delai_vente || annonce.fraisVisite;
+      condSection.style.display = hasVenteInfo ? "block" : "none";
+      condSection.querySelector("h3").textContent = "Conditions de vente";
+      condSection.querySelector(".detail-section-icon").textContent = "🏠";
 
-        if(indicator) indicator.textContent = `${index} / ${total}`;
-    }
+      if (annonce.titre_propriete) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Titre de propriété</span><span class="info-value">${annonce.titre_propriete === "oui" ? "✅ Disponible" : "❌ Non disponible"}</span>`;
+        condGrid.appendChild(el);
+      }
+      if (annonce.negociable) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Prix négociable</span><span class="info-value">${annonce.negociable === "oui" ? "✅ Oui" : "❌ Non"}</span>`;
+        condGrid.appendChild(el);
+      }
+      if (annonce.delai_vente) {
+        const labels = { urgent: "🔥 Urgent", normal: "📅 Normal", flexible: "🕐 Flexible" };
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Délai souhaité</span><span class="info-value">${labels[annonce.delai_vente] || annonce.delai_vente}</span>`;
+        condGrid.appendChild(el);
+      }
+      if (annonce.fraisVisite) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Frais de visite</span><span class="info-value">${Number(annonce.fraisVisite).toLocaleString("fr-FR")} XAF</span>`;
+        condGrid.appendChild(el);
+      }
 
-    // Mettre à jour au scroll et au resize
-    imagesContainer.addEventListener("scroll", updateIndicator);
-    window.addEventListener("resize", updateIndicator);
-
-    // Initialiser au début
-    updateIndicator();
-
-    // Bouton débloquer contact
-    const btnDebloquer = document.getElementById("btnDebloquerContact");
-    const titreEl = document.getElementById("detailTitre");
-
-    // Vérifier si déjà débloqué
-    const maintenant = new Date();
-    if (annonce.statut_numero === "debloque" && annonce.expire_deblocage) {
-        const expireDeblocage = new Date(annonce.expire_deblocage._seconds * 1000);
-        if (maintenant < expireDeblocage) {
-            // Numéro débloqué et pas encore expiré
-            contactEl.textContent = annonce.contact;
-            if (titreEl) titreEl.textContent = annonce.titre_negociation || "En cours de négociation";
-            if (btnDebloquer) {
-                btnDebloquer.textContent = "✅ Contact débloqué";
-                btnDebloquer.disabled = true;
-                btnDebloquer.style.opacity = "0.5";
-                btnDebloquer.style.cursor = "not-allowed";
-
-                // Afficher date d'expiration
-                const joursRestants = Math.ceil((expireDeblocage - maintenant) / (1000 * 60 * 60 * 24));
-                const expireEl = document.getElementById("detailexpiration");
-                if (expireEl) {
-                    expireEl.textContent = `📞 Contact disponible encore ${joursRestants} jour(s)`;
-                    expireEl.style.color = "#fd802e";
-                    expireEl.style.display = "inline";
-                }
-            }
-        }
     } else {
-        // Numéro verrouillé
-        contactEl.textContent = "🔒 Numéro verrouillé";
-        if (btnDebloquer) {
-            btnDebloquer.addEventListener("click", async () => {
-                if (!currentUserUid) {
-                    showToast("info", "Vous devez être connecté pour débloquer un contact.");
-                    afficherPage("inscription");
-                    return;
-                }
+      const hasFinancial = annonce.caution || annonce.avanceMax || annonce.fraisVisite;
+      condSection.style.display = hasFinancial ? "block" : "none";
+      condSection.querySelector("h3").textContent = "Conditions financières";
+      condSection.querySelector(".detail-section-icon").textContent = "💰";
 
-                const payload = {
-                    amount: 1060,
-                    annonceId: annonce.id,
-                    description: "Déblocage contact propriétaire",
-                    name: currentUserUid,
-                    msisdn: currentUserUid,
-                    provider: "chezmoi",
-                    uid: currentUserUid
-                };
-
-                try {
-                    const response = await fetch(`${API_URL}/api/payment/deblocage`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        history.replaceState({ page: "detail" }, '', '#detail');
-                        window.location.replace(data.redirectUrl);
-                    } else {
-                        showToast("paymentFail");
-                    }
-                } catch (err) {
-                    console.error("Erreur frontend paiement :", err);
-                    showToast("serverDown");
-                }
-            });
-        }
+      if (annonce.caution) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Caution</span><span class="info-value">${annonce.caution} mois</span>`;
+        condGrid.appendChild(el);
+      }
+      if (annonce.avanceMax) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Avance max.</span><span class="info-value">${annonce.avanceMax} mois</span>`;
+        condGrid.appendChild(el);
+      }
+      if (annonce.fraisVisite) {
+        const el = document.createElement("div");
+        el.className = "detail-info-item";
+        el.innerHTML = `<span class="info-label">Frais de visite</span><span class="info-value">${Number(annonce.fraisVisite).toLocaleString("fr-FR")} XAF</span>`;
+        condGrid.appendChild(el);
+      }
     }
+  }
+
+  const dispoSection = document.getElementById("detailDispoSection");
+  if (dispoSection) dispoSection.style.display = isVente ? "none" : "block";
+
+  const dispoBadge = document.getElementById("detailDispoBadge");
+  if (dispoBadge) {
+    if (annonce.disponibilite === "maintenant") {
+      dispoBadge.className = "detail-dispo-badge maintenant";
+      dispoBadge.innerHTML = "⚡ Disponible maintenant";
+    } else if (annonce.disponibilite === "date" && annonce.disponibiliteDate) {
+      dispoBadge.className = "detail-dispo-badge date";
+      const d = new Date(annonce.disponibiliteDate);
+      dispoBadge.innerHTML = `📆 Disponible le ${d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
+    } else {
+      dispoBadge.className = "detail-dispo-badge maintenant";
+      dispoBadge.innerHTML = "⚡ Disponible";
+    }
+  }
+
+  const contactEl = document.getElementById("detailContact");
+  if (contactEl) contactEl.textContent = annonce.contact || "Non renseigné";
+
+  const btnAppeler = document.getElementById("btnAppeler");
+  const btnWhatsapp = document.getElementById("btnWhatsapp");
+  if (btnAppeler && annonce.contact) {
+    btnAppeler.onclick = () => window.open(`tel:${annonce.contact}`);
+  }
+  if (btnWhatsapp && annonce.contact) {
+    const num = annonce.contact.replace(/\s/g, "");
+    const waNum = num.startsWith("+") ? num.replace("+", "") : `242${num}`;
+    const msg = encodeURIComponent(`Bonjour, je vous contacte au sujet de votre annonce "${annonce.titre}" sur ChezMoi (${annonce.ville}).`);
+    btnWhatsapp.onclick = () => window.open(`https://wa.me/${waNum}?text=${msg}`, "_blank");
+  }
+
+  const shareBtn = document.getElementById("detailShareBtn");
+  if (shareBtn) shareBtn.onclick = () => partagerAnnonce(annonce);
+
+  const btnDebloquer = document.getElementById("btnDebloquerContact");
+  if (btnDebloquer) btnDebloquer.style.display = "none";
+
+  const imagesContainer = document.getElementById("detailImages");
+  const paginationContainer = document.getElementById("sliderPagination");
+  if (imagesContainer) imagesContainer.innerHTML = "";
+  if (paginationContainer) paginationContainer.innerHTML = "";
+
+  const images = annonce.images?.length ? annonce.images : ["image/logo_ChezMoi.png"];
+
+  images.forEach((img, index) => {
+    const imageEl = document.createElement("img");
+    imageEl.src = img;
+    imageEl.alt = annonce.titre;
+    imagesContainer.appendChild(imageEl);
+    imageEl.addEventListener("click", () => afficherImageFullscreen(img));
+
+    const dot = document.createElement("span");
+    if (index === 0) dot.classList.add("active");
+    paginationContainer.appendChild(dot);
+  });
+
+  const indicator = document.getElementById("detailImagesIndicator");
+
+  function updatePaginationAndIndicator() {
+    const scrollLeft = imagesContainer.scrollLeft;
+    const imageWidth = imagesContainer.clientWidth;
+    const index = Math.round(scrollLeft / imageWidth);
+    paginationContainer.querySelectorAll("span").forEach((dot, i) => dot.classList.toggle("active", i === index));
+    if (indicator) indicator.textContent = `${index + 1} / ${images.length}`;
+  }
+
+  imagesContainer.addEventListener("scroll", updatePaginationAndIndicator);
+  window.addEventListener("resize", updatePaginationAndIndicator);
+  updatePaginationAndIndicator();
 }
 
-// Fonction unique pour plein écran
 function afficherImageFullscreen(src) {
-    let overlay = document.getElementById("imageFullscreenOverlay");
-    if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.id = "imageFullscreenOverlay";
-        Object.assign(overlay.style, {
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.9)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            cursor: "pointer"
-        });
-
-        const fullscreenImg = document.createElement("img");
-        fullscreenImg.id = "fullscreenImg";
-        fullscreenImg.style.maxWidth = "90%";
-        fullscreenImg.style.maxHeight = "90%";
-        overlay.appendChild(fullscreenImg);
-        document.body.appendChild(overlay);
-
-        overlay.addEventListener("click", () => overlay.style.display = "none");
-        document.addEventListener("keydown", e => { if(e.key === "Escape") overlay.style.display = "none"; });
-    }
-
-    document.getElementById("fullscreenImg").src = src;
-    overlay.style.display = "flex";
-}
-
-/* ============================= */
-/* FORMULAIRE SIGNALER UN PROBLEME */
-/* ============================= */
-const pbBtn = document.getElementById("btnSignalerProbleme");
-const formSignalerProbleme = document.getElementById("formSignalerProbleme");
-const signalerLoader = document.getElementById("loader-signaler");
-
-// Fonction pour ouvrir le formulaire et stocker l'annonce
-function signalerAnnonceCourante(annonce) {
-    if(!annonce){
-        showToast("info", "Aucune annonce sélectionnée.");
-        return;
-    }
-    localStorage.setItem("annonceProbleme", JSON.stringify(annonce));
-    afficherPage("signalerProbleme");
-}
-
-// Lors du clic sur le bouton "Signaler un problème"
-if(pbBtn){
-    pbBtn.addEventListener("click", ()=> {
-        const annonce = JSON.parse(localStorage.getItem("annonceDetail")); // annonce en cours
-        signalerAnnonceCourante(annonce);
-    });
-}
-
-// Soumission du formulaire
-if (formSignalerProbleme) {
-    formSignalerProbleme.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        // Vérifier connexion
-        const uid = localStorage.getItem("uid");
-        if (!uid) {
-            showToast("info", "Vous devez être connecté pour voir vos favoris.");
-            afficherPage("inscription")
-            return;
-        }
-
-        // Vérifier description
-        const descriptionInput = document.getElementById("problemeDescription");
-        const description = descriptionInput.value.trim();
-        if (!description) {
-            showToast("info", "Veuillez décrire le problème.");
-            return;
-        }
-
-        // Récupérer l'annonce liée
-        const annonce = JSON.parse(localStorage.getItem("annonceProbleme"));
-        if (!annonce) {
-            showToast("info", "Aucune annonce sélectionnée.");
-            return;
-        }
-
-        signalerLoader.style.display = "flex";
-
-        try {
-            // Récupérer infos utilisateur
-            const userRes = await fetch(`${API_URL}/api/user/${uid}`);
-            if (!userRes.ok) throw new Error("Impossible de récupérer les infos utilisateur");
-            const user = await userRes.json();
-
-            // Préparer les données
-            const bodyData = {
-                nom: user.nom,
-                email: user.email,
-                sujet: `Problème sur l'annonce : ${annonce.titre}`,
-                message: description,
-                annonce: {
-                    id: annonce.id,
-                    titre: annonce.titre,
-                    type: annonce.type_annonce,
-                    ville: annonce.ville,
-                    quartier: annonce.quartier,
-                    prix: annonce.prix
-                }
-            };
-
-            // Envoi au serveur
-            const response = await fetch(`${API_URL}/api/report`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bodyData)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                showToast("serverDown");
-                return;
-            }
-
-            // Succès
-            signalerLoader.style.display = "none";
-            showToast("success");
-            descriptionInput.value = "";
-            localStorage.removeItem("annonceProbleme");
-            afficherPage("home");
-
-        } catch (err) {
-            signalerLoader.style.display = "none";
-            console.error("Erreur JS signaler problème :", err);
-            showToast("loadFail");
-        }
-    });
+  let overlay = document.getElementById("imageFullscreenOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "imageFullscreenOverlay";
+    Object.assign(overlay.style, { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, cursor: "pointer" });
+    const fullscreenImg = document.createElement("img");
+    fullscreenImg.id = "fullscreenImg";
+    fullscreenImg.style.maxWidth = "90%";
+    fullscreenImg.style.maxHeight = "90%";
+    overlay.appendChild(fullscreenImg);
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", () => overlay.style.display = "none");
+    document.addEventListener("keydown", e => { if (e.key === "Escape") overlay.style.display = "none"; });
+  }
+  document.getElementById("fullscreenImg").src = src;
+  overlay.style.display = "flex";
 }
 
 /* ===================================================== */
-/* ======= FORMULAIRE PROPOSER UNE IDEE ================= */
+/* ============ SIGNALER UN PROBLÈME ================== */
 /* ===================================================== */
-
-const formProposerIdee = document.getElementById("formProposerIdee");
-const ideeLoader = document.getElementById("loader-idee");
-
-if(formProposerIdee){
-
-    formProposerIdee.addEventListener("submit", async (e)=>{
-
-        e.preventDefault();
-
-        const uid = localStorage.getItem("uid");
-
-        if(!uid){
-            showToast("info", "Vous devez être connecté pour voir vos favoris.");
-            afficherPage("inscription")
-            return;
-        }
-
-        const titreInput = document.getElementById("ideeTitre");
-        const descriptionInput = document.getElementById("ideeDescription");
-
-        const titre = titreInput.value.trim();
-        const description = descriptionInput.value.trim();
-
-        if(!titre || !description){
-            showToast("formIncomplete");
-            return;
-        }
-
-        ideeLoader.style.display = "flex";
-
-        try{
-
-            // récupérer infos utilisateur
-            const userRes = await fetch(`${API_URL}/api/user/${uid}`);
-            if(!userRes.ok) throw new Error("Impossible de récupérer les infos utilisateur");
-
-            const user = await userRes.json();
-
-            const bodyData = {
-                nom: user.nom,
-                email: user.email,
-                sujet: titre,
-                message: description
-            };
-
-            const response = await fetch(`${API_URL}/api/idea`, {
-                method: "POST",
-                headers: { "Content-Type":"application/json" },
-                body: JSON.stringify(bodyData)
-            });
-
-            const data = await response.json();
-
-            if(!response.ok){
-                showToast("serverDown");
-                return;
-            }
-
-            ideeLoader.style.display = "none";
-
-            showToast("info", "Merci pour votre idée ❤️");
-
-            titreInput.value = "";
-            descriptionInput.value = "";
-
-            afficherPage("home");
-
-        }catch(err){
-
-            ideeLoader.style.display = "none";
-
-            console.error("Erreur JS idée :", err);
-
-            showToast("serverDown");
-        }
-
-    });
-
-}
-
-/* ============================= */
-/* BOUTON RECHERCHE              */
-/* ============================= */
-const searchBtn = document.getElementById("searchBtn");
-if(searchBtn){
-    searchBtn.addEventListener("click", ()=> afficherPage("recherche"));
-}
-/* ===================================================== */
-/* =================== RECHERCHE LOGEMENTS ============ */
-/* ===================================================== */
-
-document.addEventListener("DOMContentLoaded", () => {
-    const villeFilter = document.getElementById("villeFilter");
-    const typeFilter = document.getElementById("typeFilter");
-    const searchInput = document.getElementById("searchInput");
-    const searchResults = document.getElementById("searchResults");
-
-    let annonces = []; // contiendra toutes les annonces récupérées
-
-    // ======= FETCH DES ANNONCES =======
-    async function chargerAnnonces() {
-        try {
-            const response = await fetch(`${API_URL}/api/annonces`);
-            if (!response.ok) throw new Error("Erreur serveur lors du chargement des annonces");
-            annonces = await response.json();
-            afficherAnnonces(); // affichage initial
-        } catch (err) {
-            searchResults.innerHTML = `<p style="text-align:center; font-size:18px; margin-top:50px; color:red;">
-                Erreur de chargement des annonces.\n Vérifiez votre connexion internet.
-            </p>`;
-            console.error(err);
-        }
-    }
-
-    // ======= AFFICHAGE DES ANNONCES FILTRÉES =======
-    function afficherAnnonces() {
-        const ville = villeFilter.value.toLowerCase();
-        const type = typeFilter.value.toLowerCase();
-        const rechercheTexte = searchInput.value.toLowerCase();
-
-        // ====== Déterminer si aucun filtre n'est appliqué ======
-        const aucunFiltre = ville === "toutes les villes" && type === "toutes les catégories" && rechercheTexte === "";
-        let annoncesAFiltrer = annonces;
-
-        if (aucunFiltre) {
-            // Échantillon aléatoire : 1 annonce par catégorie
-            annoncesAFiltrer = [];
-            const categories = [...new Set(annonces.map(a => a.type_annonce))]; // toutes les catégories existantes
-
-            categories.forEach(cat => {
-                const annoncesCat = annonces.filter(a => a.type_annonce === cat);
-                if (annoncesCat.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * annoncesCat.length);
-                    annoncesAFiltrer.push(annoncesCat[randomIndex]);
-                }
-            });
-        } else {
-            // filtrage normal selon ville, type, texte
-            annoncesAFiltrer = annonces.filter(a => {
-                const villeOk = ville === "toutes les villes" || a.ville?.toLowerCase() === ville;
-                const typeOk = type === "toutes les catégories" || a.type_annonce?.toLowerCase() === type;
-                const texteOk = !rechercheTexte ||
-                    a.ville?.toLowerCase().includes(rechercheTexte) ||
-                    a.type_annonce?.toLowerCase().includes(rechercheTexte) ||
-                    (a.prix ? a.prix.toString().includes(rechercheTexte) : false);
-                return villeOk && typeOk && texteOk;
-            });
-        }
-
-        // ====== Vider les résultats avant affichage ======
-        searchResults.innerHTML = "";
-
-        if (annoncesAFiltrer.length === 0) {
-            searchResults.innerHTML = `<p style="text-align:center; font-size:16px; margin-top:20px;">
-                Aucune annonce trouvée.
-            </p>`;
-            return;
-        }
-
-        // ====== Créer les cartes ======
-        annoncesAFiltrer.forEach(annonce => {
-            const joursRestants = getJoursRestants(annonce.expireAt);
-            const card = document.createElement("div");
-            card.className = "search-card";
-
-            const imgSrc = (annonce.images && annonce.images.length > 0) ? annonce.images[0] : "image/logo_ChezMoi.png";
-
-            card.innerHTML = `
-                <img src="${imgSrc}" alt="${annonce.titre}">
-
-                <div class="search-card-content">
-                    <h3>${annonce.titre || "Logement disponible"}</h3>
-                    ${joursRestants !== null && joursRestants <= 7
-                        ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
-                            ${joursRestants <= 2 
-                                ? `⚠ expire dans ${joursRestants} jour(s)` 
-                                : ` expire dans ${joursRestants} jour(s)`
-                            }
-                        </div>` 
-                    : ""}
-
-                    <div class="card-infos">
-                        <p>🏠 ${annonce.type_annonce || ""}</p>
-                        <p>📍 ${annonce.ville || ""}</p>
-                        <p class="prix">${annonce.prix ? annonce.prix + " XAF" : ""}</p>
-                    </div>
-
-                    <button class="btn-details">Voir</button>
-                    <button class="btn-share">
-                        <img src="image/partager.png" alt="Partager" class="share-icon">
-                    </button>
-
-                    <button class="btn-fav" data-id="${annonce.id}">🤍</button>
-
-                </div>
-            `;
-
-            // Bouton "Voir" pour afficher les détails
-            card.querySelector(".btn-details").addEventListener("click", () => {
-                localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-                afficherPage("detail");
-                afficherDetailAnnonce();
-            });
-
-            searchResults.appendChild(card);
-        });
-    }
-    
-    // ======= ÉVÉNEMENTS FILTRES =======
-    villeFilter.addEventListener("change", afficherAnnonces);
-    typeFilter.addEventListener("change", afficherAnnonces);
-    searchInput.addEventListener("input", afficherAnnonces);
-
-    // ======= CHARGEMENT INITIAL =======
-    chargerAnnonces();
+document.getElementById("btnSignalerProbleme")?.addEventListener("click", () => {
+  const annonce = JSON.parse(localStorage.getItem("annonceDetail") || "null");
+  if (!annonce) { showToast("info", "Aucune annonce sélectionnée."); return; }
+  localStorage.setItem("annonceProbleme", JSON.stringify(annonce));
+  afficherPage("signalerProbleme");
 });
 
-/* ============================= */
-/* ====== PAGE EXPLORER ======== */
-/* ============================= */
+document.getElementById("formSignalerProbleme")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const uid = localStorage.getItem("uid");
+  if (!uid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
 
-const explorerContainer = document.getElementById("explorerContainer");
-const cityDropdown = document.getElementById("cityDropdown");
-const chargement = document.getElementById("loader-explore")
+  const description = document.getElementById("problemeDescription").value.trim();
+  if (!description) { showToast("info", "Veuillez décrire le problème."); return; }
 
-let toutesAnnonces = [];
+  const annonce = JSON.parse(localStorage.getItem("annonceProbleme") || "null");
+  if (!annonce) { showToast("info", "Aucune annonce sélectionnée."); return; }
 
+  const signalerLoader = document.getElementById("loader-signaler");
+  signalerLoader.style.display = "flex";
 
-// ================== FETCH ANNONCES ==================
-async function chargerToutesAnnonces() {
-    if(!explorerContainer) return;
-    chargement.style.display = "flex";
+  try {
+    const userRes = await fetch(`${API_URL}/api/user/${uid}`);
+    if (!userRes.ok) throw new Error("Impossible de récupérer les infos utilisateur");
+    const user = await userRes.json();
+
+    const res = await fetch(`${API_URL}/api/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nom: user.nom, email: user.email,
+        sujet: `Problème sur l'annonce : ${annonce.titre}`,
+        message: description,
+        annonce: { id: annonce.id, titre: annonce.titre, type: annonce.type_annonce, ville: annonce.ville, quartier: annonce.quartier, prix: annonce.prix }
+      })
+    });
+
+    signalerLoader.style.display = "none";
+    if (!res.ok) throw new Error("Erreur");
+    showToast("success");
+    document.getElementById("problemeDescription").value = "";
+    localStorage.removeItem("annonceProbleme");
+    afficherPage("home");
+  } catch (err) {
+    signalerLoader.style.display = "none";
+    showToast("loadFail");
+  }
+});
+
+/* ===================================================== */
+/* ============ PROPOSER UNE IDÉE ==================== */
+/* ===================================================== */
+document.getElementById("formProposerIdee")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const uid = localStorage.getItem("uid");
+  if (!uid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
+
+  const titre = document.getElementById("ideeTitre").value.trim();
+  const description = document.getElementById("ideeDescription").value.trim();
+  if (!titre || !description) { showToast("formIncomplete"); return; }
+
+  const ideeLoader = document.getElementById("loader-idee");
+  ideeLoader.style.display = "flex";
+
+  try {
+    const userRes = await fetch(`${API_URL}/api/user/${uid}`);
+    const user = await userRes.json();
+    const res = await fetch(`${API_URL}/api/idea`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom: user.nom, email: user.email, sujet: titre, message: description })
+    });
+    ideeLoader.style.display = "none";
+    if (!res.ok) throw new Error();
+    showToast("info", "Merci pour votre idée ❤️");
+    document.getElementById("ideeTitre").value = "";
+    document.getElementById("ideeDescription").value = "";
+    afficherPage("home");
+  } catch {
+    ideeLoader.style.display = "none";
+    showToast("serverDown");
+  }
+});
+
+/* ===================================================== */
+/* ============ PAGE RECHERCHE ======================== */
+/* ===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  const villeFilter = document.getElementById("villeFilter");
+  document.getElementById("searchBtn")?.addEventListener("click", () => afficherPage("recherche"));
+  const typeFilter = document.getElementById("typeFilter");
+  const searchInput = document.getElementById("searchInput");
+  const searchResults = document.getElementById("searchResults");
+  let annonces = [];
+
+  async function chargerAnnonces() {
+    try {
+      const response = await fetch(`${API_URL}/api/annonces`);
+      if (!response.ok) throw new Error();
+      annonces = await response.json();
+      afficherAnnonces();
+    } catch {
+      if (searchResults) searchResults.innerHTML = `<p style="text-align:center;color:red;">Erreur de chargement.</p>`;
+    }
+  }
+
+  function afficherAnnonces() {
+    if (!searchResults) return;
+    const ville = villeFilter.value.toLowerCase();
+    const type = typeFilter.value.toLowerCase();
+    const rechercheTexte = searchInput.value.toLowerCase().trim();
+    const prixMaxInput = document.getElementById("prixFilter");
+    const prixMax = prixMaxInput && prixMaxInput.value ? Number(prixMaxInput.value) : null;
+    const resultCount = document.getElementById("searchResultCount");
+
+    const aucunFiltre = ville === "toutes les villes" && type === "toutes les catégories" && rechercheTexte === "" && !prixMax;
+
+    let annoncesAFiltrer = annonces;
+
+    if (aucunFiltre) {
+      annoncesAFiltrer = [];
+      const categories = [...new Set(annonces.map(a => a.type_annonce))];
+      categories.forEach(cat => {
+        const cats = annonces.filter(a => a.type_annonce === cat);
+        if (cats.length > 0) annoncesAFiltrer.push(cats[Math.floor(Math.random() * cats.length)]);
+      });
+      if (resultCount) resultCount.innerHTML = `<span>${annoncesAFiltrer.length}</span> annonces suggérées`;
+    } else {
+      annoncesAFiltrer = annonces.filter(a => {
+        const villeOk = ville === "toutes les villes" || a.ville?.toLowerCase() === ville;
+        const typeOk = type === "toutes les catégories" || a.type_annonce?.toLowerCase() === type;
+        const prixOk = !prixMax || Number(a.prix) <= prixMax;
+        const texteOk = !rechercheTexte ||
+          a.ville?.toLowerCase().includes(rechercheTexte) ||
+          a.quartier?.toLowerCase().includes(rechercheTexte) ||
+          a.type_annonce?.toLowerCase().includes(rechercheTexte) ||
+          String(a.prix).includes(rechercheTexte) ||
+          a.description?.toLowerCase().includes(rechercheTexte);
+        return villeOk && typeOk && texteOk && prixOk;
+      });
+      if (resultCount) resultCount.innerHTML = `<span>${annoncesAFiltrer.length}</span> résultat${annoncesAFiltrer.length > 1 ? "s" : ""} trouvé${annoncesAFiltrer.length > 1 ? "s" : ""}`;
+    }
+
+    searchResults.innerHTML = "";
+    if (annoncesAFiltrer.length === 0) {
+      searchResults.innerHTML = `<p>😔 Aucune annonce trouvée. Essayez d'autres critères.</p>`;
+      return;
+    }
+
+    annoncesAFiltrer.forEach(annonce => {
+      const joursRestants = getJoursRestants(annonce.expireAt);
+      const card = document.createElement("div");
+      card.className = "search-card";
+      const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
+      card.innerHTML = `
+        <img src="${imgSrc}" alt="${annonce.titre}">
+        ${joursRestants !== null && joursRestants <= 7
+          ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
+              ${joursRestants <= 2 ? `⚠ ${joursRestants}j` : `⏳ ${joursRestants}j`}
+            </div>` : ""}
+        <button class="btn-fav" data-id="${annonce.id}">🤍</button>
+        <div class="search-card-content">
+          <h3>${annonce.titre || "Logement"}</h3>
+          <div class="card-infos">
+            <p>🏠 ${annonce.type_annonce || ""}</p>
+            <p>📍 ${annonce.ville || ""}${annonce.quartier ? " · " + annonce.quartier : ""}</p>
+            <p class="prix">${annonce.prix ? Number(annonce.prix).toLocaleString("fr-FR") : ""} XAF</p>
+          </div>
+        </div>
+        <div class="search-card-footer">
+          <button class="btn-details">Voir →</button>
+        </div>`;
+      /* BUG-7 FIX: Bouton partager supprimé de la page recherche */
+
+      card.querySelector(".btn-details").addEventListener("click", () => {
+        localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+        afficherPage("detail");
+        afficherDetailAnnonce();
+      });
+      setupFavoriButton(card.querySelector(".btn-fav"), annonce);
+      searchResults.appendChild(card);
+    });
+  }
+
+  villeFilter?.addEventListener("change", afficherAnnonces);
+  typeFilter?.addEventListener("change", afficherAnnonces);
+  searchInput?.addEventListener("input", afficherAnnonces);
+  document.getElementById("prixFilter")?.addEventListener("input", afficherAnnonces);
+  chargerAnnonces();
+});
+
+/* ===================================================== */
+/* ============ PAGE ALERTES ========================== */
+/* ===================================================== */
+
+/* BUG-5 FIX: switchAlerteTab déclarée globalement (window) pour être accessible depuis le HTML inline onclick */
+window.switchAlerteTab = function(tab) {
+  document.getElementById("alerteTabLocation").style.display = tab === "location" ? "block" : "none";
+  document.getElementById("alerteTabVente").style.display = tab === "vente" ? "block" : "none";
+  document.getElementById("tabLocation").classList.toggle("active", tab === "location");
+  document.getElementById("tabVente").classList.toggle("active", tab === "vente");
+};
+
+document.getElementById("btnCreerAlerteLocation")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "location";
+  document.getElementById("modaleAlerteTitre").textContent = "Créer une alerte Location";
+  ouvrirModaleAlerte(false);
+});
+document.getElementById("btnCreerAlerteBigLocation")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "location";
+  ouvrirModaleAlerte(false);
+});
+
+document.getElementById("btnCreerAlerteVente")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "vente";
+  document.getElementById("modaleAlerteTitre").textContent = "Créer une alerte Vente";
+  ouvrirModaleAlerte(false);
+});
+document.getElementById("btnCreerAlerteBigVente")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "vente";
+  ouvrirModaleAlerte(false);
+});
+
+document.getElementById("btnModifierAlerteLocation")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "location";
+  ouvrirModaleAlerte(true);
+});
+document.getElementById("btnSupprimerAlerteLocation")?.addEventListener("click", () => {
+  if (!confirm("Supprimer votre alerte location ?")) return;
+  localStorage.removeItem("alerteChezMoi");
+  alerteLocale = null;
+  afficherEtatAlerteLocation();
+});
+
+document.getElementById("btnModifierAlerteVente")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "vente";
+  ouvrirModaleAlerte(true);
+});
+document.getElementById("btnSupprimerAlerteVente")?.addEventListener("click", () => {
+  if (!confirm("Supprimer votre alerte vente ?")) return;
+  localStorage.removeItem("alerteChezMoiVente");
+  afficherEtatAlerteVente();
+});
+
+let alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
+let biensLocalTrouves = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
+
+document.getElementById("alertesBtn")?.addEventListener("click", () => {
+  if (!currentUserUid) {
+    showToast("info", "Vous devez etre connecte pour utiliser les alertes.");
+    afficherPage("inscription");
+    return;
+  }
+  afficherPage("alertes");
+  chargerPageAlertes();
+});
+
+function chargerPageAlertes() {
+  alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
+  biensLocalTrouves = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
+  afficherEtatAlerteLocation();
+  afficherEtatAlerteVente();
+  afficherBiensTrouves();
+  if (alerteLocale) verifierCorrespondances();
+}
+
+function afficherEtatAlerteLocation() {
+  const empty = document.getElementById("alertesEmptyLocation");
+  const card = document.getElementById("alerteCardLocation");
+  const criteres = document.getElementById("alerteCriteresLocation");
+  if (!alerteLocale || alerteLocale.typeAlerte !== "location") {
+    if (empty) empty.style.display = "block";
+    if (card) card.style.display = "none";
+  } else {
+    if (empty) empty.style.display = "none";
+    if (card) card.style.display = "block";
+    if (criteres) afficherCriteres(criteres, alerteLocale);
+  }
+}
+
+function afficherEtatAlerteVente() {
+  const alerteVente = JSON.parse(localStorage.getItem("alerteChezMoiVente") || "null");
+  const empty = document.getElementById("alertesEmptyVente");
+  const card = document.getElementById("alerteCardVente");
+  const criteres = document.getElementById("alerteCriteresVente");
+  if (!alerteVente) {
+    if (empty) empty.style.display = "block";
+    if (card) card.style.display = "none";
+  } else {
+    if (empty) empty.style.display = "none";
+    if (card) card.style.display = "block";
+    if (criteres) afficherCriteres(criteres, alerteVente);
+  }
+}
+
+function afficherCriteres(container, alerte) {
+  container.innerHTML = "";
+  const chips = [];
+  chips.push({ label: "📍 " + (alerte.ville || "Brazzaville") });
+  if (alerte.quartiers?.length) chips.push({ label: "🏘️ " + alerte.quartiers.join(", ") });
+  if (alerte.types?.length) chips.push({ label: "🏠 " + alerte.types.join(", ") });
+  if (alerte.budgetMin || alerte.budgetMax) {
+    const min = alerte.budgetMin ? Number(alerte.budgetMin).toLocaleString("fr-FR") : "0";
+    const max = alerte.budgetMax ? Number(alerte.budgetMax).toLocaleString("fr-FR") : "illimité";
+    chips.push({ label: `💰 ${min} - ${max} XAF` });
+  }
+  chips.forEach(c => {
+    const chip = document.createElement("span");
+    chip.className = "critere-chip";
+    chip.textContent = c.label;
+    container.appendChild(chip);
+  });
+}
+
+function ouvrirModaleAlerte(modeModif = false) {
+  const modale = document.getElementById("modaleAlerte");
+  const titre = document.getElementById("modaleAlerteTitre");
+  if (!modale) return;
+
+  if (titre) titre.textContent = modeModif ? "Modifier mon alerte" : "Creer une alerte";
+
+  document.querySelectorAll("#alerteQuartiers input[type='checkbox']").forEach(cb => cb.checked = false);
+  document.querySelectorAll("#alerteTypes input[type='checkbox']").forEach(cb => cb.checked = false);
+  document.getElementById("alerteBudgetMin").value = "";
+  document.getElementById("alerteBudgetMax").value = "";
+  document.getElementById("alerteMeuble").value = "";
+  document.getElementById("alerteCaution").value = "";
+
+  if (modeModif && alerteLocale) {
+    alerteLocale.quartiers?.forEach(q => {
+      const cb = document.querySelector(`#alerteQuartiers input[value="${q}"]`);
+      if (cb) cb.checked = true;
+    });
+    alerteLocale.types?.forEach(t => {
+      const cb = document.querySelector(`#alerteTypes input[value="${t}"]`);
+      if (cb) cb.checked = true;
+    });
+    if (alerteLocale.budgetMin) document.getElementById("alerteBudgetMin").value = alerteLocale.budgetMin;
+    if (alerteLocale.budgetMax) document.getElementById("alerteBudgetMax").value = alerteLocale.budgetMax;
+    if (alerteLocale.meuble) document.getElementById("alerteMeuble").value = alerteLocale.meuble;
+    if (alerteLocale.cautionMax) document.getElementById("alerteCaution").value = alerteLocale.cautionMax;
+  }
+
+  modale.style.display = "flex";
+}
+
+function fermerModaleAlerte() {
+  const modale = document.getElementById("modaleAlerte");
+  if (modale) modale.style.display = "none";
+}
+
+document.getElementById("btnFermerModaleAlerte")?.addEventListener("click", fermerModaleAlerte);
+document.getElementById("modaleAlerteOverlay")?.addEventListener("click", fermerModaleAlerte);
+
+document.getElementById("btnEnregistrerAlerte")?.addEventListener("click", () => {
+  const typeAlerte = document.getElementById("alerteTypeAnnonce")?.value || "location";
+  const quartiers = [...document.querySelectorAll("#alerteQuartiers input:checked")].map(cb => cb.value);
+  const types = [...document.querySelectorAll("#alerteTypes input:checked")].map(cb => cb.value);
+  const budgetMin = document.getElementById("alerteBudgetMin").value;
+  const budgetMax = document.getElementById("alerteBudgetMax").value;
+  const meuble = document.getElementById("alerteMeuble").value;
+  const cautionMax = document.getElementById("alerteCaution").value;
+
+  const nouvelleAlerte = {
+    userId: currentUserUid,
+    typeAlerte,
+    ville: "Brazzaville",
+    quartiers, types,
+    budgetMin: budgetMin ? Number(budgetMin) : null,
+    budgetMax: budgetMax ? Number(budgetMax) : null,
+    meuble: meuble || null,
+    cautionMax: typeAlerte === "location" ? (cautionMax || null) : null,
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+
+  const key = typeAlerte === "vente" ? "alerteChezMoiVente" : "alerteChezMoi";
+  localStorage.setItem(key, JSON.stringify(nouvelleAlerte));
+  if (typeAlerte === "location") alerteLocale = nouvelleAlerte;
+
+  fermerModaleAlerte();
+  afficherEtatAlerteLocation();
+  afficherEtatAlerteVente();
+  showToast("info", `✅ Alerte ${typeAlerte} enregistrée !`);
+
+  /* BUG-3 FIX: Vérifier les correspondances pour le bon type d'alerte */
+  verifierCorrespondancesParType(typeAlerte, nouvelleAlerte);
+});
+
+document.getElementById("btnSupprimerAlerte")?.addEventListener("click", () => {
+  if (!confirm("Supprimer votre alerte ?")) return;
+  alerteLocale = null;
+  localStorage.removeItem("alerteChezMoi");
+  biensLocalTrouves = [];
+  localStorage.removeItem("biensAlerteTrouves");
+  afficherBiensTrouves();
+  showToast("info", "Alerte supprimee.");
+});
+
+/* BUG-3 FIX: Vérification des correspondances par type d'alerte */
+async function verifierCorrespondancesParType(typeAlerte, alerte) {
+  if (!alerte) return;
+  try {
+    const res = await fetch(`${API_URL}/api/annonces`);
+    if (!res.ok) return;
+    const annonces = await res.json();
+
+    // Filtrer selon le type d'alerte (location ou vente)
+    const annoncesFiltered = annonces.filter(a => {
+      const titreAnnonce = (a.titre || "").toLowerCase();
+      if (typeAlerte === "location") return titreAnnonce.includes("location");
+      if (typeAlerte === "vente") return titreAnnonce.includes("vente");
+      return true;
+    });
+
+    const matches = annoncesFiltered.filter(a => correspondAlerte(a, alerte));
+    const storageKey = typeAlerte === "vente" ? "biensAlerteTrouvesVente" : "biensAlerteTrouves";
+    let biensExistants = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const ancienIds = biensExistants.map(b => b.id);
+
+    let nouveaux = 0;
+    matches.forEach(a => {
+      if (!ancienIds.includes(a.id)) {
+        biensExistants.unshift({ ...a, trouveLe: new Date().toISOString() });
+        nouveaux++;
+      }
+    });
+
+    if (nouveaux > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(biensExistants));
+      if (typeAlerte === "location") biensLocalTrouves = biensExistants;
+
+      afficherBiensTrouves();
+      showToast("info", `🔔 ${nouveaux} nouveau${nouveaux > 1 ? 'x' : ''} bien${nouveaux > 1 ? 's' : ''} trouvé${nouveaux > 1 ? 's' : ''} !`);
+
+      const badge = typeAlerte === "vente"
+        ? document.getElementById("alertesBadgeNewVente")
+        : document.getElementById("alertesBadgeNewLocation");
+      if (badge) {
+        badge.textContent = nouveaux + " nouveau" + (nouveaux > 1 ? "x" : "");
+        badge.style.display = "inline-block";
+      }
+    } else {
+      showToast("info", "✅ Alerte créée ! Aucun bien correspondant pour l'instant.");
+      afficherBiensTrouves();
+    }
+  } catch { /* silencieux */ }
+}
+
+async function verifierCorrespondances() {
+  if (!alerteLocale) return;
+  verifierCorrespondancesParType("location", alerteLocale);
+
+  const alerteVente = JSON.parse(localStorage.getItem("alerteChezMoiVente") || "null");
+  if (alerteVente) verifierCorrespondancesParType("vente", alerteVente);
+}
+
+function correspondAlerte(annonce, alerte) {
+  if (annonce.ville?.toLowerCase() !== "brazzaville") return false;
+
+  if (alerte.quartiers?.length) {
+    const q = (annonce.quartier || "").toLowerCase();
+    const match = alerte.quartiers.some(aq => q.includes(aq.toLowerCase()));
+    if (!match) return false;
+  }
+
+  if (alerte.types?.length) {
+    const typeMatch = alerte.types.some(t => annonce.type_annonce?.toLowerCase() === t.toLowerCase());
+    if (!typeMatch) return false;
+  }
+
+  const prix = Number(annonce.prix);
+  if (alerte.budgetMin && prix < alerte.budgetMin) return false;
+  if (alerte.budgetMax && prix > alerte.budgetMax) return false;
+
+  if (alerte.meuble && annonce.meuble && alerte.meuble !== annonce.meuble) return false;
+
+  if (alerte.cautionMax && annonce.caution) {
+    if (Number(annonce.caution) > Number(alerte.cautionMax)) return false;
+  }
+
+  return true;
+}
+
+/* BUG-3 FIX: Affichage des biens trouvés par type */
+function afficherBiensTrouves() {
+  // Biens location
+  const containerLoc = document.getElementById("alertesBiensContainerLocation");
+  const emptyLoc = document.getElementById("alertesBiensEmptyLocation");
+  const biensLocation = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
+
+  if (containerLoc) {
+    containerLoc.innerHTML = "";
+    if (biensLocation.length === 0) {
+      if (emptyLoc) emptyLoc.style.display = "block";
+    } else {
+      if (emptyLoc) emptyLoc.style.display = "none";
+      biensLocation.forEach(bien => renderBienCard(bien, containerLoc));
+    }
+  }
+
+  // Biens vente
+  const containerVente = document.getElementById("alertesBiensContainerVente");
+  const emptyVente = document.getElementById("alertesBiensEmptyVente");
+  const biensVente = JSON.parse(localStorage.getItem("biensAlerteTrouvesVente") || "[]");
+
+  if (containerVente) {
+    containerVente.innerHTML = "";
+    if (biensVente.length === 0) {
+      if (emptyVente) emptyVente.style.display = "block";
+    } else {
+      if (emptyVente) emptyVente.style.display = "none";
+      biensVente.forEach(bien => renderBienCard(bien, containerVente));
+    }
+  }
+}
+
+function renderBienCard(bien, container) {
+  const card = document.createElement("div");
+  card.className = "bien-trouve-card";
+  const imgSrc = bien.images?.[0] || "image/logo_ChezMoi.png";
+  const temps = tempsEcoule(bien.trouveLe);
+
+  card.innerHTML = `
+    <img class="bien-trouve-img" src="${imgSrc}" alt="${bien.titre}">
+    <div class="bien-trouve-body">
+      <div>
+        <span class="bien-trouve-badge">${bien.titre || "Annonce"}</span>
+        <div class="bien-trouve-type">${bien.type_annonce || ""}</div>
+        <div class="bien-trouve-loc">📍 ${bien.ville || ""}${bien.quartier ? " · " + bien.quartier : ""}</div>
+      </div>
+      <div class="bien-trouve-footer">
+        <div>
+          <div class="bien-trouve-prix">${bien.prix ? Number(bien.prix).toLocaleString("fr-FR") : ""} XAF</div>
+          <div class="bien-trouve-time">Trouvé ${temps}</div>
+        </div>
+        <button class="btn-voir-bien">Voir →</button>
+      </div>
+    </div>`;
+
+  card.querySelector(".btn-voir-bien").addEventListener("click", () => {
+    localStorage.setItem("annonceDetail", JSON.stringify(bien));
+    afficherPage("detail");
+    afficherDetailAnnonce();
+  });
+
+  container.appendChild(card);
+}
+
+function tempsEcoule(dateIso) {
+  if (!dateIso) return "";
+  const diff = Date.now() - new Date(dateIso).getTime();
+  const min = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const j = Math.floor(diff / 86400000);
+  if (j > 0) return `il y a ${j}j`;
+  if (h > 0) return `il y a ${h}h`;
+  if (min > 0) return `il y a ${min} min`;
+  return "à l'instant";
+}
+
+/* ===================================================== */
+/* ============ PAGE PROFIL =========================== */
+/* ===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  const profileBtn = document.getElementById("profileBtn");
+  const profilchargement = document.getElementById("loader-profil");
+
+  profileBtn?.addEventListener("click", async () => {
+    if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
+    afficherPage("profil");
+    profilchargement.style.display = "flex";
 
     try {
-        const res = await fetch(`${API_URL}/api/annonces`);
-        if(!res.ok) throw new Error("Erreur serveur");
-        const data = await res.json();
-        toutesAnnonces = shuffleArray(data); // mélange aléatoire
-        chargement.style.display = "none";
-        afficherExplorer();
-    } catch(err) {
-        console.error(err);
-        chargement.style.display = "none";
-        explorerContainer.innerHTML = `<p style="text-align:center; color:red;">Erreur de chargement.</p>`;
+      const resUser = await fetch(`${API_URL}/api/user/${currentUserUid}`);
+      if (!resUser.ok) throw new Error();
+      const user = await resUser.json();
+
+      document.getElementById("userName").textContent = user.nom || "Utilisateur";
+      document.getElementById("userEmail").textContent = user.email || "-";
+      document.getElementById("userContact").textContent = user.inscontact || "Non renseigné";
+
+      const resFav = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
+      const favoris = await resFav.json();
+      document.getElementById("favorisCount").textContent = favoris.length;
+
+      const resAnnonces = await fetch(`${API_URL}/api/annonces/user/${currentUserUid}`);
+      const annonces = await resAnnonces.json();
+      const container = document.getElementById("userAnnoncesContainer");
+      container.innerHTML = "";
+      document.getElementById("userAnnonces").textContent = annonces.length;
+
+      if (annonces.length === 0) {
+        container.innerHTML = "<p>Aucune annonce publiée.</p>";
+      } else {
+        annonces.forEach(annonce => {
+          const joursRestants = getJoursRestants(annonce.expireAt);
+          const card = document.createElement("div");
+          card.className = "annonce-card";
+          card.style.cssText = "width:200px;border:1px solid #ddd;border-radius:8px;overflow:hidden;cursor:pointer;";
+          const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
+          card.innerHTML = `
+            <div style="height:120px;overflow:hidden;"><img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;"></div>
+            ${joursRestants !== null && joursRestants <= 7 ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">⏳ ${joursRestants} j.</div>` : ""}
+            <div style="padding:10px;">
+              <div style="font-weight:bold;font-size:16px;">${annonce.titre}</div>
+              <div style="color:#555;font-size:14px;">${annonce.ville}</div>
+              <div style="font-weight:bold;margin-top:5px;">${annonce.prix} XAF</div>
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="btn-modifier" style="flex:1;padding:6px;background:#233d4c;color:#fd802e;border:none;border-radius:5px;cursor:pointer;font-size:13px;">✏️ Modifier</button>
+                <button class="btn-delete" style="flex:1;padding:6px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;font-size:13px;">🗑️ Suppr.</button>
+              </div>
+            </div>`;
+
+          /* BUG-6 FIX: Bouton modifier annonce depuis profil */
+          card.querySelector(".btn-modifier").addEventListener("click", (e) => {
+            e.stopPropagation();
+            ouvrirModalModifierAnnonce(annonce);
+          });
+
+          card.querySelector(".btn-delete").addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (document.querySelector(".confirm-overlay")) return;
+            const overlay = document.createElement("div");
+            overlay.className = "confirm-overlay";
+            overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;";
+            overlay.innerHTML = `<div style="background:#fff;padding:20px;border-radius:10px;text-align:center;width:300px;"><p style="margin-bottom:15px;">Supprimer cette annonce ?</p><button class="yes-btn" style="background:#e74c3c;color:white;border:none;padding:8px 15px;border-radius:5px;margin-right:10px;cursor:pointer;">Oui</button><button class="no-btn" style="background:#ccc;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;">Non</button></div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector(".no-btn").onclick = () => overlay.remove();
+            overlay.querySelector(".yes-btn").onclick = async () => {
+              try {
+                const res = await fetch(`${API_URL}/api/annonces/${annonce.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uid: currentUserUid }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+                showToast("info", "Annonce supprimée !");
+                card.remove();
+                const compteur = document.getElementById("userAnnonces");
+                if (compteur) compteur.textContent = Number(compteur.textContent) - 1;
+              } catch { showToast("loadFail"); }
+              overlay.remove();
+            };
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+      profilchargement.style.display = "none";
+    } catch {
+      profilchargement.style.display = "none";
+      showToast("loadFail");
     }
-}
-
-// ================== MELANGE ALEATOIRE ==================
-function shuffleArray(array) {
-    let m = array.length, t, i;
-    while(m){
-        i = Math.floor(Math.random() * m--);
-        t = array[m];
-        array[m] = array[i];
-        array[i] = t;
-    }
-    return array;
-}
-
-// ================== AFFICHAGE CARTES ==================
-function afficherExplorer() {
-    if(!explorerContainer) return;
-    explorerContainer.innerHTML = "";
-
-   // Afficher toutes les annonces, peu importe la ville
-    const annoncesFiltres = toutesAnnonces;
-
-    if(annoncesFiltres.length === 0){
-        explorerContainer.innerHTML = `<p style="text-align:center; margin-top:50px;">Aucune annonce disponible.</p>`;
-        return;
-    }
-
-    // Créer un tableau de toutes les images avec leurs infos
-    let toutesImages = [];
-    annoncesFiltres.forEach(annonce => {
-        if(annonce.images && annonce.images.length > 0){
-            annonce.images.forEach(img => {
-                toutesImages.push({imgSrc: img, annonce});
-            });
-        } else {
-            toutesImages.push({imgSrc: "image/logo_ChezMoi.png", annonce});
-        }
-    });
-
-    // Mélanger toutes les images
-    toutesImages = shuffleArray(toutesImages);
-
-    // Afficher chaque image dans sa propre carte
-    toutesImages.forEach(({imgSrc, annonce}, index) => {
-        const joursRestants = getJoursRestants(annonce.expireAt);
-        const card = document.createElement("div");
-        card.className = "explorer-card animate-card";
-
-        // rotation subtile aléatoire
-        const rotation = (Math.random() * 4 - 2) + "deg"; // -2 à +2 deg
-        card.style.transform = `rotate(${rotation})`;
-        card.style.animationDelay = (index * 0.05) + "s";
-
-        card.innerHTML = `
-            <img src="${imgSrc}" alt="${annonce.titre}">
-            <h3>${annonce.titre || ""}</h3>
-            ${joursRestants !== null && joursRestants <= 7
-                ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
-                    ${joursRestants <= 2 
-                        ? `⚠ expire dans ${joursRestants} jour(s)` 
-                        : `⏳ expire dans ${joursRestants} jour(s)`
-                    }
-                </div>` 
-            : ""}
-            <p>${annonce.type_annonce || ""} - ${annonce.ville || ""}</p>
-            <p class="prix">${annonce.prix || ""} XAF</p>
-            <button class="btn-decouvrir pulse-btn">Découvrir</button>
-            <div class="explorer-buttons">
-                <button class="btn-share">
-                    <img src="image/partager.png" alt="Partager" class="share-icon">
-                </button>
-            </div>
-        `;
-
-        // plein écran au clic sur l'image
-        card.querySelector("img").addEventListener("click", () => afficherPleinEcran(imgSrc));
-
-        // bouton découvrir
-        card.querySelector(".btn-decouvrir").addEventListener("click", () => {
-            localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-            afficherPage("detail");
-            afficherDetailAnnonce();
-        });
-
-        // Bouton partager
-        card.querySelector(".btn-share").addEventListener("click", () => {
-            partagerAnnonce(annonce);
-        });
-
-        // === AJOUT BOUTON FAVORIS POUR EXPLORER ===
-        const isFavori = favorisLocal.includes(annonce.id);
-        const favBtnHtml = `<button class="btn-fav" data-id="${annonce.id}">${isFavori ? '❤️' : '🤍'}</button>`;
-
-        // Ajouter le bouton favoris dans explorer-buttons
-        const explorerButtonsDiv = card.querySelector(".explorer-buttons");
-        explorerButtonsDiv.insertAdjacentHTML("beforeend", favBtnHtml);
-
-        // Setup listener pour ce bouton
-        const favBtn = explorerButtonsDiv.querySelector(".btn-fav");
-        favBtn.addEventListener("click", async () => {
-            if(!currentUserUid){
-                // toast d'information
-                showToast("info", "Vous devez être connecté pour voir vos favoris.");
-                afficherPage("inscription")
-                return;
-            }
-
-            let isFavorite = favorisLocal.includes(annonce.id);
-            isFavorite = await toggleFavorite(currentUserUid, annonce.id, isFavorite);
-
-            // Mise à jour de favorisLocal
-            if(isFavorite){
-                if(!favorisLocal.includes(annonce.id)) favorisLocal.push(annonce.id);
-            } else {
-                favorisLocal = favorisLocal.filter(id => id !== annonce.id);
-            }
-
-            // Mettre à jour le texte du bouton
-            favBtn.textContent = isFavorite ? "❤️" : "🤍";
-
-            // Mettre à jour tous les autres boutons correspondants à cette annonce
-            document.querySelectorAll(`.btn-fav[data-id="${annonce.id}"]`).forEach(btn => {
-                btn.textContent = isFavorite ? "❤️" : "🤍";
-            });
-
-            // Mettre à jour compteur si besoin
-            const favorisCount = document.getElementById("favorisCount");
-            if(favorisCount){
-                favorisCount.textContent = favorisLocal.length;
-            }
-        });
-
-        explorerContainer.appendChild(card);
-    });
-}
-
-
-// ================== FILTRE VILLES ==================
-if(dropbtn && cityDropdown){
-    dropbtn.addEventListener("click", () => {
-        cityDropdown.style.display = cityDropdown.style.display === "block" ? "none" : "block";
-    });
-
-    window.addEventListener("click", e => {
-        if(!e.target.matches(".dropbtn")) cityDropdown.style.display = "none";
-    });
-
-    cityDropdown.querySelectorAll("a").forEach(a => {
-        a.addEventListener("click", e => {
-            e.preventDefault();
-            villeSelectionnee = a.textContent;
-            dropbtn.textContent = villeSelectionnee + " ▼";
-            cityDropdown.style.display = "none";
-            afficherExplorer();
-        });
-    });
-}
-
-// ================== INITIALISATION ==================
-chargerToutesAnnonces();
-
-
-// BOUTON EXPLORER
-document.addEventListener("DOMContentLoaded", () => {
-    const explorerBtn = document.getElementById("exploreBtn"); // correspond à ton HTML
-    if(explorerBtn){
-        explorerBtn.addEventListener("click", () => {
-            afficherPage("explorer"); // l'id de ta section Explorer
-            chargerToutesAnnonces(); // recharge les annonces
-        });
-    }
+  });
 });
 
-/* ===================================================== */
-/* =================== PAGE PROFIL ===================== */
-/* ===================================================== */
+/* BUG-6 FIX: Modal de modification d'annonce depuis profil */
+function ouvrirModalModifierAnnonce(annonce) {
+  // Supprimer un modal existant
+  const existant = document.getElementById("modalModifierAnnonce");
+  if (existant) existant.remove();
 
-document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.createElement("div");
+  modal.id = "modalModifierAnnonce";
+  modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center;z-index:9999;";
 
-    const profileBtn = document.getElementById("profileBtn");
-    const profilchargement = document.getElementById("loader-profil");
+  const isVente = (annonce.titre || "").toLowerCase().includes("vente");
 
-    if(profileBtn){
-        profileBtn.addEventListener("click", async () => {
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:420px;max-height:85dvh;overflow-y:auto;animation:slideUpModal 0.35s ease;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="font-size:18px;font-weight:700;color:#233d4c;margin:0;">✏️ Modifier l'annonce</h3>
+        <button id="fermerModalModif" style="background:#f0f0f0;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">✕</button>
+      </div>
 
-            if(!currentUserUid){
-                // toast d'information
-                showToast("info", "Vous devez être connecté pour voir vos favoris.");
-                afficherPage("inscription")
-                return;
-            }
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Prix (XAF)</label>
+        <input type="number" id="modifPrix" value="${annonce.prix || ""}" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;">
+      </div>
 
-            
-            // ==============================
-            //  Afficher page profil
-            // ==============================
-            afficherPage("profil");
-            profilchargement.style.display = "flex";
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Quartier</label>
+        <input type="text" id="modifQuartier" value="${annonce.quartier || ""}" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;">
+      </div>
 
-            try{
-                // ==============================
-                //  Récupérer infos utilisateur
-                // ==============================
-                const resUser = await fetch(`${API_URL}/api/user/${currentUserUid}`);
-                if(!resUser.ok) throw new Error("Erreur récupération utilisateur");
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Repère / Point de référence</label>
+        <input type="text" id="modifRepere" value="${annonce.repere || ""}" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;">
+      </div>
 
-                const user = await resUser.json();
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Contact</label>
+        <input type="tel" id="modifContact" value="${annonce.contact || ""}" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;">
+      </div>
 
-                document.getElementById("userName").textContent = user.nom || "Utilisateur";
-                document.getElementById("userEmail").textContent = user.email || "-";
-                document.getElementById("userContact").textContent = user.inscontact || "Non renseigné";
-                
-                // ==============================
-                //  Récupérer ses favoris
-                // ==============================
-                const resFav = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
-                if(!resFav.ok) throw new Error("Erreur récupération favoris");
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Description</label>
+        <textarea id="modifDescription" rows="4" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;resize:none;">${annonce.description || ""}</textarea>
+      </div>
 
-                const favoris = await resFav.json();
+      ${!isVente ? `
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px;">Frais de visite (XAF, 0 si gratuit)</label>
+        <input type="number" id="modifFraisVisite" value="${annonce.fraisVisite || 0}" min="0" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e8e8e8;font-size:14px;">
+      </div>
+      ` : ""}
 
-                // Mettre à jour le compteur
-                document.getElementById("favorisCount").textContent = favoris.length;
+      <div id="loaderModif" style="display:none;text-align:center;padding:10px;">
+        <div class="spinner" style="margin:auto;"></div>
+        <p style="font-size:14px;color:#333;margin-top:8px;">Mise à jour...</p>
+      </div>
 
-                // ==============================
-                //  Récupérer ses annonces
-                // ==============================
-                const resAnnonces = await fetch(`${API_URL}/api/annonces/user/${currentUserUid}`);
-                if(!resAnnonces.ok) throw new Error("Erreur récupération annonces");
+      <button id="btnSauvegarderModif" style="width:100%;padding:14px;background:linear-gradient(135deg,#fd802e,#ff5722);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;">
+        Enregistrer les modifications
+      </button>
+    </div>`;
 
-                const annonces = await resAnnonces.json();
+  document.body.appendChild(modal);
 
-                const container = document.getElementById("userAnnoncesContainer");
-                container.innerHTML = "";
-                container.style.display = "flex";
-                container.style.flexWrap = "wrap";
-                container.style.gap = "15px";
+  document.getElementById("fermerModalModif").onclick = () => modal.remove();
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
 
-                document.getElementById("userAnnonces").textContent = annonces.length;
+  document.getElementById("btnSauvegarderModif").onclick = async () => {
+    const nouveauPrix = document.getElementById("modifPrix").value;
+    const nouveauQuartier = document.getElementById("modifQuartier").value.trim();
+    const nouveauRepere = document.getElementById("modifRepere").value.trim();
+    const nouveauContact = document.getElementById("modifContact").value.trim();
+    const nouvelleDescription = document.getElementById("modifDescription").value.trim();
+    const nouveauxFraisVisite = document.getElementById("modifFraisVisite")?.value || annonce.fraisVisite || "";
 
-                if(annonces.length === 0){
-                    container.innerHTML = "<p>Aucune annonce publiée.</p>";
-                } else {
-                    annonces.forEach(annonce => {
+    if (!nouveauPrix || nouveauPrix <= 0) { showToast("info", "Entrez un prix valide."); return; }
+    if (!nouveauQuartier) { showToast("info", "Entrez le quartier."); return; }
+    if (!nouveauContact) { showToast("info", "Entrez un contact."); return; }
+    if (!nouvelleDescription) { showToast("info", "Entrez une description."); return; }
 
-                        // calculer jours restants
-                        const joursRestants = getJoursRestants(annonce.expireAt)
-                        const card = document.createElement("div");
-                        card.className = "annonce-card";
-
-                        // Style direct pour simplifier
-                        card.style.width = "200px";
-                        card.style.border = "1px solid #ddd";
-                        card.style.borderRadius = "8px";
-                        card.style.overflow = "hidden";
-                        card.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
-                        card.style.cursor = "pointer";
-                        card.style.transition = "transform 0.2s, box-shadow 0.2s";
-
-                        card.addEventListener("mouseenter", () => {
-                            card.style.transform = "translateY(-3px)";
-                            card.style.boxShadow = "0 5px 15px rgba(0,0,0,0.2)";
-                        });
-                        card.addEventListener("mouseleave", () => {
-                            card.style.transform = "translateY(0)";
-                            card.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
-                        });
-
-                        const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
-
-                        card.innerHTML = `
-                            <div style="height:120px; overflow:hidden;">
-                                <img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                            ${joursRestants !== null && joursRestants <= 7
-                                ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
-                                    ${joursRestants <= 2 
-                                        ? `⚠ expire dans ${joursRestants} jour(s)` 
-                                        : `⏳ expire dans ${joursRestants} jour(s)`
-                                    }
-                                </div>` 
-                            : ""}
-                            <div style="padding:10px;">
-                                <div style="font-weight:bold; margin-bottom:5px; font-size:16px;">${annonce.titre}</div>
-                                <div style="color:#555; font-size:14px;">${annonce.ville}</div>
-                                <div style="color:#000; font-weight:bold; margin-top:5px;">${annonce.prix} XAF</div>
-
-                                <button class="btn-delete" style="
-                                    margin-top:10px;
-                                    width:100%;
-                                    padding:6px;
-                                    background:#e74c3c;
-                                    color:white;
-                                    border:none;
-                                    border-radius:5px;
-                                    cursor:pointer;
-                                ">
-                                    Supprimer
-                                </button>
-                            </div>
-                        `;
-
-                        // ====== BOUTON SUPPRIMER ======
-                        const deleteBtn = card.querySelector(".btn-delete");
-
-                        deleteBtn.addEventListener("click", (e) => {
-                            e.stopPropagation();
-
-                            // éviter doublon
-                            if (document.querySelector(".confirm-overlay")) return;
-
-                            const overlay = document.createElement("div");
-                            overlay.className = "confirm-overlay";
-
-                            overlay.style.position = "fixed";
-                            overlay.style.top = "0";
-                            overlay.style.left = "0";
-                            overlay.style.width = "100%";
-                            overlay.style.height = "100%";
-                            overlay.style.background = "rgba(0,0,0,0.5)";
-                            overlay.style.display = "flex";
-                            overlay.style.alignItems = "center";
-                            overlay.style.justifyContent = "center";
-                            overlay.style.zIndex = "9999";
-
-                            overlay.innerHTML = `
-                                <div style="
-                                    background:#fff;
-                                    padding:20px;
-                                    border-radius:10px;
-                                    text-align:center;
-                                    width:300px;
-                                ">
-                                    <p style="margin-bottom:15px;">Supprimer cette annonce ?</p>
-
-                                    <button class="yes-btn" style="
-                                        background:#e74c3c;
-                                        color:white;
-                                        border:none;
-                                        padding:8px 15px;
-                                        border-radius:5px;
-                                        margin-right:10px;
-                                        cursor:pointer;
-                                    ">Oui</button>
-
-                                    <button class="no-btn" style="
-                                        background:#ccc;
-                                        border:none;
-                                        padding:8px 15px;
-                                        border-radius:5px;
-                                        cursor:pointer;
-                                    ">Non</button>
-                                </div>
-                            `;
-
-                            document.body.appendChild(overlay);
-
-                            // NON
-                            overlay.querySelector(".no-btn").onclick = () => {
-                                overlay.remove();
-                            };
-
-                            // OUI (ton code)
-                            overlay.querySelector(".yes-btn").onclick = async () => {
-                                try {
-                                    const res = await fetch(`${API_URL}/api/annonces/${annonce.id}`, {
-                                        method: "DELETE",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ uid: currentUserUid })
-                                    });
-
-                                    const data = await res.json();
-                                    if(!res.ok) throw new Error(data.message);
-
-                                    showToast("info", "Annonce supprimée !");
-
-                                    card.remove();
-
-                                    const compteur = document.getElementById("userAnnonces");
-                                    if(compteur){
-                                        compteur.textContent = Number(compteur.textContent) - 1;
-                                    }
-
-                                    if(typeof favorisLocal !== "undefined" && favorisLocal.includes(annonce.id)){
-                                        favorisLocal = favorisLocal.filter(id => id !== annonce.id);
-                                        const fav = document.getElementById("favorisCount");
-                                        if(fav){
-                                            fav.textContent = favorisLocal.length;
-                                        }
-                                    }
-
-                                } catch(err){
-                                    console.error(err);
-                                    showToast("info", "Erreur lors de la suppression, Veuillez réessayer.");
-                                }
-
-                                overlay.remove();
-                            };
-                        });
-                        container.appendChild(card);
-                    });
-                }
-                profilchargement.style.display = "none"; // Cache le loader après chargement
-            } catch(error){
-                profilchargement.style.display = "none"; // Cache le loader
-                console.error(error);
-                // toast d'erreur
-                showToast("loadFail");
-            }
-        });
-    }
-
-});
-
-// ==================== OVERLAY DE CONNEXION ====================
-const logoutBtn = document.getElementById("logoutBtn");
-const overlay = document.getElementById("loginOverlay");
-const savedAccounts = document.getElementById("savedAccounts");
-const createAccountBtn = document.getElementById("createAccountBtn");
-
-// ------------------- FONCTION POUR AFFICHER LES COMPTES -------------------
-async function afficherComptes() {
-    savedAccounts.innerHTML = '';
+    const loaderModif = document.getElementById("loaderModif");
+    loaderModif.style.display = "block";
 
     try {
-        const res = await fetch(`${API_URL}/api/user/accounts`);
-        if (!res.ok) throw new Error("Impossible de récupérer les comptes existants");
+      const res = await fetch(`${API_URL}/api/annonces/${annonce.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: currentUserUid,
+          prix: nouveauPrix,
+          quartier: nouveauQuartier,
+          repere: nouveauRepere,
+          contact: nouveauContact,
+          description: nouvelleDescription,
+          fraisVisite: nouveauxFraisVisite
+        })
+      });
 
-        const comptesExistants = await res.json();
+      const data = await res.json();
+      loaderModif.style.display = "none";
 
-        comptesExistants.forEach(compte => {
-            const div = document.createElement('div');
-            div.className = 'account-item';
-            div.innerHTML = `
-                <img src="${compte.avatar || 'image/avatar.png'}" class="account-avatar" alt="avatar">
-                <div class="account-info">
-                    <span class="account-name">${compte.nom}</span>
-                    <span class="account-email">${compte.email}</span>
-                </div>
-            `;
+      if (!res.ok) throw new Error(data.message || "Erreur lors de la modification");
 
-            // Cliquer sur un compte → reconnecter
-            div.addEventListener('click', () => {
-                currentUserUid = compte.uid;
-                localStorage.setItem("uid", compte.uid);
-                overlay.style.display = 'none';
-                showToast("info", `Connecté avec ${compte.nom}`);
-                // Ici tu peux rafraîchir le profil si nécessaire
-            });
+      showToast("info", "✅ Annonce mise à jour !");
+      modal.remove();
 
-            savedAccounts.appendChild(div);
-        });
-
-        if (comptesExistants.length === 0) {
-            savedAccounts.innerHTML = "<p>Aucun compte existant trouvé.</p>";
-        }
+      // Rafraîchir la page profil
+      document.getElementById("profileBtn")?.click();
 
     } catch (err) {
-        console.error(err);
-        savedAccounts.innerHTML = "<p>Erreur lors de la récupération des comptes.</p>";
+      loaderModif.style.display = "none";
+      showToast("info", `❌ ${err.message}`);
     }
+  };
 }
 
-// -------------------- pour le lien inviter un ami --------------------
 const menuBtn = document.getElementById("menuBtn");
 const menuContainer = document.querySelector(".dropdown-menu");
+menuBtn?.addEventListener("click", () => menuContainer.classList.toggle("show"));
+window.addEventListener("click", (e) => { if (!menuContainer?.contains(e.target)) menuContainer?.classList.remove("show"); });
 
-menuBtn.addEventListener("click", () => {
-    menuContainer.classList.toggle("show");
+document.getElementById("inviteFriendBtn")?.addEventListener("click", () => {
+  const shareData = { title: "Chezmoi 🌟", text: "Rejoins-moi sur ChezMoi !", url: "https://chezmoi-app.netlify.app" };
+  if (navigator.share) navigator.share(shareData).catch(() => {});
+  else navigator.clipboard.writeText(shareData.url).then(() => showToast("clipboardSuccess")).catch(() => showToast("clipboardFail"));
+  menuContainer?.classList.remove("show");
 });
 
-// fermer le menu si on clique ailleurs
-window.addEventListener("click", (e) => {
-    if (!menuContainer.contains(e.target)) {
-        menuContainer.classList.remove("show");
+document.getElementById("feedbackBtn")?.addEventListener("click", () => { afficherPage("proposerIdee"); menuContainer?.classList.remove("show"); });
+
+const logoutBtn = document.getElementById("logoutBtn");
+const overlay = document.getElementById("loginOverlay");
+
+logoutBtn?.addEventListener("click", async () => {
+  let nomCompte = "Utilisateur";
+  let emailCompte = "";
+  try {
+    const res = await fetch(`${API_URL}/api/user/${currentUserUid}`);
+    if (res.ok) {
+      const user = await res.json();
+      nomCompte = user.nom || "Utilisateur";
+      emailCompte = user.email || "";
     }
-});
+  } catch {}
 
-// Inviter un ami
-document.getElementById("inviteFriendBtn").addEventListener("click", () => {
-    const shareData = {
-        title: "Chezmoi 🌟",
-        text: "Hey ! Rejoins-moi sur ChezMoi, la plateforme qui simplifie la recherche de logement partout dans le monde. Découvre des annonces, contacte facilement les propriétaires et bien plus !",
-        url: "https://chezmoi-app.netlify.app"
-    };
+  const savedAccounts = document.getElementById("savedAccounts");
+  if (savedAccounts) {
+    savedAccounts.innerHTML = `
+      <div class="account-item" style="background:#fff8f2;border:1px solid rgba(253,128,46,0.3);">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#fd802e,#ff5722);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;">
+          ${nomCompte.charAt(0).toUpperCase()}
+        </div>
+        <div style="text-align:left;">
+          <div style="font-weight:700;color:#233d4c;font-size:14px;">${nomCompte}</div>
+          <div style="font-size:12px;color:#888;">${emailCompte}</div>
+          <div style="font-size:11px;color:#fd802e;font-weight:600;margin-top:2px;">Déconnecté</div>
+        </div>
+      </div>`;
 
-    if (navigator.share) {
-        navigator.share(shareData).catch(err => console.error("Erreur de partage :", err));
-    } else {
-        navigator.clipboard.writeText(shareData.url)
-            .then(() => showToast("clipboardSuccess"))
-            .catch(() => showToast("clipboardFail"));
-    }
-
-    menuContainer.classList.remove("show");
-});
-
-// Proposer une idée / feedback
-document.getElementById("feedbackBtn").addEventListener("click", () => {
-    // tu peux soit ouvrir un formulaire, soit rediriger vers ta page feedback
-    afficherPage("proposerIdee"); // par exemple réutiliser ton formulaire existant
-    menuContainer.classList.remove("show");
-});
-
-// ------------------- BOUTON DE DÉCONNEXION -------------------
-logoutBtn.addEventListener("click", () => {
-    if(!currentUserUid){
-        // toast d'information
-        showToast("info", "Vous devez être connecté pour voir vos favoris.");
-        afficherPage("inscription")
-        return;
-    }
-    currentUserUid = null;
-    localStorage.removeItem("uid");
-    showToast("info", "Déconnecté !");
-
-    // Affiche overlay et comptes uniquement au clic
-    overlay.style.display = "flex";
-    afficherComptes();
-});
-
-// ------------------- BOUTON CRÉER UN COMPTE -------------------
-createAccountBtn.addEventListener("click", () => {
-    overlay.style.display = "none";
-    afficherPage("inscription");
-});
-
-// =========================
-// ==== modifier profil
-// =========================
-
-const editProfileBtn = document.getElementById("editProfileBtn");
-const editProfileForm = document.getElementById("editProfileForm");
-const closeProfileModal = document.getElementById("closeProfileModal");
-
-const editNameInput = document.getElementById("editName");
-const editEmailInput = document.getElementById("editEmail");
-const editContactInput = document.getElementById("editContact");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
-
-// Ouvrir modal et pré-remplir
-editProfileBtn.addEventListener("click", async () => {
-    try {
-        const res = await fetch(`${API_URL}/api/user/${currentUserUid}`);
-        if (!res.ok) throw new Error("Erreur récupération utilisateur");
-
-        const user = await res.json();
-        editNameInput.value = user.nom || "";
-        editEmailInput.value = user.email || "";
-        editContactInput.value = user.inscontact || "";
-
-        editProfileForm.classList.add("active");
-    } catch(err) {
-        showToast("serverDown");
-    }
-});
-
-// Fermer modal
-closeProfileModal.addEventListener("click", () => {
-    editProfileForm.classList.remove("active");
-});
-
-// Fermer modal en cliquant en dehors
-editProfileForm.addEventListener("click", (e) => {
-    if (e.target === editProfileForm) {
-        editProfileForm.classList.remove("active");
-    }
-});
-
-// Sauvegarder modifications
-saveProfileBtn.addEventListener("click", async () => {
-    const nom = editNameInput.value.trim();
-    const email = editEmailInput.value.trim();
-    const inscontact = editContactInput.value.trim();
-    const editchargement = document.getElementById("loader-edit");
-    editchargement.style.display = "flex";
-
-    if(!currentUserUid){
-        showToast("info", "Vous devez être connecté pour voir vos favoris.");
-        afficherPage("inscription")
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/api/user/${currentUserUid}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, email, inscontact })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-
-        editchargement.style.display = "none";
-        showToast("info", "Profil mis à jour !");
-
-        // Mise à jour affichage
-        document.getElementById("userName").textContent = nom;
-        document.getElementById("userEmail").textContent = email;
-        document.getElementById("userContact").textContent = inscontact;
-
-        editProfileForm.classList.remove("active");
-    } catch(err) {
-        editchargement.style.display = "none";
-        showToast("loadFail");
-    }
-});
-
-// ============================= */
-// Bouton "Voir mes favoris"
-// ============================= */
-
-const voirFavorisBtn = document.getElementById("voirFavorisBtn");
-const chargementfav = document.getElementById("loader-fav")
-if(voirFavorisBtn){
-    voirFavorisBtn.addEventListener("click", async () => {
-        if(!currentUserUid){
-            // toast d'information
-            showToast("info", "Vous devez être connecté pour voir vos favoris.");
-            afficherPage("inscription")
-            return;
-        }
-
-        // Afficher la page favoris
-        afficherPage("favoris");
-        // loader
-        chargementfav.style.display = "flex"
-
-        const container = document.getElementById("favorisContainer");
-        const message = document.getElementById("aucunFavorisMessage");
-        container.innerHTML = "";
-
-        try{
-            // Récupérer toutes les annonces
-            const res = await fetch(`${API_URL}/api/annonces`);
-            if(!res.ok) throw new Error("Erreur serveur");
-            const toutesAnnonces = await res.json();
-
-            // Filtrer uniquement les annonces favorites
-            const annoncesFavorites = toutesAnnonces.filter(a => favorisLocal.includes(a.id));
-
-            if(annoncesFavorites.length === 0){
-                message.style.display = "block";
-                chargementfav.style.display = "none"
-                return;
-            } else {
-                message.style.display = "none";
-            }
-
-            // Créer les cartes comme sur la page home
-            annoncesFavorites.forEach(annonce => {
-                // calculer jours restants
-                const joursRestants = getJoursRestants(annonce.expireAt)
-
-                const card = document.createElement("div");
-                card.className = "annonce-card";
-
-                const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
-
-                card.innerHTML = `
-                    <span class="annonce-type">${annonce.titre}</span>
-                    ${joursRestants !== null && joursRestants <= 7
-                        ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">
-                            ${joursRestants <= 2 
-                                ? `⚠ expire dans ${joursRestants} jour(s)` 
-                                : `⏳ expire dans ${joursRestants} jour(s)`
-                            }
-                        </div>` 
-                    : ""}
- 
-                    <img class="annonce-img" src="${imgSrc}" alt="${annonce.titre}">
-                    <div class="type-annonce">
-                        <span class="annonce-quartier">${annonce.quartier}</span> - 
-                        <span class="annonce-type-text">${annonce.type_annonce || ""}</span>
-                    </div>
-                    <div class="annonce-footer">
-                        <div class="annonce-info">
-                            <span class="ville">${annonce.ville}</span>
-                            <span class="prix">${annonce.prix} XAF</span>
-                        </div>
-                        <button class="btn-details">Voir</button>
-                        <button class="btn-share">
-                            <img src="image/partager.png" alt="Partager" class="share-icon">
-                        </button>
-                        <button class="btn-fav" data-id="${annonce.id}">❤️</button>
-                    </div>
-                `;
-
-                container.appendChild(card);
-
-                // Bouton voir
-                card.querySelector(".btn-details").addEventListener("click", () => {
-                    localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-                    afficherPage("detail");
-                    afficherDetailAnnonce();
-                });
-
-                // Bouton partager
-                card.querySelector(".btn-share").addEventListener("click", () => {
-                    partagerAnnonce(annonce);
-                });
-
-                // Bouton favoris
-                let favBtn = card.querySelector(".btn-fav");
-                favBtn.replaceWith(favBtn.cloneNode(true));
-                favBtn = card.querySelector(".btn-fav");
-                setupFavoriButton(favBtn, annonce);
-            });
-
-            // on arrete le loader
-            chargementfav.style.display = "none"
-
-        } catch(err){
-            console.error("Erreur chargement favoris :", err);
-            chargementfav.style.display = "none"
-            message.textContent = "Erreur lors du chargement des favoris.";
-            message.style.display = "block";
-        }
+    savedAccounts.querySelector(".account-item")?.addEventListener("click", () => {
+      overlay.style.display = "none";
+      afficherPage("connexion");
+      if (emailCompte) {
+        const conEmail = document.getElementById("con-email");
+        if (conEmail) conEmail.value = emailCompte;
+      }
     });
-}
+  }
 
-window.addEventListener("hashchange", async () => {
-    const hash = window.location.hash;
-    if(hash.startsWith("#annonce-")){
-        const annonceId = hash.replace("#annonce-", "");
-        try {
-            const res = await fetch(`${API_URL}/api/annonces/${annonceId}`);
-            if(!res.ok) throw new Error("Annonce introuvable");
-            const annonce = await res.json();
-            localStorage.setItem("annonceDetail", JSON.stringify(annonce));
-            afficherPage("detail");
-            afficherDetailAnnonce();
-        } catch(err){
-            console.error(err);
-            showToast("info", "Impossible de charger l'annonce depuis ce lien.");
-        }
-    } else {
-        afficherPage("home");
-    }
+  currentUserUid = null;
+  localStorage.removeItem("uid");
+  showToast("info", "Déconnecté !");
+  overlay.style.display = "flex";
 });
 
-/* ================= DROPDOWN VILLES ================= */
-document.addEventListener("DOMContentLoaded", () => {
-    const dropbtn = document.querySelector(".dropbtn");
-    const cityDropdown = document.getElementById("cityDropdown");
+document.getElementById("createAccountBtn")?.addEventListener("click", () => { overlay.style.display = "none"; afficherPage("inscription"); });
 
-    if (!dropbtn || !cityDropdown) return;
-
-    // Ouvrir / fermer le dropdown au clic
-    dropbtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // empêche fermeture immédiate
-        cityDropdown.style.display = cityDropdown.style.display === "block" ? "none" : "block";
-    });
-
-    // Fermer le dropdown si clic en dehors
-    window.addEventListener("click", () => {
-        cityDropdown.style.display = "none";
-    });
-
-    // Quand on sélectionne une ville
-    cityDropdown.querySelectorAll("a").forEach(a => {
-        a.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation(); // évite fermeture immédiate
-
-            // Mettre à jour la ville sélectionnée et le texte du bouton
-            villeSelectionnee = a.textContent;
-            dropbtn.textContent = villeSelectionnee + " ▼";
-
-            // Fermer le dropdown
-            cityDropdown.style.display = "none";
-
-            // Recharger les annonces selon la page
-            if (document.getElementById("explorerContainer")) {
-                afficherExplorer();
-            } else {
-                afficherAnnoncesParGroupes(villeSelectionnee);
-            }
-        });
-    });
+document.getElementById("editProfileBtn")?.addEventListener("click", async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/user/${currentUserUid}`);
+    if (!res.ok) throw new Error();
+    const user = await res.json();
+    document.getElementById("editName").value = user.nom || "";
+    document.getElementById("editEmail").value = user.email || "";
+    document.getElementById("editContact").value = user.inscontact || "";
+    document.getElementById("editProfileForm").classList.add("active");
+  } catch { showToast("serverDown"); }
 });
 
-/* ============================= */
-/* memoriser les page */
-/* ============================= */
-window.addEventListener('popstate', function(event) {
-    // Priorité 1 : fermer plein écran formulaire si ouvert
-    if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
-        fermerPleinEcran(true);
-        return;
-    }
+document.getElementById("closeProfileModal")?.addEventListener("click", () => document.getElementById("editProfileForm").classList.remove("active"));
 
-    // Priorité 2 : fermer plein écran detail si ouvert
-    const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
-    if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
-        fullscreenOverlay.style.display = "none";
-        return;
-    }
+document.getElementById("editProfileForm")?.addEventListener("click", (e) => {
+  if (e.target === document.getElementById("editProfileForm")) document.getElementById("editProfileForm").classList.remove("active");
+});
 
-    // Priorité 3 : navigation normale entre pages
-    let pageId = (event.state && event.state.page) ? event.state.page : 'home';
-    if(pageId === 'accueil') pageId = 'home';
-    afficherPage.skipHistory = true;
-    afficherPage(pageId);
-    afficherPage.skipHistory = false;
+document.getElementById("saveProfileBtn")?.addEventListener("click", async () => {
+  const nom = document.getElementById("editName").value.trim();
+  const email = document.getElementById("editEmail").value.trim();
+  const inscontact = document.getElementById("editContact").value.trim();
+  const editchargement = document.getElementById("loader-edit");
+  editchargement.style.display = "flex";
+
+  if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
+
+  try {
+    const res = await fetch(`${API_URL}/api/user/${currentUserUid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom, email, inscontact })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    editchargement.style.display = "none";
+    showToast("info", "Profil mis à jour !");
+    document.getElementById("userName").textContent = nom;
+    document.getElementById("userEmail").textContent = email;
+    document.getElementById("userContact").textContent = inscontact;
+    document.getElementById("editProfileForm").classList.remove("active");
+  } catch {
+    editchargement.style.display = "none";
+    showToast("loadFail");
+  }
 });
 
 /* ===================================================== */
-/* ================= PULL TO REFRESH ================== */
+/* ============ PAGE FAVORIS ========================== */
+/* ===================================================== */
+document.getElementById("voirFavorisBtn")?.addEventListener("click", async () => {
+  if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
+  afficherPage("favoris");
+
+  const chargementfav = document.getElementById("loader-fav");
+  chargementfav.style.display = "flex";
+  const container = document.getElementById("favorisContainer");
+  const message = document.getElementById("aucunFavorisMessage");
+  container.innerHTML = "";
+
+  try {
+    const res = await fetch(`${API_URL}/api/annonces`);
+    if (!res.ok) throw new Error();
+    const toutes = await res.json();
+    const annoncesFavorites = toutes.filter(a => favorisLocal.includes(a.id));
+
+    if (annoncesFavorites.length === 0) { message.style.display = "block"; chargementfav.style.display = "none"; return; }
+    message.style.display = "none";
+
+    annoncesFavorites.forEach(annonce => {
+      const joursRestants = getJoursRestants(annonce.expireAt);
+      const card = document.createElement("div");
+      card.className = "annonce-card";
+      const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
+
+      const isVente = (annonce.titre || "").toLowerCase().includes("vente");
+      card.innerHTML = `
+        <img class="annonce-img" src="${imgSrc}" alt="${annonce.titre}" style="width:110px;min-height:130px;object-fit:cover;flex-shrink:0;">
+        ${joursRestants !== null && joursRestants <= 7 ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">⏳ ${joursRestants}j</div>` : ""}
+        <div class="fav-card-body">
+          <div class="fav-card-top">
+            <span class="fav-card-badge ${isVente ? "vente" : ""}">${annonce.titre || "Location"}</span>
+          </div>
+          <div class="fav-card-type">${annonce.type_annonce || ""}</div>
+          <div class="fav-card-location">📍 ${annonce.ville || ""}${annonce.quartier ? " · " + annonce.quartier : ""}</div>
+          <div class="fav-card-bottom">
+            <span class="fav-card-prix">${annonce.prix ? Number(annonce.prix).toLocaleString("fr-FR") : ""} XAF</span>
+            <div class="fav-card-actions">
+              <button class="btn-fav" data-id="${annonce.id}">❤️</button>
+              <button class="fav-btn-voir btn-details">Voir</button>
+            </div>
+          </div>
+        </div>`;
+      container.appendChild(card);
+      card.querySelector(".btn-details").addEventListener("click", () => {
+        localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+        afficherPage("detail");
+        afficherDetailAnnonce();
+      });
+      setupFavoriButton(card.querySelector(".btn-fav"), annonce);
+    });
+
+    chargementfav.style.display = "none";
+  } catch {
+    chargementfav.style.display = "none";
+    message.textContent = "Erreur lors du chargement des favoris.";
+    message.style.display = "block";
+  }
+});
+
+/* ===================================================== */
+/* ============ HASHCHANGE & POPSTATE ================= */
+/* ===================================================== */
+window.addEventListener("hashchange", async () => {
+  const hash = window.location.hash;
+  if (hash.startsWith("#annonce-")) {
+    const annonceId = hash.replace("#annonce-", "");
+    try {
+      const res = await fetch(`${API_URL}/api/annonces/${annonceId}`);
+      if (!res.ok) throw new Error();
+      const annonce = await res.json();
+      localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+      afficherPage("detail");
+      afficherDetailAnnonce();
+    } catch { showToast("info", "Impossible de charger l'annonce depuis ce lien."); }
+  } else {
+    afficherPage("home");
+  }
+});
+
+window.addEventListener('popstate', (event) => {
+  if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") { fermerPleinEcran(true); return; }
+  const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
+  if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") { fullscreenOverlay.style.display = "none"; return; }
+  const pageId = event.state?.page || 'home';
+  afficherPage.skipHistory = true;
+  afficherPage(pageId === 'accueil' ? 'home' : pageId);
+  afficherPage.skipHistory = false;
+});
+
+/* ===================================================== */
+/* ============ DROPDOWN VILLES (init au DOMContentLoaded) */
+/* ===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  const dropbtn2 = document.querySelector(".dropbtn");
+  const cityDropdown2 = document.getElementById("cityDropdown");
+  if (!dropbtn2 || !cityDropdown2) return;
+
+  dropbtn2.addEventListener("click", (e) => { e.stopPropagation(); cityDropdown2.style.display = cityDropdown2.style.display === "block" ? "none" : "block"; });
+  window.addEventListener("click", () => cityDropdown2.style.display = "none");
+  cityDropdown2.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      villeSelectionnee = a.textContent;
+      dropbtn2.textContent = villeSelectionnee + " ▼";
+      cityDropdown2.style.display = "none";
+      afficherAnnoncesParGroupes(villeSelectionnee);
+    });
+  });
+});
+
+/* ===================================================== */
+/* ============ PULL TO REFRESH ====================== */
 /* ===================================================== */
 const homeContent = document.querySelector('.home-content');
-const spinner = document.getElementById('pull-spinner');
+const spinnerHome = document.getElementById('pull-spinner');
+let touchStartY = 0, isPulling = false, isRefreshing = false;
 
-let touchStartY = 0;
-let isPulling = false;
-let isRefreshing = false;
+homeContent?.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; isPulling = false; });
 
-homeContent.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-    isPulling = false; // reset à chaque début de touch
+homeContent?.addEventListener('touchmove', (e) => {
+  const diff = e.touches[0].clientY - touchStartY;
+  if (homeContent.scrollTop === 0 && diff > 0 && !isRefreshing) {
+    isPulling = true;
+    spinnerHome.style.transform = `translateX(-50%) translateY(${Math.min(diff - 50, 50)}px)`;
+    spinnerHome.style.opacity = Math.min(diff / 100, 1);
+    if (diff > 70) spinnerHome.classList.add('active');
+    else spinnerHome.classList.remove('active');
+  } else { isPulling = false; spinnerHome.classList.remove('active'); }
 });
 
-homeContent.addEventListener('touchmove', (e) => {
-    const touchCurrentY = e.touches[0].clientY;
-    const diff = touchCurrentY - touchStartY;
-
-    // Déclencher seulement si on est EXACTEMENT en haut ET qu'on tire vers le bas
-    if (homeContent.scrollTop === 0 && diff > 0 && !isRefreshing) {
-        isPulling = true;
-        spinner.style.transform = `translateX(-50%) translateY(${Math.min(diff - 50, 50)}px)`;
-        spinner.style.opacity = Math.min(diff / 100, 1);
-        if (diff > 70) spinner.classList.add('active');
-        else spinner.classList.remove('active');
-    } else if (diff <= 0 || homeContent.scrollTop > 0) {
-        // Si on scrolle vers le bas ou qu'on est pas en haut : reset
-        isPulling = false;
-        spinner.classList.remove('active');
-        spinner.style.transform = `translateX(-50%) translateY(-50px)`;
-        spinner.style.opacity = 0;
-    }
-});
-
-homeContent.addEventListener('touchend', (e) => {
-    if (!isPulling) return;
-    const touchEndY = e.changedTouches[0].clientY;
-    const diff = touchEndY - touchStartY;
-
-    if (diff > 70 && !isRefreshing) {
-        isRefreshing = true;
-        spinner.classList.add('active');
-
-        afficherAnnoncesParGroupes(villeSelectionnee)
-            .finally(() => {
-                isRefreshing = false;
-                spinner.classList.remove('active');
-                spinner.style.transform = `translateX(-50%) translateY(-50px)`;
-                spinner.style.opacity = 0;
-            });
-    } else {
-        spinner.classList.remove('active');
-        spinner.style.transform = `translateX(-50%) translateY(-50px)`;
-        spinner.style.opacity = 0;
-    }
-
-    touchStartY = 0;
-    isPulling = false;
-});
-
-/* ===================================================== */
-/* ======= SUPPRESSION AUTO ANNONCES EXPIRÉES ========= */
-/* ===================================================== */
-function verifierAnnoncesExpirees() {
-    const now = new Date();
-
-    // Chercher toutes les cartes d'annonces affichées
-    document.querySelectorAll(".annonce-card").forEach(card => {
-        const expireEl = card.querySelector(".expire-info");
-        if (!expireEl) return;
-
-        // Récupérer le texte d'expiration
-        const texte = expireEl.textContent;
-
-        // Si le texte indique 0 jour ou négatif, supprimer la carte
-        if (texte.includes("expire dans 0") || texte.includes("expire dans -")) {
-            card.style.transition = "opacity 0.5s ease";
-            card.style.opacity = "0";
-            setTimeout(() => {
-                card.remove();
-
-                // Si la row est vide, afficher message
-                const row = card.closest(".annonces-row");
-                if (row && row.children.length === 0) {
-                    row.innerHTML = `<p style="text-align:center; font-size:16px; margin-top:20px;">
-                        Aucune annonce disponible.
-                    </p>`;
-                }
-            }, 500);
-        }
+homeContent?.addEventListener('touchend', (e) => {
+  if (!isPulling) return;
+  const diff = e.changedTouches[0].clientY - touchStartY;
+  if (diff > 70 && !isRefreshing) {
+    isRefreshing = true;
+    spinnerHome.classList.add('active');
+    afficherAnnoncesParGroupes(villeSelectionnee).finally(() => {
+      isRefreshing = false;
+      spinnerHome.classList.remove('active');
+      spinnerHome.style.opacity = 0;
     });
-}
-
-// Vérifier toutes les minutes
-setInterval(verifierAnnoncesExpirees, 60 * 1000);
+  } else { spinnerHome.classList.remove('active'); spinnerHome.style.opacity = 0; }
+  touchStartY = 0; isPulling = false;
+});
