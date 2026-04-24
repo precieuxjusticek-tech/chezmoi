@@ -1046,6 +1046,10 @@ loader pour mot de passe oublié
     display: none;
 }
 
+/* ============================= */
+/* SPINNER PULL-TO-REFRESH (HOME) */
+/* ============================= */
+
 .pull-spinner {
   position: absolute;
   top: 30dvh; /* sous le header fixe */

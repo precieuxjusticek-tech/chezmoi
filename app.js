@@ -100,6 +100,13 @@ function afficherPage(id) {
 triggers.forEach(el => {
   el.addEventListener("click", () => {
     const pageId = el.getAttribute("data-page");
+    // Protection pages nécessitant connexion
+    const pagesProtegees = ["ajouter", "alertes", "favoris", "profil"];
+    if (pagesProtegees.includes(pageId) && !currentUserUid) {
+      showToast("info", "🔒 Vous devez être connecté pour accéder à cette page.");
+      afficherPage("connexion");
+      return;
+    }
     afficherPage(pageId);
   });
 });
@@ -154,9 +161,6 @@ window.addEventListener("online", () => {
   safeToast("success", "🌐 Connexion rétablie !");
 });
 
-/* BUG-4 FIX: Suppression du checkConnectionSpeed qui causait une erreur 404
-   car le serveur Render ne répond pas aux requêtes HEAD sur /
-   On garde juste la surveillance offline/online native du navigateur */
 let lastStatus = navigator.onLine;
 
 function checkInstability() {
@@ -496,42 +500,30 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentStep = 1;
 const totalSteps = 6;
 
-/* BUG-1 FIX: Gestion des champs spécifiques aux parcelles/terrains */
+
 function toggleChampsParcelle() {
   const typeChecked = document.querySelector('input[name="type"]:checked')?.value || "";
   const isParcelle = typeChecked === "parcelle" || typeChecked === "terrain";
 
-  // Champs à masquer pour parcelle/terrain
-  const champsNonParcelle = [
-    "nbChambres", "nbPieces", "nbSalons", "nbDouches"
-  ];
+  // Panel 4 : masquer/afficher équipements intérieurs
+  const equipInterieurs = document.querySelectorAll(".equip-interieur");
+  equipInterieurs.forEach(el => el.style.display = isParcelle ? "none" : "block");
+  const parcelleInfo = document.querySelector(".parcelle-info");
+  if (parcelleInfo) parcelleInfo.style.display = isParcelle ? "block" : "none";
 
-  // Champs spécifiques parcelle
-  const champsParcelle = document.getElementById("parcelle-fields");
+  // Panel 5 : masquer/afficher champs normaux vs terrain
+  const champsNormaux = document.getElementById("champsNonParcelle");
+  if (champsNormaux) champsNormaux.style.display = isParcelle ? "none" : "block";
+  const champsParcelle = document.getElementById("champsParcelle");
+  if (champsParcelle) champsParcelle.style.display = isParcelle ? "block" : "none";
 
-  // Labels et wrappers des champs normaux dans panel-5
-  champsNonParcelle.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const wrapper = el.closest(".field-wrapper-normal") || el.parentElement;
-    if (wrapper) wrapper.style.display = isParcelle ? "none" : "block";
-    if (el) el.required = !isParcelle;
-  });
-
-  if (champsParcelle) {
-    champsParcelle.style.display = isParcelle ? "block" : "none";
-  }
-
-  // Masquer aussi douche/toilettes/équipements intérieurs pour parcelle
-  const panelEquipements = document.getElementById("panel-4");
-  if (panelEquipements) {
-    const equipInterieurs = panelEquipements.querySelectorAll(".equip-interieur");
-    equipInterieurs.forEach(el => {
-      el.style.display = isParcelle ? "none" : "block";
-    });
-    const parcelleInfo = panelEquipements.querySelector(".parcelle-info");
-    if (parcelleInfo) parcelleInfo.style.display = isParcelle ? "block" : "none";
-  }
+  // Gérer required
+  const nbChambres = document.getElementById("nbChambres");
+  const nbPieces = document.getElementById("nbPieces");
+  const surfaceTerrain = document.getElementById("surfaceTerrain");
+  if (nbChambres) nbChambres.required = !isParcelle;
+  if (nbPieces) nbPieces.required = !isParcelle;
+  if (surfaceTerrain) surfaceTerrain.required = isParcelle;
 }
 
 // Écouter changements du type de bien
@@ -589,15 +581,10 @@ function validerEtape(step) {
       if (!chambres || chambres < 0) { showToast("info", "Indiquez le nombre de chambres."); return false; }
       if (!pieces || pieces < 0) { showToast("info", "Indiquez le nombre de pièces."); return false; }
     } else {
-      // Pour parcelle, vérifier surface
-      const surface = document.getElementById("surface").value;
-      if (!surface || surface <= 0) { showToast("info", "Indiquez la surface de la parcelle."); return false; }
+      const surface = document.getElementById("surfaceTerrain").value;
+      if (!surface || surface <= 0) { showToast("info", "Indiquez la surface du terrain."); return false; }
     }
-
-    if (!prix || prix <= 0) { showToast("info", "Entrez un prix valide."); return false; }
-    if (!description) { showToast("info", "Ajoutez une description."); return false; }
-    if (!contact) { showToast("info", "Ajoutez un numéro de contact."); return false; }
-  }
+  }  
   return true;
 }
 
@@ -1077,7 +1064,10 @@ formAjouter?.addEventListener("submit", async (e) => {
     formData.append("nbChambres", isParcelle ? "" : (document.getElementById("nbChambres")?.value || ""));
     formData.append("nbPieces", isParcelle ? "" : (document.getElementById("nbPieces")?.value || ""));
     formData.append("nbSalons", isParcelle ? "" : (document.getElementById("nbSalons")?.value || ""));
-    formData.append("surface", document.getElementById("surface")?.value || "");
+    formData.append("surface", isParcelle
+      ? (document.getElementById("surfaceTerrain")?.value || "")
+      : (document.getElementById("surface")?.value || ""));
+    formData.append("facade", isParcelle ? (document.getElementById("facade")?.value || "") : "");
     formData.append("etage", document.querySelector('input[name="etage"]:checked')?.value || "");
     formData.append("eau", document.querySelector('input[name="eau"]:checked')?.value || "");
     formData.append("electricite", document.querySelector('input[name="electricite"]:checked')?.value || "");
@@ -1204,7 +1194,7 @@ async function afficherDetailAnnonce() {
   if (descEl) descEl.textContent = annonce.description || "Aucune description fournie.";
 
   /* BUG-2 FIX: Stats rapides adaptées selon le type de bien */
-  const isParcelle = annonce.type_annonce?.toLowerCase() === "parcelle" || annonce.type_annonce?.toLowerCase() === "terrain";
+  const isParcelle = ["parcelle", "terrain"].includes(annonce.type_annonce?.toLowerCase());
   const quickStats = document.getElementById("detailQuickStats");
   if (quickStats) {
     quickStats.innerHTML = "";
@@ -1666,7 +1656,10 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ============ PAGE ALERTES ========================== */
 /* ===================================================== */
 
-/* BUG-5 FIX: switchAlerteTab déclarée globalement (window) pour être accessible depuis le HTML inline onclick */
+/* ===================================================== */
+/* ============ PAGE ALERTES ========================== */
+/* ===================================================== */
+
 window.switchAlerteTab = function(tab) {
   document.getElementById("alerteTabLocation").style.display = tab === "location" ? "block" : "none";
   document.getElementById("alerteTabVente").style.display = tab === "vente" ? "block" : "none";
@@ -1674,53 +1667,35 @@ window.switchAlerteTab = function(tab) {
   document.getElementById("tabVente").classList.toggle("active", tab === "vente");
 };
 
-document.getElementById("btnCreerAlerteLocation")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "location";
-  document.getElementById("modaleAlerteTitre").textContent = "Créer une alerte Location";
-  ouvrirModaleAlerte(false);
-});
-document.getElementById("btnCreerAlerteBigLocation")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "location";
-  ouvrirModaleAlerte(false);
-});
+// Boutons ouvrir modale
+document.getElementById("btnCreerAlerteLocation")?.addEventListener("click", () => ouvrirModaleAlerte("location", false));
+document.getElementById("btnCreerAlerteBigLocation")?.addEventListener("click", () => ouvrirModaleAlerte("location", false));
+document.getElementById("btnCreerAlerteVente")?.addEventListener("click", () => ouvrirModaleAlerte("vente", false));
+document.getElementById("btnCreerAlerteBigVente")?.addEventListener("click", () => ouvrirModaleAlerte("vente", false));
+document.getElementById("btnModifierAlerteLocation")?.addEventListener("click", () => ouvrirModaleAlerte("location", true));
+document.getElementById("btnModifierAlerteVente")?.addEventListener("click", () => ouvrirModaleAlerte("vente", true));
 
-document.getElementById("btnCreerAlerteVente")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "vente";
-  document.getElementById("modaleAlerteTitre").textContent = "Créer une alerte Vente";
-  ouvrirModaleAlerte(false);
-});
-document.getElementById("btnCreerAlerteBigVente")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "vente";
-  ouvrirModaleAlerte(false);
-});
-
-document.getElementById("btnModifierAlerteLocation")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "location";
-  ouvrirModaleAlerte(true);
-});
 document.getElementById("btnSupprimerAlerteLocation")?.addEventListener("click", () => {
   if (!confirm("Supprimer votre alerte location ?")) return;
   localStorage.removeItem("alerteChezMoi");
+  localStorage.removeItem("biensAlerteTrouves");
   alerteLocale = null;
   afficherEtatAlerteLocation();
-});
-
-document.getElementById("btnModifierAlerteVente")?.addEventListener("click", () => {
-  document.getElementById("alerteTypeAnnonce").value = "vente";
-  ouvrirModaleAlerte(true);
+  afficherBiensTrouves();
 });
 document.getElementById("btnSupprimerAlerteVente")?.addEventListener("click", () => {
   if (!confirm("Supprimer votre alerte vente ?")) return;
   localStorage.removeItem("alerteChezMoiVente");
+  localStorage.removeItem("biensAlerteTrouvesVente");
   afficherEtatAlerteVente();
+  afficherBiensTrouves();
 });
 
 let alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
-let biensLocalTrouves = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
 
 document.getElementById("alertesBtn")?.addEventListener("click", () => {
   if (!currentUserUid) {
-    showToast("info", "Vous devez etre connecte pour utiliser les alertes.");
+    showToast("info", "Vous devez être connecté pour utiliser les alertes.");
     afficherPage("inscription");
     return;
   }
@@ -1730,18 +1705,17 @@ document.getElementById("alertesBtn")?.addEventListener("click", () => {
 
 function chargerPageAlertes() {
   alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
-  biensLocalTrouves = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
   afficherEtatAlerteLocation();
   afficherEtatAlerteVente();
   afficherBiensTrouves();
-  if (alerteLocale) verifierCorrespondances();
+  verifierCorrespondances();
 }
 
 function afficherEtatAlerteLocation() {
   const empty = document.getElementById("alertesEmptyLocation");
   const card = document.getElementById("alerteCardLocation");
   const criteres = document.getElementById("alerteCriteresLocation");
-  if (!alerteLocale || alerteLocale.typeAlerte !== "location") {
+  if (!alerteLocale) {
     if (empty) empty.style.display = "block";
     if (card) card.style.display = "none";
   } else {
@@ -1768,8 +1742,10 @@ function afficherEtatAlerteVente() {
 
 function afficherCriteres(container, alerte) {
   container.innerHTML = "";
-  const chips = [];
-  chips.push({ label: "📍 " + (alerte.ville || "Brazzaville") });
+  const chips = [
+    { label: "📍 " + (alerte.ville || "Brazzaville") },
+  ];
+  if (alerte.typeAlerte) chips.push({ label: alerte.typeAlerte === "location" ? "🔑 Location" : "🏠 Vente" });
   if (alerte.quartiers?.length) chips.push({ label: "🏘️ " + alerte.quartiers.join(", ") });
   if (alerte.types?.length) chips.push({ label: "🏠 " + alerte.types.join(", ") });
   if (alerte.budgetMin || alerte.budgetMax) {
@@ -1777,6 +1753,12 @@ function afficherCriteres(container, alerte) {
     const max = alerte.budgetMax ? Number(alerte.budgetMax).toLocaleString("fr-FR") : "illimité";
     chips.push({ label: `💰 ${min} - ${max} XAF` });
   }
+  if (alerte.meuble) chips.push({ label: "🛋️ Meublé: " + alerte.meuble });
+  if (alerte.wifi) chips.push({ label: "📶 WiFi: " + alerte.wifi });
+  if (alerte.climatiseur) chips.push({ label: "❄️ Clim: " + alerte.climatiseur });
+  if (alerte.negociable) chips.push({ label: "🤝 Négociable: " + alerte.negociable });
+  if (alerte.viabilisee) chips.push({ label: "🏗️ Viabilisé: " + alerte.viabilisee });
+
   chips.forEach(c => {
     const chip = document.createElement("span");
     chip.className = "critere-chip";
@@ -1785,37 +1767,103 @@ function afficherCriteres(container, alerte) {
   });
 }
 
-function ouvrirModaleAlerte(modeModif = false) {
+function ouvrirModaleAlerte(typeAlerte, modeModif = false) {
   const modale = document.getElementById("modaleAlerte");
   const titre = document.getElementById("modaleAlerteTitre");
   if (!modale) return;
 
-  if (titre) titre.textContent = modeModif ? "Modifier mon alerte" : "Creer une alerte";
+  // Mettre à jour le type dans le hidden input
+  document.getElementById("alerteTypeAnnonce").value = typeAlerte;
+  if (titre) titre.textContent = modeModif ? "Modifier mon alerte" : "Créer une alerte";
 
+  // Mettre en surbrillance le bon onglet type dans la modale
+  actualisserTypeModale(typeAlerte);
+
+  // Réinitialiser les champs
   document.querySelectorAll("#alerteQuartiers input[type='checkbox']").forEach(cb => cb.checked = false);
   document.querySelectorAll("#alerteTypes input[type='checkbox']").forEach(cb => cb.checked = false);
   document.getElementById("alerteBudgetMin").value = "";
   document.getElementById("alerteBudgetMax").value = "";
-  document.getElementById("alerteMeuble").value = "";
-  document.getElementById("alerteCaution").value = "";
+  const meuble = document.getElementById("alerteMeuble");
+  if (meuble) meuble.value = "";
+  const caution = document.getElementById("alerteCaution");
+  if (caution) caution.value = "";
+  const wifi = document.getElementById("alerteWifi");
+  if (wifi) wifi.value = "";
+  const clim = document.getElementById("alerteClimatiseur");
+  if (clim) clim.value = "";
+  const neg = document.getElementById("alerteNegociable");
+  if (neg) neg.value = "";
+  const titreProp = document.getElementById("alerteTitreProp");
+  if (titreProp) titreProp.value = "";
+  const viab = document.getElementById("alerteViabilisee");
+  if (viab) viab.value = "";
+  const clot = document.getElementById("alerteCloture");
+  if (clot) clot.value = "";
 
-  if (modeModif && alerteLocale) {
-    alerteLocale.quartiers?.forEach(q => {
-      const cb = document.querySelector(`#alerteQuartiers input[value="${q}"]`);
-      if (cb) cb.checked = true;
-    });
-    alerteLocale.types?.forEach(t => {
-      const cb = document.querySelector(`#alerteTypes input[value="${t}"]`);
-      if (cb) cb.checked = true;
-    });
-    if (alerteLocale.budgetMin) document.getElementById("alerteBudgetMin").value = alerteLocale.budgetMin;
-    if (alerteLocale.budgetMax) document.getElementById("alerteBudgetMax").value = alerteLocale.budgetMax;
-    if (alerteLocale.meuble) document.getElementById("alerteMeuble").value = alerteLocale.meuble;
-    if (alerteLocale.cautionMax) document.getElementById("alerteCaution").value = alerteLocale.cautionMax;
+  // Pré-remplir si modification
+  if (modeModif) {
+    const storageKey = typeAlerte === "vente" ? "alerteChezMoiVente" : "alerteChezMoi";
+    const alerte = JSON.parse(localStorage.getItem(storageKey) || "null");
+    if (alerte) {
+      alerte.quartiers?.forEach(q => {
+        const cb = document.querySelector(`#alerteQuartiers input[value="${q}"]`);
+        if (cb) cb.checked = true;
+      });
+      alerte.types?.forEach(t => {
+        const cb = document.querySelector(`#alerteTypes input[value="${t}"]`);
+        if (cb) cb.checked = true;
+      });
+      if (alerte.budgetMin) document.getElementById("alerteBudgetMin").value = alerte.budgetMin;
+      if (alerte.budgetMax) document.getElementById("alerteBudgetMax").value = alerte.budgetMax;
+      if (alerte.meuble && meuble) meuble.value = alerte.meuble;
+      if (alerte.cautionMax && caution) caution.value = alerte.cautionMax;
+      if (alerte.wifi && wifi) wifi.value = alerte.wifi;
+      if (alerte.climatiseur && clim) clim.value = alerte.climatiseur;
+      if (alerte.negociable && neg) neg.value = alerte.negociable;
+      if (alerte.viabilisee && viab) viab.value = alerte.viabilisee;
+      if (alerte.cloture && clot) clot.value = alerte.cloture;
+    }
   }
 
   modale.style.display = "flex";
 }
+
+function actualisserTypeModale(typeAlerte) {
+  const isTerrain = typeAlerte === "terrain";
+  const isVente = typeAlerte === "vente" || isTerrain;
+
+  // Onglets visuels dans la modale
+  const locBtn = document.getElementById("alerteTypeLoc");
+  const venBtn = document.getElementById("alerteTypeVen");
+  if (locBtn && venBtn) {
+    const activeStyle = "border-color:#fd802e;background:rgba(253,128,46,0.08);color:#c96b1a;font-weight:700;";
+    const inactiveStyle = "";
+    locBtn.style.cssText = isVente ? inactiveStyle : activeStyle;
+    venBtn.style.cssText = isVente ? activeStyle : inactiveStyle;
+  }
+
+  // Champs conditionnels
+  const champLoc = document.getElementById("alerteChampLocation");
+  const champVente = document.getElementById("alerteChampVente");
+  const champTerrain = document.getElementById("alerteChampTerrain");
+  const terrainCb = document.getElementById("alerteTypeTerrain");
+
+  if (champLoc) champLoc.style.display = isVente ? "none" : "block";
+  if (champVente) champVente.style.display = isVente ? "block" : "none";
+  if (champTerrain) champTerrain.style.display = isTerrain ? "block" : "none";
+  if (terrainCb) terrainCb.style.display = isTerrain ? "flex" : "none";
+}
+
+// Clic sur les onglets de type dans la modale
+document.getElementById("alerteTypeLoc")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "location";
+  actualisserTypeModale("location");
+});
+document.getElementById("alerteTypeVen")?.addEventListener("click", () => {
+  document.getElementById("alerteTypeAnnonce").value = "vente";
+  actualisserTypeModale("vente");
+});
 
 function fermerModaleAlerte() {
   const modale = document.getElementById("modaleAlerte");
@@ -1831,8 +1879,14 @@ document.getElementById("btnEnregistrerAlerte")?.addEventListener("click", () =>
   const types = [...document.querySelectorAll("#alerteTypes input:checked")].map(cb => cb.value);
   const budgetMin = document.getElementById("alerteBudgetMin").value;
   const budgetMax = document.getElementById("alerteBudgetMax").value;
-  const meuble = document.getElementById("alerteMeuble").value;
-  const cautionMax = document.getElementById("alerteCaution").value;
+  const meuble = document.getElementById("alerteMeuble")?.value || "";
+  const cautionMax = document.getElementById("alerteCaution")?.value || "";
+  const wifi = document.getElementById("alerteWifi")?.value || "";
+  const climatiseur = document.getElementById("alerteClimatiseur")?.value || "";
+  const negociable = document.getElementById("alerteNegociable")?.value || "";
+  const titreProp = document.getElementById("alerteTitreProp")?.value || "";
+  const viabilisee = document.getElementById("alerteViabilisee")?.value || "";
+  const cloture = document.getElementById("alerteCloture")?.value || "";
 
   const nouvelleAlerte = {
     userId: currentUserUid,
@@ -1843,6 +1897,12 @@ document.getElementById("btnEnregistrerAlerte")?.addEventListener("click", () =>
     budgetMax: budgetMax ? Number(budgetMax) : null,
     meuble: meuble || null,
     cautionMax: typeAlerte === "location" ? (cautionMax || null) : null,
+    wifi: wifi || null,
+    climatiseur: climatiseur || null,
+    negociable: negociable || null,
+    titre_propriete: titreProp || null,
+    viabilisee: viabilisee || null,
+    cloture: cloture || null,
     active: true,
     createdAt: new Date().toISOString()
   };
@@ -1855,22 +1915,9 @@ document.getElementById("btnEnregistrerAlerte")?.addEventListener("click", () =>
   afficherEtatAlerteLocation();
   afficherEtatAlerteVente();
   showToast("info", `✅ Alerte ${typeAlerte} enregistrée !`);
-
-  /* BUG-3 FIX: Vérifier les correspondances pour le bon type d'alerte */
   verifierCorrespondancesParType(typeAlerte, nouvelleAlerte);
 });
 
-document.getElementById("btnSupprimerAlerte")?.addEventListener("click", () => {
-  if (!confirm("Supprimer votre alerte ?")) return;
-  alerteLocale = null;
-  localStorage.removeItem("alerteChezMoi");
-  biensLocalTrouves = [];
-  localStorage.removeItem("biensAlerteTrouves");
-  afficherBiensTrouves();
-  showToast("info", "Alerte supprimee.");
-});
-
-/* BUG-3 FIX: Vérification des correspondances par type d'alerte */
 async function verifierCorrespondancesParType(typeAlerte, alerte) {
   if (!alerte) return;
   try {
@@ -1878,11 +1925,10 @@ async function verifierCorrespondancesParType(typeAlerte, alerte) {
     if (!res.ok) return;
     const annonces = await res.json();
 
-    // Filtrer selon le type d'alerte (location ou vente)
     const annoncesFiltered = annonces.filter(a => {
-      const titreAnnonce = (a.titre || "").toLowerCase();
-      if (typeAlerte === "location") return titreAnnonce.includes("location");
-      if (typeAlerte === "vente") return titreAnnonce.includes("vente");
+      const t = (a.titre || "").toLowerCase();
+      if (typeAlerte === "location") return t.includes("location");
+      if (typeAlerte === "vente") return t.includes("vente");
       return true;
     });
 
@@ -1901,11 +1947,9 @@ async function verifierCorrespondancesParType(typeAlerte, alerte) {
 
     if (nouveaux > 0) {
       localStorage.setItem(storageKey, JSON.stringify(biensExistants));
-      if (typeAlerte === "location") biensLocalTrouves = biensExistants;
-
+      if (typeAlerte === "location") alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
       afficherBiensTrouves();
       showToast("info", `🔔 ${nouveaux} nouveau${nouveaux > 1 ? 'x' : ''} bien${nouveaux > 1 ? 's' : ''} trouvé${nouveaux > 1 ? 's' : ''} !`);
-
       const badge = typeAlerte === "vente"
         ? document.getElementById("alertesBadgeNewVente")
         : document.getElementById("alertesBadgeNewLocation");
@@ -1921,47 +1965,39 @@ async function verifierCorrespondancesParType(typeAlerte, alerte) {
 }
 
 async function verifierCorrespondances() {
-  if (!alerteLocale) return;
-  verifierCorrespondancesParType("location", alerteLocale);
-
+  alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
+  if (alerteLocale) verifierCorrespondancesParType("location", alerteLocale);
   const alerteVente = JSON.parse(localStorage.getItem("alerteChezMoiVente") || "null");
   if (alerteVente) verifierCorrespondancesParType("vente", alerteVente);
 }
 
 function correspondAlerte(annonce, alerte) {
   if (annonce.ville?.toLowerCase() !== "brazzaville") return false;
-
   if (alerte.quartiers?.length) {
     const q = (annonce.quartier || "").toLowerCase();
-    const match = alerte.quartiers.some(aq => q.includes(aq.toLowerCase()));
-    if (!match) return false;
+    if (!alerte.quartiers.some(aq => q.includes(aq.toLowerCase()))) return false;
   }
-
   if (alerte.types?.length) {
-    const typeMatch = alerte.types.some(t => annonce.type_annonce?.toLowerCase() === t.toLowerCase());
-    if (!typeMatch) return false;
+    if (!alerte.types.some(t => annonce.type_annonce?.toLowerCase() === t.toLowerCase())) return false;
   }
-
   const prix = Number(annonce.prix);
   if (alerte.budgetMin && prix < alerte.budgetMin) return false;
   if (alerte.budgetMax && prix > alerte.budgetMax) return false;
-
   if (alerte.meuble && annonce.meuble && alerte.meuble !== annonce.meuble) return false;
-
+  if (alerte.wifi && annonce.wifi && alerte.wifi !== annonce.wifi) return false;
+  if (alerte.climatiseur && annonce.climatiseur && alerte.climatiseur !== annonce.climatiseur) return false;
+  if (alerte.negociable && annonce.negociable && alerte.negociable !== annonce.negociable) return false;
+  if (alerte.viabilisee && annonce.viabilisee && alerte.viabilisee !== annonce.viabilisee) return false;
   if (alerte.cautionMax && annonce.caution) {
     if (Number(annonce.caution) > Number(alerte.cautionMax)) return false;
   }
-
   return true;
 }
 
-/* BUG-3 FIX: Affichage des biens trouvés par type */
 function afficherBiensTrouves() {
-  // Biens location
   const containerLoc = document.getElementById("alertesBiensContainerLocation");
   const emptyLoc = document.getElementById("alertesBiensEmptyLocation");
   const biensLocation = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
-
   if (containerLoc) {
     containerLoc.innerHTML = "";
     if (biensLocation.length === 0) {
@@ -1972,11 +2008,9 @@ function afficherBiensTrouves() {
     }
   }
 
-  // Biens vente
   const containerVente = document.getElementById("alertesBiensContainerVente");
   const emptyVente = document.getElementById("alertesBiensEmptyVente");
   const biensVente = JSON.parse(localStorage.getItem("biensAlerteTrouvesVente") || "[]");
-
   if (containerVente) {
     containerVente.innerHTML = "";
     if (biensVente.length === 0) {
@@ -1993,7 +2027,6 @@ function renderBienCard(bien, container) {
   card.className = "bien-trouve-card";
   const imgSrc = bien.images?.[0] || "image/logo_ChezMoi.png";
   const temps = tempsEcoule(bien.trouveLe);
-
   card.innerHTML = `
     <img class="bien-trouve-img" src="${imgSrc}" alt="${bien.titre}">
     <div class="bien-trouve-body">
@@ -2010,13 +2043,11 @@ function renderBienCard(bien, container) {
         <button class="btn-voir-bien">Voir →</button>
       </div>
     </div>`;
-
   card.querySelector(".btn-voir-bien").addEventListener("click", () => {
     localStorage.setItem("annonceDetail", JSON.stringify(bien));
     afficherPage("detail");
     afficherDetailAnnonce();
   });
-
   container.appendChild(card);
 }
 

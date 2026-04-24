@@ -472,6 +472,9 @@
 
                             <input type="radio" id="maison4Chambre" name="type" value="maison 4 chambre et plus">
                             <label for="maison4Chambre">Maison 4+ ch.</label>
+
+                            <input type="radio" id="terrain" name="type" value="terrain">
+                            <label for="terrain">Terrain</label>
                         </div>
                     </div>
                 </div>
@@ -513,167 +516,209 @@
                         <h3>Équipements du bien</h3>
                         <p class="panel-desc">Ces détails font la différence — les biens bien décrits partent 3x plus vite ✅</p>
 
-                        <!-- DOUCHE -->
-                        <label class="field-label">🚿 Type de douche</label>
-                        <div class="douche-radios">
-                            <input type="radio" id="interne" name="douche" value="interne">
-                            <label for="interne">🚿 Interne</label>
-                            <input type="radio" id="externe" name="douche" value="externe">
-                            <label for="externe">🪣 Externe</label>
-                        </div>
+                        <div class="equip-interieur">
+                            <!-- DOUCHE -->
+                            <label class="field-label">🚿 Type de douche</label>
+                            <div class="douche-radios">
+                                <input type="radio" id="interne" name="douche" value="interne">
+                                <label for="interne">🚿 Interne</label>
+                                <input type="radio" id="externe" name="douche" value="externe">
+                                <label for="externe">🪣 Externe</label>
+                            </div>
 
-                        <!-- NOMBRE DE DOUCHES -->
-                        <label class="field-label" style="margin-top:15px;">
-                            🚿 Nombre de douches
-                            <span class="field-hint">Préciser ça rassure les familles</span>
-                        </label>
-                        <input type="number" id="nbDouches" placeholder="Ex: 2 — les familles adorent savoir ça" min="0">
+                            <!-- NOMBRE DE DOUCHES -->
+                            <label class="field-label" style="margin-top:15px;">
+                                🚿 Nombre de douches
+                                <span class="field-hint">Préciser ça rassure les familles</span>
+                            </label>
+                            <input type="number" id="nbDouches" placeholder="Ex: 2 — les familles adorent savoir ça" min="0">
 
-                        <!-- TOILETTES (bug 2) -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🚽 Toilettes ?
-                            <span class="field-hint">Interne ou externe — les locataires adorent le savoir</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="toilettesInterne" name="toilettes" value="interne">
-                            <label for="toilettesInterne" class="toggle-oui">🏠 Interne</label>
-                            <input type="radio" id="toilettesExterne" name="toilettes" value="externe">
-                            <label for="toilettesExterne" class="toggle-non">🪣 Externe</label>
-                        </div>
-
-                        <!-- CLIMATISEUR -->
-                        <label class="field-label" style="margin-top:12px;">
-                            ❄️ Climatiseur ?
-                            <span class="field-hint">Un vrai atout à Pointe-Noire et Brazzaville !</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="climOui" name="climatiseur" value="oui">
-                            <label for="climOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="climNon" name="climatiseur" value="non">
-                            <label for="climNon" class="toggle-non">❌ Non</label>
-                        </div>
-
-                        <!-- BALCON -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🌿 Balcon / Terrasse ?
-                            <span class="field-hint">Les locataires adorent ça</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="balconOui" name="balcon" value="oui">
-                            <label for="balconOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="balconNon" name="balcon" value="non">
-                            <label for="balconNon" class="toggle-non">❌ Non</label>
-                        </div>
-
-                        <!-- GROUPE ÉLECTROGÈNE -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🔋 Groupe électrogène ?
-                            <span class="field-hint">Critique en cas de coupures fréquentes</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="groupeOui" name="groupe_electrogene" value="oui">
-                            <label for="groupeOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="groupeNon" name="groupe_electrogene" value="non">
-                            <label for="groupeNon" class="toggle-non">❌ Non</label>
-                        </div>
-
-                        <!-- FORAGE -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🪣 Forage / Puits ?
-                            <span class="field-hint">Indispensable si l'eau courante est irrégulière</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="forageOui" name="forage" value="oui">
-                            <label for="forageOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="forageNon" name="forage" value="non">
-                            <label for="forageNon" class="toggle-non">❌ Non</label>
-                        </div>
-
-                        <!-- MEUBLÉ (bug 2) -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🛋️ Logement meublé ?
-                            <span class="field-hint">Un logement meublé se loue 2x plus vite !</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="meubleOui" name="meuble" value="oui">
-                            <label for="meubleOui" class="toggle-oui">✅ Oui, meublé</label>
-                            <input type="radio" id="meubleNon" name="meuble" value="non">
-                            <label for="meubleNon" class="toggle-non">❌ Non meublé</label>
-                        </div>
-
-                        <!-- WIFI (bug 2) -->
-                        <label class="field-label" style="margin-top:12px;">
-                            📶 Internet / WiFi disponible ?
-                            <span class="field-hint">Critère n°1 pour les jeunes actifs et étudiants</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="wifiOui" name="wifi" value="oui">
-                            <label for="wifiOui" class="toggle-oui">✅ Oui, WiFi inclus</label>
-                            <input type="radio" id="wifiNon" name="wifi" value="non">
-                            <label for="wifiNon" class="toggle-non">❌ Pas de WiFi</label>
-                        </div>
-
-                        <!-- CUISINE -->
-                        <label class="field-label" style="margin-top:12px;">
-                            🍳 Cuisine disponible ?
-                            <span class="field-hint">Les étudiants et jeunes actifs adorent savoir ça</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="cuisineNon" name="cuisine" value="non">
-                            <label for="cuisineNon" class="toggle-non">❌ Non</label>
-                            <input type="radio" id="cuisineOui" name="cuisine" value="oui">
-                            <label for="cuisineOui" class="toggle-oui">✅ Oui</label>
-                        </div>
-                        <div id="typeCuisineBlock" style="display:none; margin-top:10px; padding:14px; background:rgba(253,128,46,0.07); border:1px dashed rgba(253,128,46,0.4); border-radius:12px;">
-                            <p style="font-size:12px; color:#fd802e; font-weight:600; margin-bottom:10px;">🍽️ Quel type de cuisine ?</p>
+                            <!-- TOILETTES (bug 2) -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🚽 Toilettes ?
+                                <span class="field-hint">Interne ou externe — les locataires adorent le savoir</span>
+                            </label>
                             <div class="toggle-radios">
-                                <input type="radio" id="cuisineSimple" name="type_cuisine" value="simple">
-                                <label for="cuisineSimple" class="toggle-oui" style="border-color:#f5a623; color:#f5a623;">🟡 Simple</label>
-                                <input type="radio" id="cuisineEquipee" name="type_cuisine" value="équipée">
-                                <label for="cuisineEquipee" class="toggle-oui">🟢 Équipée / Moderne</label>
+                                <input type="radio" id="toilettesInterne" name="toilettes" value="interne">
+                                <label for="toilettesInterne" class="toggle-oui">🏠 Interne</label>
+                                <input type="radio" id="toilettesExterne" name="toilettes" value="externe">
+                                <label for="toilettesExterne" class="toggle-non">🪣 Externe</label>
+                            </div>
+
+                            <!-- CLIMATISEUR -->
+                            <label class="field-label" style="margin-top:12px;">
+                                ❄️ Climatiseur ?
+                                <span class="field-hint">Un vrai atout à Pointe-Noire et Brazzaville !</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="climOui" name="climatiseur" value="oui">
+                                <label for="climOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="climNon" name="climatiseur" value="non">
+                                <label for="climNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- BALCON -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🌿 Balcon / Terrasse ?
+                                <span class="field-hint">Les locataires adorent ça</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="balconOui" name="balcon" value="oui">
+                                <label for="balconOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="balconNon" name="balcon" value="non">
+                                <label for="balconNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- GROUPE ÉLECTROGÈNE -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🔋 Groupe électrogène ?
+                                <span class="field-hint">Critique en cas de coupures fréquentes</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="groupeOui" name="groupe_electrogene" value="oui">
+                                <label for="groupeOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="groupeNon" name="groupe_electrogene" value="non">
+                                <label for="groupeNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- FORAGE -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🪣 Forage / Puits ?
+                                <span class="field-hint">Indispensable si l'eau courante est irrégulière</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="forageOui" name="forage" value="oui">
+                                <label for="forageOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="forageNon" name="forage" value="non">
+                                <label for="forageNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- MEUBLÉ (bug 2) -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🛋️ Logement meublé ?
+                                <span class="field-hint">Un logement meublé se loue 2x plus vite !</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="meubleOui" name="meuble" value="oui">
+                                <label for="meubleOui" class="toggle-oui">✅ Oui, meublé</label>
+                                <input type="radio" id="meubleNon" name="meuble" value="non">
+                                <label for="meubleNon" class="toggle-non">❌ Non meublé</label>
+                            </div>
+
+                            <!-- WIFI (bug 2) -->
+                            <label class="field-label" style="margin-top:12px;">
+                                📶 Internet / WiFi disponible ?
+                                <span class="field-hint">Critère n°1 pour les jeunes actifs et étudiants</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="wifiOui" name="wifi" value="oui">
+                                <label for="wifiOui" class="toggle-oui">✅ Oui, WiFi inclus</label>
+                                <input type="radio" id="wifiNon" name="wifi" value="non">
+                                <label for="wifiNon" class="toggle-non">❌ Pas de WiFi</label>
+                            </div>
+
+                            <!-- CUISINE -->
+                            <label class="field-label" style="margin-top:12px;">
+                                🍳 Cuisine disponible ?
+                                <span class="field-hint">Les étudiants et jeunes actifs adorent savoir ça</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="cuisineNon" name="cuisine" value="non">
+                                <label for="cuisineNon" class="toggle-non">❌ Non</label>
+                                <input type="radio" id="cuisineOui" name="cuisine" value="oui">
+                                <label for="cuisineOui" class="toggle-oui">✅ Oui</label>
+                            </div>
+                            <div id="typeCuisineBlock" style="display:none; margin-top:10px; padding:14px; background:rgba(253,128,46,0.07); border:1px dashed rgba(253,128,46,0.4); border-radius:12px;">
+                                <p style="font-size:12px; color:#fd802e; font-weight:600; margin-bottom:10px;">🍽️ Quel type de cuisine ?</p>
+                                <div class="toggle-radios">
+                                    <input type="radio" id="cuisineSimple" name="type_cuisine" value="simple">
+                                    <label for="cuisineSimple" class="toggle-oui" style="border-color:#f5a623; color:#f5a623;">🟡 Simple</label>
+                                    <input type="radio" id="cuisineEquipee" name="type_cuisine" value="équipée">
+                                    <label for="cuisineEquipee" class="toggle-oui">🟢 Équipée / Moderne</label>
+                                </div>
+                            </div>
+
+                            <!-- EAU -->
+                            <label class="field-label" style="margin-top:12px;">💧 Eau disponible ?
+                                <span class="field-hint">Les locataires demandent toujours ça en premier</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="eauOui" name="eau" value="oui">
+                                <label for="eauOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="eauNon" name="eau" value="non">
+                                <label for="eauNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- ELECTRICITE -->
+                            <label class="field-label" style="margin-top:12px;">⚡ Électricité disponible ?
+                                <span class="field-hint">Critère n°1 pour 9 locataires sur 10</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="electriciteOui" name="electricite" value="oui">
+                                <label for="electriciteOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="electriciteNon" name="electricite" value="non">
+                                <label for="electriciteNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- PARKING -->
+                            <label class="field-label" style="margin-top:12px;">🚗 Parking disponible ?</label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="parkingOui" name="parking" value="oui">
+                                <label for="parkingOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="parkingNon" name="parking" value="non">
+                                <label for="parkingNon" class="toggle-non">❌ Non</label>
+                            </div>
+
+                            <!-- GARDIEN -->
+                            <label class="field-label" style="margin-top:12px;">🔒 Gardien / Sécurité ?
+                                <span class="field-hint">Rassure les familles</span>
+                            </label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="gardienOui" name="gardien" value="oui">
+                                <label for="gardienOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="gardienNon" name="gardien" value="non">
+                                <label for="gardienNon" class="toggle-non">❌ Non</label>
                             </div>
                         </div>
+                        <!-- INFO PARCELLE (affiché seulement si terrain) -->
+                        <div class="parcelle-info" style="display:none; background:rgba(253,128,46,0.08); border:1px dashed rgba(253,128,46,0.4); border-radius:12px; padding:14px; margin-top:10px;">
+                            <p style="font-size:12px; color:#fd802e; font-weight:600; margin-bottom:10px;">🌍 Caractéristiques du terrain</p>
 
-                        <!-- EAU -->
-                        <label class="field-label" style="margin-top:12px;">💧 Eau disponible ?
-                            <span class="field-hint">Les locataires demandent toujours ça en premier</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="eauOui" name="eau" value="oui">
-                            <label for="eauOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="eauNon" name="eau" value="non">
-                            <label for="eauNon" class="toggle-non">❌ Non</label>
-                        </div>
+                            <label class="field-label">🌱 Type de sol</label>
+                            <div class="type-radios" style="grid-template-columns:1fr 1fr;">
+                                <input type="radio" id="solSableux" name="type_sol" value="sableux">
+                                <label for="solSableux">🟡 Sableux</label>
+                                <input type="radio" id="solArgileux" name="type_sol" value="argileux">
+                                <label for="solArgileux">🟤 Argileux</label>
+                                <input type="radio" id="solLaterite" name="type_sol" value="latéritique">
+                                <label for="solLaterite">🔴 Latéritique</label>
+                                <input type="radio" id="solRocheux" name="type_sol" value="rocheux">
+                                <label for="solRocheux">⚫ Rocheux</label>
+                            </div>
 
-                        <!-- ELECTRICITE -->
-                        <label class="field-label" style="margin-top:12px;">⚡ Électricité disponible ?
-                            <span class="field-hint">Critère n°1 pour 9 locataires sur 10</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="electriciteOui" name="electricite" value="oui">
-                            <label for="electriciteOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="electriciteNon" name="electricite" value="non">
-                            <label for="electriciteNon" class="toggle-non">❌ Non</label>
-                        </div>
+                            <label class="field-label" style="margin-top:12px;">🛣️ Accès voirie / route ?</label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="voirieOui" name="voirie" value="oui">
+                                <label for="voirieOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="voirieNon" name="voirie" value="non">
+                                <label for="voirieNon" class="toggle-non">❌ Non</label>
+                            </div>
 
-                        <!-- PARKING -->
-                        <label class="field-label" style="margin-top:12px;">🚗 Parking disponible ?</label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="parkingOui" name="parking" value="oui">
-                            <label for="parkingOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="parkingNon" name="parking" value="non">
-                            <label for="parkingNon" class="toggle-non">❌ Non</label>
-                        </div>
+                            <label class="field-label" style="margin-top:12px;">🧱 Terrain clôturé ?</label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="clotureOui" name="cloture" value="oui">
+                                <label for="clotureOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="clotureNon" name="cloture" value="non">
+                                <label for="clotureNon" class="toggle-non">❌ Non</label>
+                            </div>
 
-                        <!-- GARDIEN -->
-                        <label class="field-label" style="margin-top:12px;">🔒 Gardien / Sécurité ?
-                            <span class="field-hint">Rassure les familles</span>
-                        </label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="gardienOui" name="gardien" value="oui">
-                            <label for="gardienOui" class="toggle-oui">✅ Oui</label>
-                            <input type="radio" id="gardienNon" name="gardien" value="non">
-                            <label for="gardienNon" class="toggle-non">❌ Non</label>
+                            <label class="field-label" style="margin-top:12px;">🏗️ Terrain viabilisé ? <span class="field-hint">(eau, élec, assainissement)</span></label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="viabiliseeOui" name="viabilisee" value="oui">
+                                <label for="viabiliseeOui" class="toggle-oui">✅ Oui</label>
+                                <input type="radio" id="viabiliseeNon" name="viabilisee" value="non">
+                                <label for="viabiliseeNon" class="toggle-non">❌ Non</label>
+                            </div>
                         </div>
 
                         <!-- CHARGES INCLUSES -->
@@ -708,48 +753,64 @@
                     </div>
                 </div>
 
-                <!-- ÉTAPE 6 : PHOTOS -->
+                <!-- ÉTAPE 5 : Infos & Prix -->
                 <div class="wizard-panel" id="panel-5">
                     <div class="panel-content">
                         <div class="panel-icon">💰</div>
                         <h3>Infos & Prix</h3>
                         <p class="panel-desc">Ces infos déterminent si votre annonce est contactée aujourd'hui ou ignorée 📊</p>
-
-                        <!-- CHAMBRES & PIECES -->
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
-                            <div>
-                                <label class="field-label">🛏️ Nb de chambres <span class="champ-requis">*</span></label>
-                                <input type="number" id="nbChambres" placeholder="Ex: 2 — soyez précis !" min="0" required>
-                            </div>
-                            <div>
-                                <label class="field-label">🚪 Nb de pièces <span class="champ-requis">*</span></label>
-                                <input type="number" id="nbPieces" placeholder="Ex: 4 — plus c'est clair, mieux c'est" min="0" required>
-                            </div>
-                        </div>
-
-                        <!-- SALONS & SURFACE -->
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
-                            <div>
-                                <label class="field-label">🛋️ Nb de salons</label>
-                                <input type="number" id="nbSalons" placeholder="Ex: 1" min="0">
-                            </div>
-                            <div>
-                                <label class="field-label">📐 Surface (m²)</label>
-                                <div class="input-with-unit">
-                                    <input type="number" id="surface" placeholder="Ex: 80" min="0">
-                                    <span class="unit-label">m²</span>
+                        <!-- CHAMPS NORMAUX (masqués pour parcelle/terrain) -->
+                        <div id="champsNonParcelle">
+                            <!-- CHAMBRES & PIECES -->
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+                                <div>
+                                    <label class="field-label">🛏️ Nb de chambres <span class="champ-requis">*</span></label>
+                                    <input type="number" id="nbChambres" placeholder="Ex: 2 — soyez précis !" min="0" required>
+                                </div>
+                                <div>
+                                    <label class="field-label">🚪 Nb de pièces <span class="champ-requis">*</span></label>
+                                    <input type="number" id="nbPieces" placeholder="Ex: 4 — plus c'est clair, mieux c'est" min="0" required>
                                 </div>
                             </div>
+
+                            <!-- SALONS & SURFACE -->
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                                <div>
+                                    <label class="field-label">🛋️ Nb de salons</label>
+                                    <input type="number" id="nbSalons" placeholder="Ex: 1" min="0">
+                                </div>
+                                <div>
+                                    <label class="field-label">📐 Surface (m²)</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="surface" placeholder="Ex: 80" min="0">
+                                        <span class="unit-label">m²</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ETAGE -->
+                            <label class="field-label" style="margin-top:15px;">🏢 Le bien est à un étage ?</label>
+                            <div class="toggle-radios">
+                                <input type="radio" id="etageOui" name="etage" value="oui">
+                                <label for="etageOui" class="toggle-oui">Oui, avec étage</label>
+                                <input type="radio" id="etageNon" name="etage" value="non">
+                                <label for="etageNon" class="toggle-non">Non, plain-pied</label>
+                            </div>
                         </div>
 
-                        <!-- ETAGE -->
-                        <label class="field-label" style="margin-top:15px;">🏢 Le bien est à un étage ?</label>
-                        <div class="toggle-radios">
-                            <input type="radio" id="etageOui" name="etage" value="oui">
-                            <label for="etageOui" class="toggle-oui">Oui, avec étage</label>
-                            <input type="radio" id="etageNon" name="etage" value="non">
-                            <label for="etageNon" class="toggle-non">Non, plain-pied</label>
-                        </div>
+                        <!-- SURFACE TERRAIN (affiché seulement si terrain) -->
+                        <div id="champsParcelle" style="display:none; margin-top:15px;">
+                            <label class="field-label">📐 Surface du terrain (m²) <span class="champ-requis">*</span></label>
+                            <div class="input-with-unit">
+                                <input type="number" id="surfaceTerrain" placeholder="Ex: 500" min="1">
+                                <span class="unit-label">m²</span>
+                            </div>
+                            <label class="field-label" style="margin-top:12px;">📐 Façade (mètres linéaires)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="facade" placeholder="Ex: 20" min="0">
+                                <span class="unit-label">m</span>
+                            </div>
+                        </div>  
 
                         <!-- CAUTION & AVANCE -->
                         <div class="location-only" id="locationOnlyFields" style="display:none;">
@@ -1206,10 +1267,33 @@
                     <button class="modale-alerte-close" id="btnFermerModaleAlerte">&times;</button>
                 </div>
 
-                <!-- TYPE ALERTE (caché, géré par JS) -->
                 <input type="hidden" id="alerteTypeAnnonce" value="location">
 
-                <!-- VILLE (disabled, Brazzaville par défaut) -->
+                <!-- TYPE ANNONCE -->
+                <div class="modale-field">
+                    <label>🏷️ Type d'annonce</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <label class="modale-check-item" id="alerteTypeLoc" style="justify-content:center;cursor:pointer;border-color:#fd802e;background:rgba(253,128,46,0.08);color:#c96b1a;font-weight:700;">🔑 Location</label>
+                        <label class="modale-check-item" id="alerteTypeVen" style="justify-content:center;cursor:pointer;">🏠 Vente</label>
+                    </div>
+                </div>
+
+                <!-- TYPE DE BIEN -->
+                <div class="modale-field">
+                    <label>🏠 Types de bien <span style="font-size:11px;color:#999;">(plusieurs possibles)</span></label>
+                    <div class="modale-checkboxes" id="alerteTypes">
+                        <label class="modale-check-item"><input type="checkbox" value="studio"> Studio</label>
+                        <label class="modale-check-item"><input type="checkbox" value="appartement"> Appartement</label>
+                        <label class="modale-check-item"><input type="checkbox" value="villa"> Villa</label>
+                        <label class="modale-check-item"><input type="checkbox" value="maison simple"> Maison simple</label>
+                        <label class="modale-check-item"><input type="checkbox" value="maison 2 chambre"> Maison 2 ch.</label>
+                        <label class="modale-check-item"><input type="checkbox" value="maison 3 chambre"> Maison 3 ch.</label>
+                        <label class="modale-check-item"><input type="checkbox" value="maison 4 chambre et plus"> Maison 4+ ch.</label>
+                        <label class="modale-check-item" id="alerteTypeTerrain" style="display:none;"><input type="checkbox" value="terrain"> Terrain/Parcelle</label>
+                    </div>
+                </div>
+
+                <!-- VILLE (disabled) -->
                 <div class="modale-field">
                     <label>📍 Ville</label>
                     <select id="alerteVille" disabled>
@@ -1217,9 +1301,9 @@
                     </select>
                 </div>
 
-                <!-- QUARTIERS (checkboxes) -->
+                <!-- QUARTIERS -->
                 <div class="modale-field">
-                    <label>🏘️ Quartiers <span style="font-size:11px;color:#999;">(optionnel, plusieurs possibles)</span></label>
+                    <label>🏘️ Quartiers <span style="font-size:11px;color:#999;">(optionnel)</span></label>
                     <div class="modale-checkboxes" id="alerteQuartiers">
                         <label class="modale-check-item"><input type="checkbox" value="Moungali"> Moungali</label>
                         <label class="modale-check-item"><input type="checkbox" value="Bacongo"> Bacongo</label>
@@ -1227,17 +1311,6 @@
                         <label class="modale-check-item"><input type="checkbox" value="Talangai"> Talangai</label>
                         <label class="modale-check-item"><input type="checkbox" value="Mfilou"> Mfilou</label>
                         <label class="modale-check-item"><input type="checkbox" value="Madibou"> Madibou</label>
-                    </div>
-                </div>
-
-                <!-- TYPES DE BIEN (checkboxes) -->
-                <div class="modale-field">
-                    <label>🏠 Types de bien <span style="font-size:11px;color:#999;">(optionnel)</span></label>
-                    <div class="modale-checkboxes" id="alerteTypes">
-                        <label class="modale-check-item"><input type="checkbox" value="studio"> Studio</label>
-                        <label class="modale-check-item"><input type="checkbox" value="appartement"> Appart 1 ch.</label>
-                        <label class="modale-check-item"><input type="checkbox" value="maison 2 chambre"> Appart 2 ch.</label>
-                        <label class="modale-check-item"><input type="checkbox" value="maison 3 chambre"> Appart 3 ch.</label>
                     </div>
                 </div>
 
@@ -1256,25 +1329,81 @@
                     </div>
                 </div>
 
-                <!-- MEUBLE -->
-                <div class="modale-field">
-                    <label>🛋️ Meublé</label>
-                    <select id="alerteMeuble">
+                <!-- CHAMPS LOCATION SEULEMENT -->
+                <div id="alerteChampLocation">
+                    <div class="modale-field">
+                        <label>🛋️ Meublé</label>
+                        <select id="alerteMeuble">
+                            <option value="">Peu importe</option>
+                            <option value="oui">Oui</option>
+                            <option value="non">Non</option>
+                        </select>
+                    </div>
+                    <div class="modale-field">
+                        <label>🔑 Caution max</label>
+                        <select id="alerteCaution">
+                            <option value="">Peu importe</option>
+                            <option value="1">1 mois</option>
+                            <option value="2">2 mois</option>
+                            <option value="3">3 mois</option>
+                        </select>
+                    </div>
+                    <div class="modale-field">
+                        <label>📶 WiFi</label>
+                        <select id="alerteWifi">
+                        <option value="">Peu importe</option>
+                        <option value="oui">Avec WiFi</option>
+                        <option value="non">Sans WiFi</option>
+                        </select>
+                    </div>
+                    <div class="modale-field">
+                        <label>❄️ Climatiseur</label>
+                        <select id="alerteClimatiseur">
+                        <option value="">Peu importe</option>
+                        <option value="oui">Avec clim</option>
+                        <option value="non">Sans clim</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CHAMPS VENTE SEULEMENT -->
+                <div id="alerteChampVente" style="display:none;">
+                    <div class="modale-field">
+                        <label>🤝 Prix négociable</label>
+                        <select id="alerteNegociable">
                         <option value="">Peu importe</option>
                         <option value="oui">Oui</option>
                         <option value="non">Non</option>
-                    </select>
+                        </select>
+                    </div>
+                    <div class="modale-field">
+                        <label>📋 Titre de propriété</label>
+                        <select id="alerteTitreProp">
+                        <option value="">Peu importe</option>
+                        <option value="oui">Disponible</option>
+                        <option value="non">Non disponible</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- CAUTION MAX -->
-                <div class="modale-field">
-                    <label>🔑 Caution max</label>
-                    <select id="alerteCaution">
+                <!-- CHAMPS TERRAIN SEULEMENT -->
+                <div id="alerteChampTerrain" style="display:none;">
+                    <div class="modale-field">
+                        <label>🏗️ Terrain viabilisé</label>
+                        <select id="alerteViabilisee">
                         <option value="">Peu importe</option>
-                        <option value="1">1 mois</option>
-                        <option value="2">2 mois</option>
-                        <option value="3">3 mois</option>
-                    </select>
+                        <option value="oui">Oui</option>
+                        <option value="non">Non</option>
+                        </select>
+                    </div>
+                    <div class="modale-field">
+                        <label>🧱 Terrain clôturé</label>
+                        <select id="alerteCloture">
+                        <option value="">Peu importe</option>
+                        <option value="oui">Oui</option>
+                        <option value="non">Non</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button class="btn-enregistrer-alerte" id="btnEnregistrerAlerte">
