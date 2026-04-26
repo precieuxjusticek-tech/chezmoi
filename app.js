@@ -1,3 +1,39 @@
+/* ==================================================== */
+/* ======== VERIFICATION DE LA MISE A JOUR ============ */
+/* ==================================================== */
+// Écouter les mises à jour du SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'SW_UPDATED') {
+      showToast("info", "🔄 Mise à jour disponible ! Rechargement...");
+      setTimeout(() => location.reload(true), 2000);
+    }
+
+    // Clic sur notification push → navigation intelligente
+    if (event.data?.type === 'NOTIFICATION_CLICK') {
+      const { annonceId, typeAlerte, count } = event.data;
+      if (count === 1 && annonceId) {
+        // Charger l'annonce et aller sur détail
+        fetch(`${API_URL}/api/annonces/${annonceId}`)
+          .then(r => r.json())
+          .then(annonce => {
+            localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+            afficherPage("detail");
+            afficherDetailAnnonce();
+          })
+          .catch(() => showToast("loadFail"));
+      } else {
+        // Aller sur alertes et ouvrir le bon onglet
+        afficherPage("alertes");
+        chargerPageAlertes();
+        // Activer le bon onglet location ou vente
+        const tab = typeAlerte === "vente" ? "vente" : "location";
+        switchAlerteTab(tab);
+      }
+    }
+  });
+}
+
 /* ===================================================== */
 /* ================= VARIABLES GLOBALES ================= */
 /* ===================================================== */
@@ -9,6 +45,44 @@ if (savedUid) currentUserUid = savedUid;
 let villeSelectionnee = "Toutes les villes";
 let selectedImages = [];
 let favorisLocal = [];
+
+/* ===================================================== */
+/* ======= bagde d'alertes dans la nav ================== */
+/* ===================================================== */
+
+function majBadgeAlertes() {
+  const badge = document.getElementById("alertesNavBadge");
+  if (!badge) return;
+
+  const alerteLoc = localStorage.getItem("alerteChezMoi");
+  const alerteVente = localStorage.getItem("alerteChezMoiVente");
+
+  // Si aucune alerte n'existe, cacher le badge et nettoyer les données orphelines
+  if (!alerteLoc) {
+    localStorage.removeItem("biensAlerteTrouves");
+    localStorage.removeItem("biensAlerteVusLoc");
+  }
+  if (!alerteVente) {
+    localStorage.removeItem("biensAlerteTrouvesVente");
+    localStorage.removeItem("biensAlerteVusVente");
+  }
+
+  // Si aucune alerte du tout, badge caché
+  if (!alerteLoc && !alerteVente) {
+    badge.classList.remove("visible");
+    return;
+  }
+
+  const biensLoc = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
+  const biensVente = JSON.parse(localStorage.getItem("biensAlerteTrouvesVente") || "[]");
+  const vusLoc = JSON.parse(localStorage.getItem("biensAlerteVusLoc") || "[]");
+  const vusVente = JSON.parse(localStorage.getItem("biensAlerteVusVente") || "[]");
+
+  const nouveauxLoc = alerteLoc ? biensLoc.filter(b => b.id && !vusLoc.includes(b.id)).length : 0;
+  const nouveauxVente = alerteVente ? biensVente.filter(b => b.id && !vusVente.includes(b.id)).length : 0;
+
+  badge.classList.toggle("visible", nouveauxLoc > 0 || nouveauxVente > 0);
+}
 
 /* ===================================================== */
 /* ================= TOAST ============================= */
@@ -137,6 +211,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     afficherPage(savedUid ? "home" : "accueil");
     if (savedUid) afficherAnnoncesParGroupes(villeSelectionnee);
   }
+  majBadgeAlertes();
 });
 
 /* ===================================================== */
@@ -195,6 +270,7 @@ function setupFavoriButton(btn, annonce) {
   let isFavorite = favorisLocal.includes(annonce.id);
   btn.textContent = isFavorite ? "❤️" : "🤍";
   btn.addEventListener("click", async () => {
+    e.stopPropagation();
     if (!currentUserUid) { showToast("info", "Vous devez être connecté."); return; }
     isFavorite = await toggleFavorite(currentUserUid, annonce.id, isFavorite);
     if (isFavorite) { if (!favorisLocal.includes(annonce.id)) favorisLocal.push(annonce.id); }
@@ -227,7 +303,10 @@ async function afficherAnnoncesParGroupes(ville) {
   container.style.display = "none";
 
   try {
-    const response = await fetch(`${API_URL}/api/annonces`);
+    const response = await fetch(`${API_URL}/api/annonces`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" }
+    });
     if (!response.ok) throw new Error("Erreur serveur");
     const annonces = await response.json();
 
@@ -355,9 +434,11 @@ async function afficherAnnoncesParGroupes(ville) {
             afficherDetailAnnonce();
           });
 
-          let favBtn = card.querySelector(".btn-fav");
-          favBtn.replaceWith(favBtn.cloneNode(true));
-          favBtn = card.querySelector(".btn-fav");
+          const favBtn = card.querySelector(".btn-fav");
+          favBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          });
           setupFavoriButton(favBtn, annonce);
         });
       }
@@ -1048,6 +1129,22 @@ formAjouter?.addEventListener("submit", async (e) => {
   if (selectedFiles.length === 0) { showToast("info", "Veuillez sélectionner au moins une image."); return; }
 
   chargementpub.style.display = "flex";
+  chargementpub.querySelector("p").textContent = "Publication en cours...";
+  // Mise à jour du message selon le nombre d'images
+  if (selectedFiles.length > 5) {
+    setTimeout(() => {
+      if (chargementpub.style.display === "flex")
+        chargementpub.querySelector("p").textContent = "Compression des images en cours... ⏳";
+    }, 5000);
+    setTimeout(() => {
+      if (chargementpub.style.display === "flex")
+        chargementpub.querySelector("p").textContent = "Envoi des photos... patience 📤";
+    }, 20000);
+    setTimeout(() => {
+      if (chargementpub.style.display === "flex")
+        chargementpub.querySelector("p").textContent = "Finalisation... encore quelques secondes 🏁";
+    }, 50000);
+  }
 
   try {
     const formData = new FormData();
@@ -1110,7 +1207,27 @@ formAjouter?.addEventListener("submit", async (e) => {
       formData.append("images", compressedFile);
     }
 
-    const annonceResponse = await fetch(`${API_URL}/api/annonces`, { method: "POST", body: formData });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 secondes max
+
+    let annonceResponse;
+    try {
+      annonceResponse = await fetch(`${API_URL}/api/annonces`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      chargementpub.style.display = "none";
+      if (fetchErr.name === "AbortError") {
+        showToast("info", "⚠️ Délai dépassé (2 min). Réduisez le nombre d'images ou vérifiez votre réseau.");
+      } else {
+        showToast("offline");
+      }
+      return;
+    }
     const annonceData = await annonceResponse.json();
     if (!annonceResponse.ok) throw new Error(annonceData.message);
 
@@ -1456,6 +1573,7 @@ function afficherImageFullscreen(src) {
   }
   document.getElementById("fullscreenImg").src = src;
   overlay.style.display = "flex";
+  history.pushState({ fullscreen: true }, '', '#fullscreen');
 }
 
 /* ===================================================== */
@@ -1656,10 +1774,6 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ============ PAGE ALERTES ========================== */
 /* ===================================================== */
 
-/* ===================================================== */
-/* ============ PAGE ALERTES ========================== */
-/* ===================================================== */
-
 window.switchAlerteTab = function(tab) {
   document.getElementById("alerteTabLocation").style.display = tab === "location" ? "block" : "none";
   document.getElementById("alerteTabVente").style.display = tab === "vente" ? "block" : "none";
@@ -1676,31 +1790,92 @@ document.getElementById("btnModifierAlerteLocation")?.addEventListener("click", 
 document.getElementById("btnModifierAlerteVente")?.addEventListener("click", () => ouvrirModaleAlerte("vente", true));
 
 document.getElementById("btnSupprimerAlerteLocation")?.addEventListener("click", () => {
-  if (!confirm("Supprimer votre alerte location ?")) return;
-  localStorage.removeItem("alerteChezMoi");
-  localStorage.removeItem("biensAlerteTrouves");
-  alerteLocale = null;
-  afficherEtatAlerteLocation();
-  afficherBiensTrouves();
+  // Overlay de confirmation
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;";
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:300px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+      <div style="font-size:36px;margin-bottom:12px;">🗑️</div>
+      <p style="font-weight:700;font-size:16px;color:#233d4c;margin-bottom:8px;">Supprimer l'alerte ?</p>
+      <p style="font-size:13px;color:#888;margin-bottom:20px;">Cette action est irréversible.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button id="overlayNon" style="padding:11px;border-radius:12px;border:1.5px solid #e0e0e0;background:#fff;color:#555;font-weight:600;cursor:pointer;">Annuler</button>
+        <button id="overlayOui" style="padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#e53935,#c62828);color:#fff;font-weight:700;cursor:pointer;">Supprimer</button>
+      </div>
+      <div id="spinnerSuppr" style="display:none;margin-top:16px;"><div class="spinner" style="margin:auto;"></div></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#overlayNon").onclick = () => overlay.remove();
+  overlay.querySelector("#overlayOui").onclick = () => {
+    overlay.querySelector("#spinnerSuppr").style.display = "block";
+    overlay.querySelector("#overlayOui").disabled = true;
+    overlay.querySelector("#overlayNon").disabled = true;
+    setTimeout(() => {
+      localStorage.removeItem("alerteChezMoi");
+      localStorage.removeItem("biensAlerteTrouves");
+      localStorage.removeItem("biensAlerteVusLoc");
+      alerteLocale = null;
+      afficherEtatAlerteLocation();
+      afficherBiensTrouves();
+      overlay.remove();
+      showToast("info", "Alerte supprimée.");
+    }, 800);
+  };
 });
+
 document.getElementById("btnSupprimerAlerteVente")?.addEventListener("click", () => {
-  if (!confirm("Supprimer votre alerte vente ?")) return;
-  localStorage.removeItem("alerteChezMoiVente");
-  localStorage.removeItem("biensAlerteTrouvesVente");
-  afficherEtatAlerteVente();
-  afficherBiensTrouves();
+  // Overlay de confirmation
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;";
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:300px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+      <div style="font-size:36px;margin-bottom:12px;">🗑️</div>
+      <p style="font-weight:700;font-size:16px;color:#233d4c;margin-bottom:8px;">Supprimer l'alerte ?</p>
+      <p style="font-size:13px;color:#888;margin-bottom:20px;">Cette action est irréversible.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button id="overlayNon" style="padding:11px;border-radius:12px;border:1.5px solid #e0e0e0;background:#fff;color:#555;font-weight:600;cursor:pointer;">Annuler</button>
+        <button id="overlayOui" style="padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#e53935,#c62828);color:#fff;font-weight:700;cursor:pointer;">Supprimer</button>
+      </div>
+      <div id="spinnerSuppr" style="display:none;margin-top:16px;"><div class="spinner" style="margin:auto;"></div></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#overlayNon").onclick = () => overlay.remove();
+  overlay.querySelector("#overlayOui").onclick = () => {
+    overlay.querySelector("#spinnerSuppr").style.display = "block";
+    overlay.querySelector("#overlayOui").disabled = true;
+    overlay.querySelector("#overlayNon").disabled = true;
+    setTimeout(() => {
+      localStorage.removeItem("alerteChezMoiVente");
+      localStorage.removeItem("biensAlerteTrouvesVente");
+      localStorage.removeItem("biensAlerteVusVente");
+      alerteLocale = null;
+      afficherEtatAlerteLocation();
+      afficherBiensTrouves();
+      overlay.remove();
+      showToast("info", "Alerte supprimée.");
+    }, 800);
+  };
 });
 
 let alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
 
 document.getElementById("alertesBtn")?.addEventListener("click", () => {
   if (!currentUserUid) {
-    showToast("info", "Vous devez être connecté pour utiliser les alertes.");
     afficherPage("inscription");
     return;
   }
   afficherPage("alertes");
   chargerPageAlertes();
+
+  // Marquer tous les biens actuels comme "vus"
+  const biensLoc = JSON.parse(localStorage.getItem("biensAlerteTrouves") || "[]");
+  const biensVente = JSON.parse(localStorage.getItem("biensAlerteTrouvesVente") || "[]");
+  localStorage.setItem("biensAlerteVusLoc", JSON.stringify(biensLoc.map(b => b.id)));
+  localStorage.setItem("biensAlerteVusVente", JSON.stringify(biensVente.map(b => b.id)));
+
+  // Retirer le badge
+  const alertesBadge = document.getElementById("alertesNavBadge");
+  if (alertesBadge) alertesBadge.classList.remove("visible");
 });
 
 function chargerPageAlertes() {
@@ -1914,6 +2089,7 @@ document.getElementById("btnEnregistrerAlerte")?.addEventListener("click", () =>
   fermerModaleAlerte();
   afficherEtatAlerteLocation();
   afficherEtatAlerteVente();
+  demanderNotifications();
   showToast("info", `✅ Alerte ${typeAlerte} enregistrée !`);
   verifierCorrespondancesParType(typeAlerte, nouvelleAlerte);
 });
@@ -1950,6 +2126,7 @@ async function verifierCorrespondancesParType(typeAlerte, alerte) {
       if (typeAlerte === "location") alerteLocale = JSON.parse(localStorage.getItem("alerteChezMoi") || "null");
       afficherBiensTrouves();
       showToast("info", `🔔 ${nouveaux} nouveau${nouveaux > 1 ? 'x' : ''} bien${nouveaux > 1 ? 's' : ''} trouvé${nouveaux > 1 ? 's' : ''} !`);
+      
       const badge = typeAlerte === "vente"
         ? document.getElementById("alertesBadgeNewVente")
         : document.getElementById("alertesBadgeNewLocation");
@@ -1957,9 +2134,37 @@ async function verifierCorrespondancesParType(typeAlerte, alerte) {
         badge.textContent = nouveaux + " nouveau" + (nouveaux > 1 ? "x" : "");
         badge.style.display = "inline-block";
       }
+
+      // Notification push
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const premierBien = biensExistants[0];
+        const labelType = typeAlerte === "vente" ? "Vente" : "Location";
+        const titreNotif = `ChezMoi 🔔 — Alerte ${labelType}`;
+        const bodyNotif = nouveaux === 1
+          ? `1 bien : ${premierBien?.type_annonce || ""} à ${premierBien?.ville || ""} — ${premierBien?.prix ? Number(premierBien.prix).toLocaleString("fr-FR") + " XAF" : ""}`
+          : `${nouveaux} nouveaux biens correspondent à votre alerte ${labelType} !`;
+
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(titreNotif, {
+            body: bodyNotif,
+            icon: '/icons/chezmoi_icon256.png',
+            badge: '/icons/chezmoi_icon256.png',
+            data: { annonceId: nouveaux === 1 ? premierBien?.id : null, typeAlerte, count: nouveaux },
+            vibrate: [200, 100, 200]
+          });
+        }).catch(() => {
+          new Notification(titreNotif, { body: bodyNotif, icon: '/icons/chezmoi_icon256.png' });
+        });
+      }
+
+      majBadgeAlertes();
     } else {
-      showToast("info", "✅ Alerte créée ! Aucun bien correspondant pour l'instant.");
+      const biensActuels = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (biensActuels.length === 0) {
+        showToast("info", "✅ Alerte créée ! Aucun bien correspondant pour l'instant.");
+      }
       afficherBiensTrouves();
+      majBadgeAlertes();
     }
   } catch { /* silencieux */ }
 }
@@ -2049,6 +2254,15 @@ function renderBienCard(bien, container) {
     afficherDetailAnnonce();
   });
   container.appendChild(card);
+}
+
+// ==========================
+// DEMANDE DE PUSH
+// ==========================
+async function demanderNotifications() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return;
 }
 
 function tempsEcoule(dateIso) {
@@ -2399,43 +2613,71 @@ document.getElementById("voirFavorisBtn")?.addEventListener("click", async () =>
     const toutes = await res.json();
     const annoncesFavorites = toutes.filter(a => favorisLocal.includes(a.id));
 
-    if (annoncesFavorites.length === 0) { message.style.display = "block"; chargementfav.style.display = "none"; return; }
+    chargementfav.style.display = "none";
+
+    if (annoncesFavorites.length === 0) {
+      message.style.display = "block";
+      return;
+    }
     message.style.display = "none";
 
     annoncesFavorites.forEach(annonce => {
       const joursRestants = getJoursRestants(annonce.expireAt);
-      const card = document.createElement("div");
-      card.className = "annonce-card";
+      const isVente = (annonce.titre || "").toLowerCase().includes("vente");
       const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
 
-      const isVente = (annonce.titre || "").toLowerCase().includes("vente");
+      const card = document.createElement("div");
+      card.className = "fav-card";
       card.innerHTML = `
-        <img class="annonce-img" src="${imgSrc}" alt="${annonce.titre}" style="width:110px;min-height:130px;object-fit:cover;flex-shrink:0;">
-        ${joursRestants !== null && joursRestants <= 7 ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">⏳ ${joursRestants}j</div>` : ""}
-        <div class="fav-card-body">
+        <div class="fav-card-img-wrap">
+          <img src="${imgSrc}" alt="${annonce.titre}">
+          ${joursRestants !== null && joursRestants <= 7
+            ? `<div class="fav-expire ${joursRestants <= 2 ? "urgent" : ""}">
+                ${joursRestants <= 2 ? `⚠ ${joursRestants}j` : `⏳ ${joursRestants}j`}
+              </div>` : ""}
+          <button class="fav-heart-btn" data-id="${annonce.id}">❤️</button>
+        </div>
+        <div class="fav-card-info">
           <div class="fav-card-top">
-            <span class="fav-card-badge ${isVente ? "vente" : ""}">${annonce.titre || "Location"}</span>
+            <span class="fav-badge ${isVente ? "vente" : "location"}">${annonce.titre || "Location"}</span>
+            <span class="fav-type">${annonce.type_annonce || ""}</span>
           </div>
-          <div class="fav-card-type">${annonce.type_annonce || ""}</div>
-          <div class="fav-card-location">📍 ${annonce.ville || ""}${annonce.quartier ? " · " + annonce.quartier : ""}</div>
+          <div class="fav-loc">📍 ${annonce.ville || ""}${annonce.quartier ? " · " + annonce.quartier : ""}</div>
           <div class="fav-card-bottom">
-            <span class="fav-card-prix">${annonce.prix ? Number(annonce.prix).toLocaleString("fr-FR") : ""} XAF</span>
-            <div class="fav-card-actions">
-              <button class="btn-fav" data-id="${annonce.id}">❤️</button>
-              <button class="fav-btn-voir btn-details">Voir</button>
-            </div>
+            <span class="fav-prix">${annonce.prix ? Number(annonce.prix).toLocaleString("fr-FR") : ""} <small>XAF</small></span>
+            <button class="fav-voir-btn">Voir →</button>
           </div>
         </div>`;
-      container.appendChild(card);
-      card.querySelector(".btn-details").addEventListener("click", () => {
+
+      card.querySelector(".fav-voir-btn").addEventListener("click", () => {
         localStorage.setItem("annonceDetail", JSON.stringify(annonce));
         afficherPage("detail");
         afficherDetailAnnonce();
       });
-      setupFavoriButton(card.querySelector(".btn-fav"), annonce);
+
+      const heartBtn = card.querySelector(".fav-heart-btn");
+      let isFav = true;
+      heartBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        isFav = await toggleFavorite(currentUserUid, annonce.id, isFav);
+        if (!isFav) {
+          favorisLocal = favorisLocal.filter(id => id !== annonce.id);
+          card.style.animation = "fadeOutCard 0.3s ease forwards";
+          setTimeout(() => {
+            card.remove();
+            if (container.querySelectorAll(".fav-card").length === 0) {
+              message.style.display = "block";
+            }
+          }, 300);
+        }
+        heartBtn.textContent = isFav ? "❤️" : "🤍";
+        const favorisCount = document.getElementById("favorisCount");
+        if (favorisCount) favorisCount.textContent = favorisLocal.length;
+      });
+
+      container.appendChild(card);
     });
 
-    chargementfav.style.display = "none";
   } catch {
     chargementfav.style.display = "none";
     message.textContent = "Erreur lors du chargement des favoris.";
@@ -2464,9 +2706,18 @@ window.addEventListener("hashchange", async () => {
 });
 
 window.addEventListener('popstate', (event) => {
-  if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") { fermerPleinEcran(true); return; }
+  // Overlay plein écran wizard
+  if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
+    fermerPleinEcran(true);
+    return;
+  }
+  // Overlay fullscreen détail
   const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
-  if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") { fullscreenOverlay.style.display = "none"; return; }
+  if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
+    fullscreenOverlay.style.display = "none";
+    return; // IMPORTANT : ne pas continuer
+  }
+  // Navigation normale
   const pageId = event.state?.page || 'home';
   afficherPage.skipHistory = true;
   afficherPage(pageId === 'accueil' ? 'home' : pageId);
@@ -2520,11 +2771,21 @@ homeContent?.addEventListener('touchend', (e) => {
   if (diff > 70 && !isRefreshing) {
     isRefreshing = true;
     spinnerHome.classList.add('active');
-    afficherAnnoncesParGroupes(villeSelectionnee).finally(() => {
+    // Actualisation complète : annonces + favoris
+    Promise.all([
+      afficherAnnoncesParGroupes(villeSelectionnee),
+      currentUserUid ? fetch(`${API_URL}/api/favorites/${currentUserUid}`)
+        .then(r => r.json()).then(f => { favorisLocal = f; }).catch(() => {}) : Promise.resolve()
+    ]).finally(() => {
       isRefreshing = false;
       spinnerHome.classList.remove('active');
       spinnerHome.style.opacity = 0;
+      spinnerHome.style.transform = 'translateX(-50%) translateY(-60px)';
     });
-  } else { spinnerHome.classList.remove('active'); spinnerHome.style.opacity = 0; }
+  } else {
+    spinnerHome.classList.remove('active');
+    spinnerHome.style.opacity = 0;
+    spinnerHome.style.transform = 'translateX(-50%) translateY(-60px)';
+  }
   touchStartY = 0; isPulling = false;
 });

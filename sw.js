@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chezmoi-cache-v5'; // incrémenter à chaque mise à jour
+const CACHE_NAME = 'chezmoi-cache-v1.0.1'; // incrémenter à chaque mise à jour
 const urlsToCache = [
   '/',
   '/index.html',
@@ -35,11 +35,24 @@ self.addEventListener('activate', event => {
     ))
   );
   self.clients.claim();
+
+  self.clients.matchAll({ type: 'window' }).then(clients => {
+    clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
+  });
 });
 
 // FETCH - stratégie network-first pour tout sauf images statiques
+
 self.addEventListener('fetch', event => {
   const request = event.request;
+  if (request.method !== 'GET') return;
+
+  // AJOUTER : exclure toutes les requêtes API du cache
+  if (request.url.includes('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+  
 
   // Ignorer les requêtes POST, PUT, DELETE — impossibles à mettre en cache
   if (request.method !== 'GET') return;
@@ -63,5 +76,50 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       });
     })).catch(() => caches.match('/image/logo_ChezMoi.png'))
+  );
+});
+
+// PUSH POUR LES ALERTES
+self.addEventListener('push', event => {
+  const data = event.data?.json() || {};
+  const options = {
+    body: data.body || "Un nouveau bien correspond à votre alerte !",
+    icon: '/icons/chezmoi_icon256.png',
+    badge: '/icons/chezmoi_icon256.png',
+    data: {
+      annonceId: data.annonceId || null,
+      typeAlerte: data.typeAlerte || "location",
+      count: data.count || 1
+    },
+    vibrate: [200, 100, 200]
+  };
+  event.waitUntil(
+    self.registration.showNotification(data.title || "ChezMoi 🔔", options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const { annonceId, typeAlerte, count } = event.notification.data || {};
+
+  let targetUrl;
+  if (count === 1 && annonceId) {
+    // Une seule annonce → page détail directe
+    targetUrl = `/#annonce-${annonceId}`;
+  } else {
+    // Plusieurs annonces → page alertes, bon onglet
+    targetUrl = `/#alertes-${typeAlerte}`;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.postMessage({ type: 'NOTIFICATION_CLICK', url: targetUrl, typeAlerte, annonceId, count });
+          return client.focus();
+        }
+      }
+      return clients.openWindow(targetUrl);
+    })
   );
 });
