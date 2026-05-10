@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chezmoi-cache-v1.0.1'; // incrémenter à chaque mise à jour
+const CACHE_NAME = 'chezmoi-cache-v1.0.3'; // version incrémentée
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,73 +13,88 @@ const urlsToCache = [
   '/icons/chezmoi_icon512.png'
 ];
 
-// INSTALLATION
 self.addEventListener('install', event => {
   console.log('[SW] Install');
-  self.skipWaiting(); // prendre contrôle immédiatement
-
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// ACTIVATION
 self.addEventListener('activate', event => {
   console.log('[SW] Activate');
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.map(key => {
-        if (key !== CACHE_NAME) return caches.delete(key);
-      })
+      keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
     ))
   );
   self.clients.claim();
-
   self.clients.matchAll({ type: 'window' }).then(clients => {
     clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
   });
 });
 
-// FETCH - stratégie network-first pour tout sauf images statiques
-
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
-  // AJOUTER : exclure toutes les requêtes API du cache
+  // ✅ TOUJOURS réseau pour les APIs — jamais de cache
   if (request.url.includes('/api/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
-  
-
-  // Ignorer les requêtes POST, PUT, DELETE — impossibles à mettre en cache
-  if (request.method !== 'GET') return;
-
-  // Forcer network-first pour fichiers critiques (JS, CSS, HTML)
-  if (request.url.endsWith('.js') || request.url.endsWith('.css') || request.url.endsWith('index.html')) {
     event.respondWith(
-      fetch(request).then(networkResponse => {
-        caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse.clone()));
-        return networkResponse.clone();
-      }).catch(() => caches.match(request))
+      fetch(request).catch(() => new Response(
+        JSON.stringify({ message: "Hors ligne" }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      ))
     );
     return;
   }
 
-  // Pour les autres (images, icônes), cache-first
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).then(networkResponse => {
-      return caches.open(CACHE_NAME).then(cache => {
-        cache.put(request, networkResponse.clone());
-        return networkResponse;
-      });
-    })).catch(() => caches.match('/image/logo_ChezMoi.png'))
-  );
+  // ✅ TOUJOURS réseau pour les images externes (Cloudinary, etc.)
+  const appOrigin = self.location.origin;
+  if (!request.url.startsWith(appOrigin)) {
+    event.respondWith(
+      fetch(request).catch(() => new Response('', { status: 408 }))
+    );
+    return;
+  }
+
+  // Network-first pour JS/CSS/HTML — mise à jour automatique
+  if (
+    request.url.endsWith('.js') ||
+    request.url.endsWith('.css') ||
+    request.url.endsWith('index.html') ||
+    request.url.endsWith('/')
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then(networkResponse => {
+          caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse.clone()));
+          return networkResponse.clone();
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Cache-first UNIQUEMENT pour images statiques locales
+  if (request.url.includes('/image/') || request.url.includes('/icons/')) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(networkResponse => {
+          caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse.clone()));
+          return networkResponse.clone();
+        });
+      }).catch(() => caches.match('/image/logo_ChezMoi.png'))
+    );
+    return;
+  }
+
+  // Tout le reste : réseau direct, pas de cache
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
 });
 
-// PUSH POUR LES ALERTES
+// PUSH
 self.addEventListener('push', event => {
   const data = event.data?.json() || {};
   const options = {
@@ -101,15 +116,9 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const { annonceId, typeAlerte, count } = event.notification.data || {};
-
-  let targetUrl;
-  if (count === 1 && annonceId) {
-    // Une seule annonce → page détail directe
-    targetUrl = `/#annonce-${annonceId}`;
-  } else {
-    // Plusieurs annonces → page alertes, bon onglet
-    targetUrl = `/#alertes-${typeAlerte}`;
-  }
+  const targetUrl = count === 1 && annonceId
+    ? `/#annonce-${annonceId}`
+    : `/#alertes-${typeAlerte}`;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
