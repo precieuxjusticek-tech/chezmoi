@@ -87,9 +87,13 @@ function majBadgeAlertes() {
 /* ===================================================== */
 /* ================= TOAST ============================= */
 /* ===================================================== */
+// Garde une trace du dernier toast affiché
+let _lastToastKey = "";
+let _lastToastTime = 0;
+
 function showToast(type = "info", customMessage = "") {
   const messages = {
-    offline: "⚠️ Impossible de se connecter. Vérifiez votre connexion internet.",
+    offline: "⚠️ Vous êtes hors ligne.",
     loadFail: "❌ Échec du chargement. Veuillez réessayer.",
     success: "✅ Action effectuée avec succès !",
     formIncomplete: "⚠️ Veuillez remplir tous les champs requis.",
@@ -99,21 +103,27 @@ function showToast(type = "info", customMessage = "") {
     imageMissing: "⚠️ Veuillez sélectionner au moins une image."
   };
 
+  const message = messages[type] || customMessage;
+
+  // Anti-doublon : même message dans les 3 dernières secondes → on ignore
+  const now = Date.now();
+  const key = type + "|" + message;
+  if (key === _lastToastKey && now - _lastToastTime < 3000) return;
+  _lastToastKey = key;
+  _lastToastTime = now;
+
   let color;
   if (type === "success" || type === "clipboardSuccess") color = "#233d4c";
   else if (type === "error" || type === "loadFail" || type === "clipboardFail") color = "#c62828";
   else if (type === "info") color = "#fd802e";
   else color = "#fd802e";
 
-  const message = messages[type] || customMessage;
   Toastify({
     text: message,
     duration: 3500,
     gravity: "bottom",
     position: "center",
-    offset: {
-      y: 80  // ✅ remonte le toast au-dessus de la nav bar (70px de hauteur)
-    },
+    offset: { y: 80 },
     stopOnFocus: true,
     style: {
       background: color,
@@ -125,6 +135,21 @@ function showToast(type = "info", customMessage = "") {
       padding: "12px 18px"
     }
   }).showToast();
+}
+
+// Détecte si une erreur est une erreur réseau/offline
+function isNetworkError(err) {
+  if (!navigator.onLine) return true;
+  if (!err) return false;
+  const msg = (err.message || err.toString()).toLowerCase();
+  return (
+    msg.includes("fetch") ||
+    msg.includes("network") ||
+    msg.includes("failed to fetch") ||
+    msg.includes("load failed") ||
+    msg.includes("networkerror") ||
+    msg.includes("connection")
+  );
 }
 
 function setupConnectionWatcher() {
@@ -215,7 +240,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       afficherPage("detail");
       afficherDetailAnnonce();
     } catch (err) {
-      showToast("loadFail");
+      if (isNetworkError(err)) showToast("offline");
+      else showToast("loadFail");
       afficherPage(savedUid ? "home" : "accueil");
     }
   } else {
@@ -477,7 +503,8 @@ async function afficherAnnoncesParGroupes(ville) {
         <button id="retryBtn" style="padding:10px 20px;font-size:16px;background:#233d4c;color:#fff;border:none;border-radius:5px;cursor:pointer;">🔄 Actualiser</button>
       </div>`;
     document.getElementById("retryBtn")?.addEventListener("click", () => location.reload());
-    showToast("loadFail");
+    if (isNetworkError(error)) showToast("offline");
+    else showToast("loadFail");
   }
 }
 
@@ -861,7 +888,8 @@ async function loginAvecGoogle(mode) {
     } else if (err.code === "auth/popup-closed-by-user") {
       return;
     } else {
-      showToast("loadFail");
+      if (isNetworkError(err)) showToast("offline");
+      else showToast("loadFail");
     }
   }
 }
@@ -934,7 +962,8 @@ async function handleGoogleResult(result, mode) {
 
     } catch (err) {
       if (loaderCon) loaderCon.style.display = "none";
-      showToast("loadFail");
+      if (isNetworkError(err)) showToast("offline");
+      else showToast("loadFail");
     }
   }
 }
@@ -984,7 +1013,8 @@ formInscription?.addEventListener("submit", async (e) => {
       afficherPage("home");
     } catch (err) {
       loader.classList.remove("show");
-      showToast("loadFail");
+      if (isNetworkError(err)) showToast("offline");
+      else showToast("loadFail");
     }
     return;
   }
@@ -1102,7 +1132,8 @@ document.getElementById("sendResetBtn")?.addEventListener("click", async () => {
     document.getElementById("resetModal").style.display = "none";
   } catch (err) {
     document.getElementById("loader-reset").style.display = "none";
-    showToast("loadFail");
+    if (isNetworkError(err)) showToast("offline");
+    else showToast("loadFail");
   }
 });
 
@@ -1421,13 +1452,14 @@ formAjouter?.addEventListener("submit", async (e) => {
     if (!annonceResponse.ok) throw new Error(annonceData.message);
 
     chargementpub.style.display = "none";
-    showToast("info", "✅ Annonce publiée avec succès ! Elle sera visible 30 jours.");
+    showToast("info", "✅ Annonce publiée avec succès ! Elle sera visible 90 jours.");
     resetFormulaire();
     afficherPage("home");
     afficherAnnoncesParGroupes(villeSelectionnee);
 
-  } catch (error) {
-    showToast("loadFail");
+  } catch (err) {
+    if (isNetworkError(err)) showToast("offline");
+    else showToast("loadFail");
     chargementpub.style.display = "none";
   }
 });
@@ -1881,30 +1913,51 @@ function afficherImageFullscreen(src) {
   if (!overlay) {
     overlay = document.createElement("div");
     overlay.id = "imageFullscreenOverlay";
-    Object.assign(overlay.style, { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, cursor: "pointer" });
+    Object.assign(overlay.style, {
+      position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+      backgroundColor: "rgba(0,0,0,0.9)", display: "flex",
+      alignItems: "center", justifyContent: "center",
+      zIndex: 9999, cursor: "pointer"
+    });
     const fullscreenImg = document.createElement("img");
     fullscreenImg.id = "fullscreenImg";
     fullscreenImg.style.maxWidth = "90%";
     fullscreenImg.style.maxHeight = "90%";
     overlay.appendChild(fullscreenImg);
     document.body.appendChild(overlay);
-    overlay.addEventListener("click", () => fermerImageFullscreen());
-    // Listener Escape attaché une seule fois grâce au flag
+
+    overlay.addEventListener("click", (e) => {
+      // Ferme UNIQUEMENT le fullscreen, sans propager
+      e.stopPropagation();
+      fermerImageFullscreen();
+    });
+
     if (!overlay._escListenerAdded) {
-      document.addEventListener("keydown", e => { if (e.key === "Escape") fermerImageFullscreen(); });
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") fermerImageFullscreen();
+      });
       overlay._escListenerAdded = true;
     }
   }
   document.getElementById("fullscreenImg").src = src;
   overlay.style.display = "flex";
-  history.pushState({ fullscreen: true }, '', '#fullscreen');
+
+  // Ajoute une entrée dans l'historique UNIQUEMENT si pas déjà en fullscreen
+  if (window.location.hash !== "#fullscreen") {
+    history.pushState({ fullscreen: true }, '', '#fullscreen');
+  }
 }
 
 function fermerImageFullscreen(fromPopState = false) {
   const overlay = document.getElementById("imageFullscreenOverlay");
   if (!overlay || overlay.style.display === "none") return;
   overlay.style.display = "none";
-  if (!fromPopState && window.location.hash === "#fullscreen") history.back();
+
+  // Retire #fullscreen de l'URL sans naviguer en arrière
+  // sauf si c'est déjà le popstate qui gère ça
+  if (!fromPopState && window.location.hash === "#fullscreen") {
+    history.back(); // revient au state précédent (détail ou home)
+  }
 }
 
 /* ===================================================== */
@@ -1955,7 +2008,8 @@ document.getElementById("formSignalerProbleme")?.addEventListener("submit", asyn
     afficherPage("home");
   } catch (err) {
     signalerLoader.style.display = "none";
-    showToast("loadFail");
+    if (isNetworkError(err)) showToast("offline");
+    else showToast("loadFail");
   }
 });
 
@@ -2973,7 +3027,10 @@ document.addEventListener("DOMContentLoaded", () => {
                   const filtres = biens.filter(b => b.id !== annonce.id);
                   localStorage.setItem(key, JSON.stringify(filtres));
                 });
-              } catch { showToast("loadFail"); }
+              } catch (err) {
+                if (isNetworkError(err)) showToast("offline");
+                else showToast("loadFail");
+              }
               overlay.remove();
             };
           });
@@ -2983,9 +3040,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       profilchargement.style.display = "none";
-    } catch {
+    } catch (err) {
       profilchargement.style.display = "none";
-      showToast("loadFail");
+      if (isNetworkError(err)) showToast("offline");
+      else showToast("loadFail");
     }
   });
 });
@@ -3240,9 +3298,10 @@ document.getElementById("saveProfileBtn")?.addEventListener("click", async () =>
       if (roleEl) roleEl.textContent = rolesLabels[role] || role;
     }
     document.getElementById("editProfileForm").classList.remove("active");
-  } catch {
+  } catch (err) {
     editchargement.style.display = "none";
-    showToast("loadFail");
+    if (isNetworkError(err)) showToast("offline");
+    else showToast("loadFail");
   }
 });
 
@@ -3346,6 +3405,10 @@ document.getElementById("voirFavorisBtn")?.addEventListener("click", async () =>
 /* ===================================================== */
 window.addEventListener("hashchange", async () => {
   const hash = window.location.hash;
+
+  // Ignorer les transitions liées au fullscreen
+  if (hash === "#fullscreen" || !hash || hash === "#") return;
+
   if (hash.startsWith("#annonce-")) {
     const annonceId = hash.replace("#annonce-", "");
     try {
@@ -3356,24 +3419,25 @@ window.addEventListener("hashchange", async () => {
       afficherPage("detail");
       afficherDetailAnnonce();
     } catch { showToast("info", "Impossible de charger l'annonce depuis ce lien."); }
-  } else {
-    afficherPage("home");
   }
+  // Pas de else → le popstate gère la navigation normale
 });
 
 window.addEventListener('popstate', (event) => {
-  // Overlay plein écran wizard
+  // 1. Fullscreen image détail — priorité absolue
+  const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
+  if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
+    fermerImageFullscreen(true); // true = c'est le popstate qui appelle, pas de history.back()
+    return; // stoppe tout — pas de navigation de page
+  }
+
+  // 2. Fullscreen wizard (plein écran upload image)
   if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
     fermerPleinEcran(true);
     return;
   }
-  // Overlay fullscreen détail
-  const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
-  if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
-    fermerImageFullscreen(true);
-    return;
-  }
-  // Navigation normale
+
+  // 3. Navigation normale entre pages
   const pageId = event.state?.page || 'home';
   afficherPage.skipHistory = true;
   afficherPage(pageId === 'accueil' ? 'home' : pageId);
@@ -3929,7 +3993,8 @@ async function soumettreDeblocage(annonce) {
   } catch (err) {
     if (loader) loader.style.display = "none";
     if (btnCont) btnCont.style.display = "block";
-    showToast("loadFail");
+    if (isNetworkError(err)) showToast("offline");
+    else showToast("loadFail");
   }
 }
 
