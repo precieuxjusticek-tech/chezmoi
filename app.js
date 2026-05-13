@@ -268,14 +268,6 @@ function safeToast(type, message = "") {
   }
 }
 
-window.addEventListener("offline", () => {
-  safeToast("offline");
-});
-
-window.addEventListener("online", () => {
-  safeToast("success", "🌐 Connexion rétablie !");
-});
-
 let lastStatus = navigator.onLine;
 
 function checkInstability() {
@@ -381,10 +373,41 @@ async function afficherAnnoncesParGroupes(ville) {
       const section = document.createElement("div");
       section.className = "categorie-section";
 
+      const titreWrap = document.createElement("div");
+      titreWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:0 4px;";
+
       const titre = document.createElement("h3");
       titre.className = "categorie-title";
       titre.textContent = group.join(" & ");
-      section.appendChild(titre);
+
+      const voirTout = document.createElement("button");
+      voirTout.textContent = "Voir tout →";
+      voirTout.style.cssText = `
+        background: linear-gradient(135deg, #fd802e, #ff5722);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      `;
+      voirTout.addEventListener("click", () => {
+        const searchInput = document.getElementById("searchInput");
+        const typeFilter = document.getElementById("typeFilter");
+        if (searchInput) searchInput.value = "";
+        if (typeFilter) {
+          const firstType = group[0];
+          const option = [...typeFilter.options].find(o => o.value.toLowerCase() === firstType.toLowerCase());
+          if (option) typeFilter.value = option.value;
+        }
+        afficherPage("recherche");
+      });
+
+      titreWrap.appendChild(titre);
+      titreWrap.appendChild(voirTout);
+      section.appendChild(titreWrap);
 
       const row = document.createElement("div");
       row.className = "annonces-row";
@@ -602,9 +625,21 @@ installBtn?.addEventListener('click', async () => {
   if (isIOS) { hidePwaPrompt(); return; }
   hidePwaPrompt();
   if (!deferredPrompt) return;
+
+  // Afficher loader
+  const installLoader = document.getElementById("installLoader");
+  if (installLoader) installLoader.style.display = "flex";
+
   deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
+  const choice = await deferredPrompt.userChoice;
   deferredPrompt = null;
+
+  // Cacher loader
+  if (installLoader) installLoader.style.display = "none";
+
+  if (choice.outcome === "accepted") {
+    showToast("info", "✅ ChezMoi installé ! Vous pouvez l'utiliser.");
+  }
 });
 
 dismissBtn?.addEventListener('click', hidePwaPrompt);
@@ -2453,8 +2488,9 @@ async function chargerPageAlertes() {
   if (!currentUserUid) return;
 
   // ===== OVERLAY ALERTES EN COURS DE TEST =====
-  afficherOverlayAlertesBientot();
-  return; // bloquer tout le reste
+  const existant = document.getElementById("overlayAlertesBientot");
+  if (!existant) afficherOverlayAlertesBientot();
+  return;
   // ============================================
 
   try {
@@ -2948,10 +2984,24 @@ document.addEventListener("DOMContentLoaded", () => {
     afficherPage("profil");
     profilchargement.style.display = "flex";
 
+    // Afficher depuis le cache localStorage si disponible
+    const cachedUser = localStorage.getItem("userProfile");
+    if (cachedUser) {
+      const u = JSON.parse(cachedUser);
+      document.getElementById("userName").textContent = u.nom || "Utilisateur";
+      document.getElementById("userEmail").textContent = u.email || "-";
+      document.getElementById("userContact").textContent = u.inscontact || "Non renseigné";
+      const rolesLabels = { locataire: "🏠 Locataire", agent: "💼 Agent", proprietaire: "🔑 Propriétaire" };
+      document.getElementById("userRole").textContent = rolesLabels[u.role] || "Non renseigné";
+    }
+
     try {
       const resUser = await fetch(`${API_URL}/api/user/${currentUserUid}`);
       if (!resUser.ok) throw new Error();
       const user = await resUser.json();
+
+      // Sauvegarder en cache
+      localStorage.setItem("userProfile", JSON.stringify(user));
 
       document.getElementById("userName").textContent = user.nom || "Utilisateur";
       document.getElementById("userEmail").textContent = user.email || "-";
