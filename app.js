@@ -529,7 +529,7 @@ async function afficherAnnoncesParGroupes(ville) {
 
           card.innerHTML = `
             <div class="card-carousel" style="position:relative;overflow:hidden;border-radius:20px 20px 0 0;">
-              <div class="card-slides" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+              <div class="card-slides" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:auto;overscroll-behavior-x:contain;">
                 ${slidesHTML}
               </div>
               ${dotsHTML}

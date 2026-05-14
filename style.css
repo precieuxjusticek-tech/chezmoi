@@ -1122,6 +1122,8 @@ loader pour mot de passe oublié
   overflow-x: auto;
   padding-bottom: 8px;
   scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior-x: contain;
 }
 
 .annonces-row::-webkit-scrollbar {
@@ -2350,9 +2352,10 @@ input[type="checkbox"]:checked + label {
   height: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: auto;
   scrollbar-width: none;
   padding: 0;
+  overscroll-behavior-x: contain;
 }
 
 .detail-images::-webkit-scrollbar { display: none; }
@@ -2363,6 +2366,7 @@ input[type="checkbox"]:checked + label {
   height: 280px;
   object-fit: cover;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   cursor: pointer;
   filter: brightness(0.95);
   transition: filter 0.3s;
