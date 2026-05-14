@@ -397,10 +397,9 @@ function afficherPageCategorie(group, annoncesFiltrees) {
 
   // Bouton retour
   document.getElementById("btnRetourCategorie").onclick = () => {
-    document.getElementById("pageCategorie").style.display = "none";
-    document.getElementById("home").classList.add("active");
-    document.getElementById("home").style.display = "flex";
+    history.back(); // le popstate s'occupe du reste  
   };
+
 
   // Afficher la page
   pages.forEach(p => p.classList.remove("active"));
@@ -410,6 +409,7 @@ function afficherPageCategorie(group, annoncesFiltrees) {
   pageCategorie.style.display = "flex";
   pageCategorie.classList.add("active");
   if (nav) nav.style.display = "none";
+  history.pushState({ page: "pageCategorie" }, '', '#pageCategorie');
 }
 
 /* ===================================================== */
@@ -2424,19 +2424,20 @@ function afficherOverlayAlertesBientot() {
     position: fixed; inset: 0; z-index: 99999;
     background: rgba(10, 20, 30, 0.75);
     backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 0;
     animation: fadeIn 0.3s ease;
   `;
 
   overlay.innerHTML = `
     <div style="
       background: #fff;
-      border-radius: 28px;
+      border-radius: 28px 28px 0 0;
       width: 100%;
-      max-width: 400px;
-      overflow: hidden;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.25);
+      max-width: 100%;
+      max-height: 92dvh;
+      overflow-y: auto;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
       animation: slideUpModal 0.4s cubic-bezier(.4,1.2,.5,1);
     ">
 
@@ -2589,8 +2590,7 @@ async function chargerPageAlertes() {
   if (!currentUserUid) return;
 
   // ===== OVERLAY ALERTES EN COURS DE TEST =====
-  const existant = document.getElementById("overlayAlertesBientot");
-  if (!existant) afficherOverlayAlertesBientot();
+  afficherOverlayAlertesBientot();
   return;
   // ============================================
 
@@ -3575,24 +3575,46 @@ window.addEventListener("hashchange", async () => {
 });
 
 window.addEventListener('popstate', (event) => {
-  // 1. Fullscreen image détail — priorité absolue
+  // 1. Fullscreen image détail
   const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
   if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
-    fermerImageFullscreen(true); // true = c'est le popstate qui appelle, pas de history.back()
-    return; // stoppe tout — pas de navigation de page
+    fermerImageFullscreen(true);
+    return;
   }
 
-  // 2. Fullscreen wizard (plein écran upload image)
+  // 2. Fullscreen wizard
   if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
     fermerPleinEcran(true);
     return;
   }
 
-  // 3. Navigation normale entre pages
+  // 3. Page agent overlay
+  const pageAgentOverlay = document.getElementById("pageAgentOverlay");
+  if (pageAgentOverlay && pageAgentOverlay.classList.contains("show")) {
+    fermerPageAgent(true);
+    return;
+  }
+
+  // 4. Page catégorie dédiée
+  const pageCategorie = document.getElementById("pageCategorie");
+  if (pageCategorie && pageCategorie.style.display === "flex") {
+    pageCategorie.style.display = "none";
+    pageCategorie.classList.remove("active");
+    pages.forEach(p => p.classList.remove("active"));
+    const home = document.getElementById("home");
+    home.classList.add("active");
+    home.style.display = "flex";
+    if (nav) nav.style.display = "flex";
+    updateIconActive("home");
+    return;
+  }
+
+  // 5. Navigation normale entre pages
   const pageId = event.state?.page || 'home';
   afficherPage.skipHistory = true;
   afficherPage(pageId === 'accueil' ? 'home' : pageId);
   afficherPage.skipHistory = false;
+  if (pageId === 'alertes') chargerPageAlertes();
 });
 
 /* ===================================================== */
@@ -4156,6 +4178,7 @@ async function ouvrirPageAgent(ownerId, annonceRef) {
 
   overlay.style.display = "flex";
   setTimeout(() => overlay.classList.add("show"), 10);
+  history.pushState({ page: "pageAgent" }, '', '#pageAgent');
 
   const pageAgentNom = document.getElementById("pageAgentNom");
   const pageAgentAvatar = document.getElementById("pageAgentAvatar");
@@ -4216,11 +4239,12 @@ async function ouvrirPageAgent(ownerId, annonceRef) {
   if (backBtn) backBtn.onclick = fermerPageAgent;
 }
 
-function fermerPageAgent() {
+function fermerPageAgent(fromPopState = false) {
   const overlay = document.getElementById("pageAgentOverlay");
   if (!overlay) return;
   overlay.classList.remove("show");
   setTimeout(() => { overlay.style.display = "none"; }, 300);
+  if (!fromPopState && window.location.hash === "#pageAgent") history.back();
 }
 
 /* ===================================================== */
