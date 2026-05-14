@@ -326,6 +326,96 @@ function partagerAnnonce(annonce) {
   }
 }
 
+/* ===================================================== */
+/* ============= PAGE DEDIEE PAR CATEGORIE ============= */
+/* ===================================================== */
+function afficherPageCategorie(group, annoncesFiltrees) {
+  // Filtrer les annonces pour ce groupe
+  let annonces;
+  if (group[0] === "2-3-4 chambres et plus") {
+    annonces = annoncesFiltrees.filter(a => {
+      const t = a.type_annonce?.toLowerCase();
+      return t === "maison 2 chambre" || t === "maison 3 chambre" || t === "maison 4 chambre et plus";
+    });
+  } else {
+    annonces = annoncesFiltrees.filter(a =>
+      group.some(c => a.type_annonce?.toLowerCase() === c.toLowerCase())
+    );
+  }
+
+  // Titre + compteur
+  const titre = document.getElementById("titreCategorieDedie");
+  const count = document.getElementById("countCategorieDedie");
+  const liste = document.getElementById("listeCategorieDedie");
+
+  if (titre) titre.textContent = group.join(" & ");
+  if (count) count.textContent = `${annonces.length} annonce${annonces.length > 1 ? "s" : ""} disponible${annonces.length > 1 ? "s" : ""}`;
+  if (!liste) return;
+
+  liste.innerHTML = "";
+
+  if (annonces.length === 0) {
+    liste.innerHTML = `<p style="text-align:center;color:#888;padding:40px;grid-column:1/-1;">Aucune annonce pour cette catégorie.</p>`;
+  } else {
+    annonces.forEach(annonce => {
+      const joursRestants = getJoursRestants(annonce.expireAt);
+      const imgSrc = annonce.images?.[0] || "image/logo_ChezMoi.png";
+      const card = document.createElement("div");
+      card.style.cssText = "background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.09);cursor:pointer;border:1px solid rgba(253,128,46,0.08);";
+      card.innerHTML = `
+        <div style="position:relative;height:130px;overflow:hidden;">
+          <img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;">
+          ${annonce.statut === "loue"
+            ? `<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
+                <span style="background:#e53935;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;">🔒 LOUÉ</span>
+              </div>`
+            : joursRestants !== null && joursRestants <= 7
+              ? `<div class="expire-info ${joursRestants <= 2 ? "urgent" : ""}">⏳ ${joursRestants}j</div>`
+              : ""}
+          <button class="btn-fav" data-id="${annonce.id}" style="position:absolute;top:8px;right:8px;">🤍</button>
+        </div>
+        <div style="padding:10px 11px 12px;">
+          <div style="font-size:10px;font-weight:700;color:#fd802e;background:rgba(253,128,46,0.1);border-radius:20px;padding:2px 8px;display:inline-block;margin-bottom:4px;">${annonce.titre || ""}</div>
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${annonce.type_annonce || ""}</div>
+          <div style="font-size:11px;color:#888;">📍 ${annonce.ville || ""}${annonce.quartier ? " · " + annonce.quartier : ""}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;border-top:1px solid #f5f5f5;padding-top:8px;">
+            <span style="font-size:14px;font-weight:800;color:#fd802e;">${Number(annonce.prix).toLocaleString("fr-FR")} XAF</span>
+            <button class="btn-voir" style="background:linear-gradient(135deg,#233d4c,#2f5d73)!important;color:#fff!important;border:none!important;border-radius:8px!important;padding:5px 10px!important;font-size:10px!important;font-weight:700!important;cursor:pointer;">Voir →</button>
+          </div>
+        </div>`;
+
+      card.querySelector(".btn-voir").addEventListener("click", () => {
+        localStorage.setItem("annonceDetail", JSON.stringify(annonce));
+        afficherPage("detail");
+        afficherDetailAnnonce();
+      });
+
+      setupFavoriButton(card.querySelector(".btn-fav"), annonce);
+      liste.appendChild(card);
+    });
+  }
+
+  // Bouton retour
+  document.getElementById("btnRetourCategorie").onclick = () => {
+    document.getElementById("pageCategorie").style.display = "none";
+    document.getElementById("home").classList.add("active");
+    document.getElementById("home").style.display = "flex";
+  };
+
+  // Afficher la page
+  pages.forEach(p => p.classList.remove("active"));
+  document.getElementById("accueil").style.display = "none";
+  document.getElementById("home").style.display = "none";
+  const pageCategorie = document.getElementById("pageCategorie");
+  pageCategorie.style.display = "flex";
+  pageCategorie.classList.add("active");
+  if (nav) nav.style.display = "none";
+}
+
+/* ===================================================== */
+/* ================= AFFICHAGE ANNONCES ================ */
+/* ===================================================== */
+
 async function afficherAnnoncesParGroupes(ville) {
   const container = document.getElementById("categoriesContainer");
   const spinner = document.getElementById("spinner");
@@ -394,15 +484,7 @@ async function afficherAnnoncesParGroupes(ville) {
         white-space: nowrap;
       `;
       voirTout.addEventListener("click", () => {
-        const searchInput = document.getElementById("searchInput");
-        const typeFilter = document.getElementById("typeFilter");
-        if (searchInput) searchInput.value = "";
-        if (typeFilter) {
-          const firstType = group[0];
-          const option = [...typeFilter.options].find(o => o.value.toLowerCase() === firstType.toLowerCase());
-          if (option) typeFilter.value = option.value;
-        }
-        afficherPage("recherche");
+        afficherPageCategorie(group, annoncesFiltrees);
       });
 
       titreWrap.appendChild(titre);
@@ -1353,7 +1435,26 @@ const chargementpub = document.getElementById("loader-pub");
 
 formAjouter?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!verifierConnexion("la publication d'une annonce")) return;
+
+  // Vérification connexion stricte
+  if (!navigator.onLine) {
+    showToast("info", "📵 Pas de connexion internet. Publication impossible.");
+    return;
+  }
+
+  // Test connexion instable (ping rapide)
+  try {
+    const pingStart = Date.now();
+    await fetch(`${API_URL}/ping`, { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000) });
+    const pingTime = Date.now() - pingStart;
+    if (pingTime > 2500) {
+      showToast("info", "⚠️ Connexion trop instable. Réessayez dans un endroit avec un meilleur réseau.");
+      return;
+    }
+  } catch {
+    showToast("info", "⚠️ Connexion instable ou serveur indisponible. Réessayez.");
+    return;
+  }
   if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
 
   const titre = document.querySelector('input[name="titre"]:checked')?.value;
@@ -1456,14 +1557,14 @@ formAjouter?.addEventListener("submit", async (e) => {
 
     // ✅ APRÈS — compression parallèle, beaucoup plus rapide
     const compressedFiles = await Promise.all(
-      selectedFiles.map(file => compressImage(file))
+      selectedFiles.map(file => compressImage(file, 2)) // max 2MB
     );
     for (const compressedFile of compressedFiles) {
       formData.append("images", compressedFile);
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000); // ✅ 3 minutes
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 1min30 max
 
     let annonceResponse;
     try {
@@ -2315,7 +2416,7 @@ document.getElementById("alertesBtn")?.addEventListener("click", () => {
 
 function afficherOverlayAlertesBientot() {
   const existant = document.getElementById("overlayAlertesBientot");
-  if (existant) return;
+  if (existant) existant.remove(); // supprimer l'ancien et recréer
 
   const overlay = document.createElement("div");
   overlay.id = "overlayAlertesBientot";

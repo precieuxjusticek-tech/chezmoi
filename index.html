@@ -1873,13 +1873,26 @@
             </button>
 
         </div>
-        
+    
+        <!-- PAGE CATÉGORIE DÉDIÉE -->
+        <section class="page" id="pageCategorie" style="display:none; flex-direction:column; padding:0; background:#f4f6f8; overflow-y:auto; padding-bottom:100px;">
+            <div style="background:linear-gradient(135deg,#233d4c,#2f5d73); padding:20px 16px 28px; position:sticky; top:0; z-index:10;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                    <button id="btnRetourCategorie" style="background:rgba(255,255,255,0.15)!important; border:none!important; border-radius:50%!important; width:36px!important; height:36px!important; color:#fff!important; font-size:18px!important; display:flex!important; align-items:center!important; justify-content:center!important; cursor:pointer; padding:0!important;">←</button>
+                    <h2 id="titreCategorieDedie" style="color:#fff!important; font-size:20px; font-weight:700; margin:0!important; text-align:left!important;"></h2>
+                </div>
+                <p id="countCategorieDedie" style="color:rgba(255,255,255,0.6)!important; font-size:13px!important; margin:0!important;"></p>
+            </div>
+            <div id="listeCategorieDedie" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px;"></div>
+        </section>
+
         <!-- FOOTER -->
         <footer class="klippo-footer">
             2026 Klippo — Tous droits réservés
         </footer>
 
     </div>
+    
 
     <!-- POPUP D'INSTALLATION PWA -->
     <div id="pwaPrompt" class="pwa-prompt" style="display:none;">
