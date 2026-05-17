@@ -3115,7 +3115,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Afficher le provider
       const providerEl = document.getElementById("userProvider");
       if (providerEl) {
-        providerEl.textContent = user.provider === "google"
+        providerEl.textContent = u.provider === "google"
           ? "🔵 Google"
           : "📧 Email / Mot de passe";
       }
@@ -3134,6 +3134,13 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("userContact").textContent = user.inscontact || "Non renseigné";
       const rolesLabels = { locataire: "🏠 Locataire", agent: "💼 Agent", proprietaire: "🔑 Propriétaire" };
       document.getElementById("userRole").textContent = rolesLabels[user.role] || "Non renseigné";
+      // À ajouter après userRole, dans le bloc try après le fetch
+      const providerElFresh = document.getElementById("userProvider");
+      if (providerElFresh) {
+        providerElFresh.textContent = user.provider === "google"
+          ? "🔵 Google"
+          : "📧 Email / Mot de passe";
+      }
 
       const resFav = await fetch(`${API_URL}/api/favorites/${currentUserUid}`);
       const favoris = await resFav.json();

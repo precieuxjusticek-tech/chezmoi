@@ -1133,13 +1133,17 @@ loader pour mot de passe oublié
 /* ============================= */
 /* ROW ANNONCES (scroll horizontal) */
 /* ============================= */
+
 .annonces-row {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;
+  padding-left: 2px;
+  padding-right: 12px;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: auto;
+  scroll-padding-left: 2px;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
 
@@ -1161,7 +1165,9 @@ loader pour mot de passe oublié
 /* ============================= */
 
 .annonce-card {
-  flex: 0 0 260px;
+  flex: 0 0 calc(75vw - 16px);
+  max-width: 260px;
+  min-width: 200px;
   background: #fff;
   border-radius: 20px;
   overflow: hidden;
@@ -1396,32 +1402,6 @@ loader pour mot de passe oublié
 
 .annonce-card:hover .annonce-type {
     letter-spacing: 1px;
-}
-
-/* ============================= */
-/* SCROLL HORIZONTAL */
-/* ============================= */
-.annonces-row {
-    display: flex;
-    gap: 15px;
-    overflow-x: auto;
-    padding-bottom: 10px;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-}
-
-.annonces-row::-webkit-scrollbar {
-    height: 6px;
-}
-
-.annonces-row::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.2);
-    border-radius: 3px;
-}
-
-.annonces-row::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
-    border-radius: 3px;
 }
 
 /* ============================= */
@@ -5430,6 +5410,19 @@ body.modal-open {
     font-size: 18px;
   }
 
+  .annonces-row {
+    padding-left: 2px;
+    padding-right: 10px;
+    gap: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .annonce-card {
+    flex: 0 0 calc(78vw - 12px);
+    max-width: 240px;
+    min-width: 190px;
+  }
+
   /* very small phones (≤390px) */
   @media (max-width: 390px) {
     .app {
@@ -5468,6 +5461,11 @@ body.modal-open {
     }
     button {
       padding: 8px;
+    }
+
+    .annonce-card {
+      flex: 0 0 calc(82vw - 10px);
+      min-width: 180px;
     }
   }
 }
