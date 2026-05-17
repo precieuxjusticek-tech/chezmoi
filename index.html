@@ -434,7 +434,7 @@
                     <div class="panel-content">
                         <div class="panel-icon">🏷️</div>
                         <h3>Type d'annonce</h3>
-                        <p class="panel-desc">Vous souhaitez louer ou vendre votre bien ?</p>
+                        <p class="panel-desc">Vous souhaitez louer votre bien ?</p>
                         <div class="type-radios-wizard" id="titre">
                             <input type="radio" id="location" name="titre" value="Location">
                             <label for="location">
@@ -1738,6 +1738,7 @@
                             <p><strong>Email :</strong> <span id="userEmail">email@example.com</span></p>
                             <p><strong>Contact :</strong> <span id="userContact">Non renseigné</span></p>
                             <p><strong>Rôle :</strong> <span id="userRole">Non renseigné</span></p>
+                            <p><strong>Connexion :</strong> <span id="userProvider">—</span></p>
                         </div>
                     </div>
 
@@ -1768,6 +1769,10 @@
                             <input type="text" id="editName" placeholder="Nom">
                             <input type="email" id="editEmail" placeholder="Email">
                             <input type="text" id="editContact" placeholder="Contact">
+                            <div id="editPasswordWrap" style="display:none;">
+                              <input type="password" id="editPassword" placeholder="Nouveau mot de passe (optionnel)" autocomplete="new-password">
+                                <small style="color:#888;font-size:12px;display:block;margin-top:4px;">Laissez vide pour ne pas changer</small>
+                            </div>
                             <div class="auth-field" style="width:100%;">
                                 <label style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;display:block;">Rôle</label>
                                 <div class="role-radios" id="editRoleRadios">

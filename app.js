@@ -1115,7 +1115,7 @@ formInscription?.addEventListener("submit", async (e) => {
       const res = await fetch(`${API_URL}/api/google-auth`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: _googleIdToken, inscontact, role })
+        body: JSON.stringify({ idToken: _googleIdToken, inscontact, role, password: document.getElementById("ins-password").value })
       });
       const data = await res.json();
       loader.classList.remove("show");
@@ -1273,12 +1273,51 @@ function updateImageCounter() {
   if (imageMax) imageMax.textContent = maxImages;
 }
 
+// APRÈS — ajoutez le flag avant et après
+let _isGalleryOpen = false;
+
+// Avant d'ouvrir la galerie, on pose le flag
+function ouvrirGalerie() {
+  _isGalleryOpen = true;
+  hiddenInput.click();
+}
+
+hiddenInput?.addEventListener("change", () => {
+  // Le flag se réinitialise dès que le navigateur traite le retour
+  _isGalleryOpen = false;
+
+  if (!hiddenInput.files.length) return;
+  const files = Array.from(hiddenInput.files);
+  const maxImages = 15;
+
+  for (let file of files) {
+    const supported = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!supported.includes(file.type)) {
+      showToast("info", `Format non supporté: ${file.name}`);
+      hiddenInput.value = "";
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      showToast("info", `Image trop lourde: ${file.name}`);
+      hiddenInput.value = "";
+      return;
+    }
+  }
+
+  if (selectedFiles.length + files.length > maxImages) {
+    showToast("info", `Tu peux ajouter maximum ${maxImages} images au total.`);
+  }
+  selectedFiles = [...selectedFiles, ...files].slice(0, maxImages);
+  renderGrid();
+  hiddenInput.value = "";
+});
+
+// Dans renderGrid(), remplacez hiddenInput.click() par ouvrirGalerie()
 function renderGrid() {
   if (!imageGrid) return;
   imageGrid.innerHTML = "";
   const maxImages = 15;
 
-  // Créer d'abord tous les slots vides pour préserver l'ordre
   const slots = selectedFiles.map(() => {
     const card = document.createElement("div");
     card.classList.add("image-card");
@@ -1290,8 +1329,7 @@ function renderGrid() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const card = slots[index];
-      card.innerHTML = ""; // vider le slot
-
+      card.innerHTML = "";
       const img = document.createElement("img");
       img.src = e.target.result;
       card.appendChild(img);
@@ -1299,7 +1337,6 @@ function renderGrid() {
         ev.stopPropagation();
         afficherPleinEcran(e.target.result);
       });
-
       const btnSuppr = document.createElement("div");
       btnSuppr.classList.add("btnSuppr");
       btnSuppr.textContent = "✖";
@@ -1314,33 +1351,16 @@ function renderGrid() {
     reader.readAsDataURL(file);
   });
 
-  // Carte "+" pour ajouter
   if (selectedFiles.length < maxImages) {
     const plusCard = document.createElement("div");
     plusCard.classList.add("image-card", "plus");
     plusCard.textContent = "+";
-    plusCard.addEventListener("click", () => hiddenInput.click());
+    // ↓ Remplacé : hiddenInput.click() → ouvrirGalerie()
+    plusCard.addEventListener("click", () => ouvrirGalerie());
     imageGrid.appendChild(plusCard);
   }
   updateImageCounter();
 }
-
-hiddenInput?.addEventListener("change", () => {
-  if (!hiddenInput.files.length) return;
-  const files = Array.from(hiddenInput.files);
-  const maxImages = 15;
-
-  for (let file of files) {
-    const supported = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!supported.includes(file.type)) { showToast("info", `Format non supporté: ${file.name}`); hiddenInput.value = ""; return; }
-    if (file.size > 20 * 1024 * 1024) { showToast("info", `Image trop lourde: ${file.name}`); hiddenInput.value = ""; return; }
-  }
-
-  if (selectedFiles.length + files.length > maxImages) { showToast("info", `Tu peux ajouter maximum ${maxImages} images au total.`); }
-  selectedFiles = [...selectedFiles, ...files].slice(0, maxImages);
-  renderGrid();
-  hiddenInput.value = "";
-});
 
 document.querySelectorAll('input[name="titre"]').forEach(radio => {
   radio.addEventListener("change", () => {
@@ -1602,7 +1622,6 @@ formAjouter?.addEventListener("submit", async (e) => {
 
 renderGrid();
 window.addEventListener("DOMContentLoaded", () => resetFormulaire());
-window.addEventListener("beforeunload", () => resetFormulaire());
 
 /* ===================================================== */
 /* ================= DÉTAIL ANNONCE ======= */
@@ -3081,7 +3100,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilchargement = document.getElementById("loader-profil");
 
   profileBtn?.addEventListener("click", async () => {
-    if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
     afficherPage("profil");
     profilchargement.style.display = "flex";
 
@@ -3094,6 +3112,13 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("userContact").textContent = u.inscontact || "Non renseigné";
       const rolesLabels = { locataire: "🏠 Locataire", agent: "💼 Agent", proprietaire: "🔑 Propriétaire" };
       document.getElementById("userRole").textContent = rolesLabels[u.role] || "Non renseigné";
+      // Afficher le provider
+      const providerEl = document.getElementById("userProvider");
+      if (providerEl) {
+        providerEl.textContent = user.provider === "google"
+          ? "🔵 Google"
+          : "📧 Email / Mot de passe";
+      }
     }
 
     try {
@@ -3410,6 +3435,14 @@ document.getElementById("editProfileBtn")?.addEventListener("click", async () =>
       const radioEdit = document.querySelector(`input[name="editRole"][value="${currentRole}"]`);
       if (radioEdit) radioEdit.checked = true;
     }
+    // Afficher le champ mot de passe seulement pour les comptes email
+    const editPwdWrap = document.getElementById("editPasswordWrap");
+    if (editPwdWrap) {
+      editPwdWrap.style.display = user.provider === "google" ? "none" : "block";
+    }
+    // Réinitialiser le champ
+    const editPwd = document.getElementById("editPassword");
+    if (editPwd) editPwd.value = "";
     document.getElementById("editProfileForm").classList.add("active");
   } catch { showToast("serverDown"); }
 });
@@ -3425,6 +3458,7 @@ document.getElementById("saveProfileBtn")?.addEventListener("click", async () =>
   const email = document.getElementById("editEmail").value.trim();
   const inscontact = document.getElementById("editContact").value.trim();
   const role = document.querySelector('input[name="editRole"]:checked')?.value || "";
+  const newPassword = document.getElementById("editPassword")?.value.trim() || "";
   const editchargement = document.getElementById("loader-edit");
   editchargement.style.display = "flex";
 
@@ -3434,7 +3468,7 @@ document.getElementById("saveProfileBtn")?.addEventListener("click", async () =>
     const res = await fetch(`${API_URL}/api/user/${currentUserUid}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nom, email, inscontact, role })
+      body: JSON.stringify({ nom, email, inscontact, role, newPassword })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
@@ -3460,7 +3494,6 @@ document.getElementById("saveProfileBtn")?.addEventListener("click", async () =>
 /* ============ PAGE FAVORIS ========================== */
 /* ===================================================== */
 document.getElementById("voirFavorisBtn")?.addEventListener("click", async () => {
-  if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
   afficherPage("favoris");
 
   const chargementfav = document.getElementById("loader-fav");
@@ -3574,28 +3607,45 @@ window.addEventListener("hashchange", async () => {
   // Pas de else → le popstate gère la navigation normale
 });
 
+// APRÈS — ajoutez la vérification du flag en TOUT PREMIER dans le handler
 window.addEventListener('popstate', (event) => {
-  // 1. Fullscreen image détail
+
+  // ✅ GUARD 1 — Retour depuis la galerie Android : on absorbe l'événement
+  // sans naviguer, le formulaire reste intact
+  if (_isGalleryOpen) {
+    _isGalleryOpen = false;
+    // On repousse un état dans l'historique pour ne pas "consommer"
+    // l'entrée du wizard dans le stack
+    history.pushState({ page: "ajouter" }, '', '#ajouter');
+    return;
+  }
+
+  // ✅ GUARD 2 — Si la page active est #ajouter et qu'aucun overlay
+  // n'est ouvert, on ne redirige pas vers home non plus
+  const pageActuelle = document.querySelector(".page.active")?.id;
+  if (pageActuelle === "ajouter" && !event.state?.page) {
+    history.pushState({ page: "ajouter" }, '', '#ajouter');
+    return;
+  }
+
+  // Vos vérifications existantes (ordre conservé)
   const fullscreenOverlay = document.getElementById("imageFullscreenOverlay");
   if (fullscreenOverlay && fullscreenOverlay.style.display === "flex") {
     fermerImageFullscreen(true);
     return;
   }
 
-  // 2. Fullscreen wizard
   if (overlayPleinEcran && overlayPleinEcran.style.display === "flex") {
     fermerPleinEcran(true);
     return;
   }
 
-  // 3. Page agent overlay
   const pageAgentOverlay = document.getElementById("pageAgentOverlay");
   if (pageAgentOverlay && pageAgentOverlay.classList.contains("show")) {
     fermerPageAgent(true);
     return;
   }
 
-  // 4. Page catégorie dédiée
   const pageCategorie = document.getElementById("pageCategorie");
   if (pageCategorie && pageCategorie.style.display === "flex") {
     pageCategorie.style.display = "none";
@@ -3609,7 +3659,6 @@ window.addEventListener('popstate', (event) => {
     return;
   }
 
-  // 5. Navigation normale entre pages
   const pageId = event.state?.page || 'home';
   afficherPage.skipHistory = true;
   afficherPage(pageId === 'accueil' ? 'home' : pageId);
@@ -3986,31 +4035,39 @@ function updateScoreLive() {
   }
 }
 
-function msgProfilFaible({ prenom, titre, type_annonce, ville, whatsapp }) {
-  const numPropre = String(whatsapp || "").replace(/\D/g, "");
+function msgProfilFaible({ prenom, type_annonce, ville, quartier, whatsapp }) {
   return `👋 Salut ${prenom},
 
-  Merci pour ta demande sur ChezMoi 🙌
+  Ta demande sur ChezMoi a bien été reçue 🙌
 
-  On a bien reçu ta recherche pour :
-  🏠 ${type_annonce} — ${ville}
+  Mais nous n'avons pas pu l'envoyer au propriétaire car ton profil est incomplet.
 
-  ⚠️ Important
-  Ton profil indique que tu es encore en phase de recherche exploratoire.
+  ━━━━━━━━━━━━━━━
+  🏠 ANNONCE CONCERNÉE
+  ━━━━━━━━━━━━━━━
+  ${type_annonce} à ${ville}${quartier ? " · " + quartier : ""}
 
-  ❌ Résultat : Ta demande n'a pas été envoyée au propriétaire.
+  ━━━━━━━━━━━━━━━
+  ❌ POURQUOI TA DEMANDE N'A PAS ÉTÉ ENVOYÉE
+  ━━━━━━━━━━━━━━━
+  Ton profil indique que tu es encore en phase d'exploration.
+  Les propriétaires reçoivent beaucoup de demandes et priorisent les profils sérieux.
 
-  👉 Pour avoir une chance d'être contacté, tu dois refaire une nouvelle demande avec un profil plus précis.
+  ━━━━━━━━━━━━━━━
+  💡 COMMENT AMÉLIORER TON PROFIL
+  ━━━━━━━━━━━━━━━
+  - Précise que tu veux emménager rapidement
+  - Confirme que ton budget est prêt
+  - Donne une date de visite claire
 
-  💡 Conseil ChezMoi :
-  - précise ton budget réel
-  - indique si tu es prêt à emménager rapidement
-  - ajoute une date de visite claire
+  🔄 Rouvre l'annonce sur ChezMoi et refais ta demande avec ces infos.
 
   🚀 Les profils sérieux sont prioritaires.
   ━━━━━━━━━━━━━━━
   🏠 Voir plus d'annonces → https://chezmoi-app.netlify
-  ✏️ Refaire une demande → Rouvrir l'annonce sur ChezMoi`;
+  ✏️ Refaire une demande → Rouvrir l'annonce sur ChezMoi`; 
+  
+  ChezMoi - Immobilier; CG;
 }
 
 async function soumettreDeblocage(annonce) {
@@ -4072,8 +4129,9 @@ async function soumettreDeblocage(annonce) {
     try {
       const msgFaible = msgProfilFaible({
         prenom,
-        titre: annonce.type_annonce || "Annonce",
-        ville: annonce.ville || "",
+        type_annonce: annonce.type_annonce || annonce.titre || "Annonce",
+        ville:        annonce.ville        || "",
+        quartier:     annonce.quartier     || "",
         whatsapp
       });
 
