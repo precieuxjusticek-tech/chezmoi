@@ -44,6 +44,7 @@ if (savedUid) currentUserUid = savedUid;
 
 let villeSelectionnee = "Toutes les villes";
 let selectedImages = [];
+let _isPublishing = false; // garde anti double-clic
 let favorisLocal = [];
 
 /* ===================================================== */
@@ -189,27 +190,56 @@ function updateIconActive(pageId) {
   if (activeBtn) activeBtn.classList.add('active');
 }
 
+// Pages qui se comportent comme des "tabs" (switch, pas empilement)
+const TAB_PAGES = ["home", "alertes", "favoris", "profil"];
+
 function afficherPage(id) {
   const pageActive = document.querySelector(".page.active");
-  if (pageActive && pageActive.id === "ajouter" && id !== "ajouter") resetFormulaire();
+  const currentId = pageActive?.id;
 
+  // ── 1. DÉJÀ SUR CETTE PAGE → rien à faire
+  if (currentId === id) return;
+
+  // ── 2. RESET formulaire si on quitte "ajouter"
+  if (currentId === "ajouter" && id !== "ajouter") resetFormulaire();
+
+  // ── 3. Affichage DOM
   pages.forEach(page => page.classList.remove("active"));
-
   const accueil = document.getElementById("accueil");
   if (accueil) accueil.style.display = (id === "accueil") ? "flex" : "none";
-
   const currentPage = document.getElementById(id);
   if (currentPage) currentPage.classList.add("active");
   if (nav) nav.style.display = pagesSansNav.includes(id) ? "none" : "flex";
 
+  // ── 4. Chargement de contenu
   if (id === "home") afficherAnnoncesParGroupes(villeSelectionnee);
-  if (!afficherPage.skipHistory) history.pushState({ page: id }, '', '#' + id);
+
+  // ── 5. HISTORIQUE INTELLIGENT
+  if (!afficherPage.skipHistory) {
+    const currentHash = window.location.hash.replace("#", "");
+    const isSamePage  = currentHash === id;
+
+    if (TAB_PAGES.includes(id)) {
+      // Tab principale → replaceState (jamais empilé)
+      history.replaceState({ page: id }, '', '#' + id);
+    } else if (!isSamePage) {
+      // Page normale différente → pushState uniquement si différente
+      history.pushState({ page: id }, '', '#' + id);
+    }
+    // Si même page → on ne fait rien (zéro doublon)
+  }
+
   updateIconActive(id);
 }
 
 triggers.forEach(el => {
   el.addEventListener("click", () => {
     const pageId = el.getAttribute("data-page");
+
+    // ── Déjà sur cette page → ignorer le clic
+    const currentId = document.querySelector(".page.active")?.id;
+    if (currentId === pageId) return;
+
     // Protection pages nécessitant connexion
     const pagesProtegees = ["ajouter", "alertes", "favoris", "profil"];
     if (pagesProtegees.includes(pageId) && !currentUserUid) {
@@ -253,31 +283,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   majBadgeAlertes();
 });
-
-/* ===================================================== */
-/* ============ SURVEILLANCE CONNEXION ================== */
-/* ===================================================== */
-
-let lastToastTime = 0;
-
-function safeToast(type, message = "") {
-  const now = Date.now();
-  if (now - lastToastTime > 5000) {
-    showToast(type, message);
-    lastToastTime = now;
-  }
-}
-
-let lastStatus = navigator.onLine;
-
-function checkInstability() {
-  if (navigator.onLine !== lastStatus) {
-    safeToast("info", "⚠️ Connexion instable...");
-    lastStatus = navigator.onLine;
-  }
-}
-
-setInterval(checkInstability, 5000);
 
 /* ===================================================== */
 /* ================= FAVORIS ========================== */
@@ -332,10 +337,16 @@ function partagerAnnonce(annonce) {
 function afficherPageCategorie(group, annoncesFiltrees) {
   // Filtrer les annonces pour ce groupe
   let annonces;
+
   if (group[0] === "2-3-4 chambres et plus") {
     annonces = annoncesFiltrees.filter(a => {
       const t = a.type_annonce?.toLowerCase();
       return t === "maison 2 chambre" || t === "maison 3 chambre" || t === "maison 4 chambre et plus";
+    });
+  } else if (group[0] === "boutique et espace commercial") {
+    annonces = annoncesFiltrees.filter(a => {
+      const t = a.type_annonce?.toLowerCase();
+      return t === "boutique" || t === "kiosque" || t === "local commercial";
     });
   } else {
     annonces = annoncesFiltrees.filter(a =>
@@ -456,7 +467,7 @@ async function afficherAnnoncesParGroupes(ville) {
       ["studio", "appartement"],
       ["villa", "maison simple"],
       ["2-3-4 chambres et plus"],
-      ["parcelle", "terrain"]
+      ["boutique et espace commercial"]
     ];
 
     groupedCategories.forEach(group => {
@@ -495,13 +506,21 @@ async function afficherAnnoncesParGroupes(ville) {
       row.className = "annonces-row";
 
       let annoncesDuo;
+
       if (group[0] === "2-3-4 chambres et plus") {
         annoncesDuo = annoncesFiltrees.filter(a => {
           const t = a.type_annonce?.toLowerCase();
           return t === "maison 2 chambre" || t === "maison 3 chambre" || t === "maison 4 chambre et plus";
         });
+      } else if (group[0] === "boutique et espace commercial") {
+        annoncesDuo = annoncesFiltrees.filter(a => {
+          const t = a.type_annonce?.toLowerCase();
+          return t === "boutique" || t === "kiosque" || t === "local commercial";
+        });
       } else {
-        annoncesDuo = annoncesFiltrees.filter(a => group.some(c => a.type_annonce?.toLowerCase() === c.toLowerCase()));
+        annoncesDuo = annoncesFiltrees.filter(a =>
+          group.some(c => a.type_annonce?.toLowerCase() === c.toLowerCase())
+        );
       }
 
       if (annoncesDuo.length === 0) {
@@ -746,7 +765,8 @@ const totalSteps = 6;
 
 function toggleChampsParcelle() {
   const typeChecked = document.querySelector('input[name="type"]:checked')?.value || "";
-  const isParcelle = typeChecked === "parcelle" || typeChecked === "terrain";
+  
+  const isParcelle = typeChecked === "boutique" || typeChecked === "kiosque" || typeChecked === "local commercial";
 
   // Panel 4 : masquer/afficher équipements intérieurs
   const equipInterieurs = document.querySelectorAll(".equip-interieur");
@@ -807,7 +827,8 @@ function validerEtape(step) {
 
   // BUG-1: Validation douche seulement si pas parcelle/terrain
   const typeChecked = document.querySelector('input[name="type"]:checked')?.value || "";
-  const isParcelle = typeChecked === "parcelle" || typeChecked === "terrain";
+
+  const isParcelle = typeChecked === "boutique" || typeChecked === "kiosque" || typeChecked === "local commercial";
 
   if (step === 4 && !isParcelle && !document.querySelector('input[name="douche"]:checked')) {
     showToast("info", "Choisissez le type de douche."); return false;
@@ -1456,34 +1477,65 @@ const chargementpub = document.getElementById("loader-pub");
 formAjouter?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Vérification connexion stricte
+  // ── GARDE ANTI DOUBLE-CLIC ──────────────────────────────
+  if (_isPublishing) return;
+
+  // ── 1. VÉRIFICATION CONNEXION AVANT PUBLICATION ─────────
   if (!navigator.onLine) {
-    showToast("info", "📵 Pas de connexion internet. Publication impossible.");
+    showToast("info", "📵 Pas de connexion internet. Impossible de publier.");
     return;
   }
 
-  // Test connexion instable (ping rapide)
+  // Désactiver le bouton immédiatement
+  _isPublishing = true;
+  const btnPublier = document.getElementById("btnPublier");
+  if (btnPublier) {
+    btnPublier.disabled = true;
+    btnPublier.style.opacity = "0.6";
+    btnPublier.textContent = "⏳ Publication...";
+  }
+
+  // Fonction de réinitialisation du bouton (succès ou échec)
+  function _resetPublierBtn() {
+    _isPublishing = false;
+    if (btnPublier) {
+      btnPublier.disabled = false;
+      btnPublier.style.opacity = "1";
+      btnPublier.textContent = "Publier l'annonce";
+    }
+  }
+
+  // Test ping connexion
   try {
     const pingStart = Date.now();
     await fetch(`${API_URL}/ping`, { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000) });
     const pingTime = Date.now() - pingStart;
     if (pingTime > 2500) {
       showToast("info", "⚠️ Connexion trop instable. Réessayez dans un endroit avec un meilleur réseau.");
+      _resetPublierBtn();
       return;
     }
   } catch {
     showToast("info", "⚠️ Connexion instable ou serveur indisponible. Réessayez.");
+    _resetPublierBtn();
     return;
   }
-  if (!currentUserUid) { showToast("info", "Vous devez être connecté."); afficherPage("inscription"); return; }
+
+  if (!currentUserUid) {
+    showToast("info", "Vous devez être connecté.");
+    afficherPage("inscription");
+    _resetPublierBtn();
+    return;
+  }
 
   const titre = document.querySelector('input[name="titre"]:checked')?.value;
 
-  // SÉCURITÉ — Blocage vente côté logique (même si contournement interface)
   if (titre === "Vente") {
     afficherModalVenteIndisponible();
+    _resetPublierBtn();
     return;
   }
+
   const type = document.querySelector('input[name="type"]:checked')?.value;
   const ville = document.querySelector('input[name="ville"]:checked')?.value;
   const quartier = document.getElementById("quartier").value.trim();
@@ -1492,17 +1544,32 @@ formAjouter?.addEventListener("submit", async (e) => {
   const description = document.getElementById("description").value.trim();
   const contact = document.getElementById("contactAnnonce").value.trim();
 
-  const isParcelle = type === "parcelle" || type === "terrain";
+  const isParcelle = type === "boutique" || type === "kiosque" || type === "local commercial";
 
-  // BUG-1: Validation adaptée selon le type
-  if (!titre || !type || !ville || !quartier || !prix || !description || !contact) { showToast("formIncomplete"); return; }
-  if (!isParcelle && !douche) { showToast("formIncomplete"); return; }
-  if (isNaN(prix) || prix <= 0) { showToast("info", "Veuillez entrer un prix valide supérieur à 0"); return; }
-  if (selectedFiles.length === 0) { showToast("info", "Veuillez sélectionner au moins une image."); return; }
+  if (!titre || !type || !ville || !quartier || !prix || !description || !contact) {
+    showToast("formIncomplete");
+    _resetPublierBtn();
+    return;
+  }
+  if (!isParcelle && !douche) {
+    showToast("formIncomplete");
+    _resetPublierBtn();
+    return;
+  }
+  if (isNaN(prix) || prix <= 0) {
+    showToast("info", "Veuillez entrer un prix valide supérieur à 0");
+    _resetPublierBtn();
+    return;
+  }
+  if (selectedFiles.length === 0) {
+    showToast("info", "Veuillez sélectionner au moins une image.");
+    _resetPublierBtn();
+    return;
+  }
 
   chargementpub.style.display = "flex";
   chargementpub.querySelector("p").textContent = "Publication en cours...";
-  // Mise à jour du message selon le nombre d'images
+
   if (selectedFiles.length > 5) {
     setTimeout(() => {
       if (chargementpub.style.display === "flex")
@@ -1517,6 +1584,15 @@ formAjouter?.addEventListener("submit", async (e) => {
         chargementpub.querySelector("p").textContent = "Finalisation... encore quelques secondes 🏁";
     }, 50000);
   }
+
+  // ── 2. SURVEILLANCE CONNEXION PENDANT PUBLICATION ────────
+  let _connexionCoupee = false;
+  const _surveillerConnexion = () => {
+    if (!navigator.onLine) {
+      _connexionCoupee = true;
+    }
+  };
+  window.addEventListener("offline", _surveillerConnexion);
 
   try {
     const formData = new FormData();
@@ -1543,8 +1619,6 @@ formAjouter?.addEventListener("submit", async (e) => {
     formData.append("parking", document.querySelector('input[name="parking"]:checked')?.value || "");
     formData.append("gardien", document.querySelector('input[name="gardien"]:checked')?.value || "");
     formData.append("nbDouches", isParcelle ? "" : (document.getElementById("nbDouches")?.value || ""));
-
-    // BUG-1 Champs spécifiques parcelle
     formData.append("type_sol", isParcelle ? (document.querySelector('input[name="type_sol"]:checked')?.value || "") : "");
     formData.append("voirie", isParcelle ? (document.querySelector('input[name="voirie"]:checked')?.value || "") : "");
     formData.append("cloture", isParcelle ? (document.querySelector('input[name="cloture"]:checked')?.value || "") : "");
@@ -1575,16 +1649,29 @@ formAjouter?.addEventListener("submit", async (e) => {
     formData.append("statut", "published");
     formData.append("statut_numero", "verrouille");
 
-    // ✅ APRÈS — compression parallèle, beaucoup plus rapide
+    // Compression images
     const compressedFiles = await Promise.all(
-      selectedFiles.map(file => compressImage(file, 2)) // max 2MB
+      selectedFiles.map(file => compressImage(file, 2))
     );
+
+    // ── VÉRIFICATION CONNEXION APRÈS COMPRESSION ─────────
+    if (_connexionCoupee || !navigator.onLine) {
+      throw new Error("CONNEXION_PERDUE");
+    }
+
     for (const compressedFile of compressedFiles) {
       formData.append("images", compressedFile);
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // 1min30 max
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+    // ── SURVEILLANCE PENDANT LE FETCH ────────────────────
+    const _offlineDurantFetch = () => {
+      _connexionCoupee = true;
+      controller.abort();
+    };
+    window.addEventListener("offline", _offlineDurantFetch);
 
     let annonceResponse;
     try {
@@ -1596,17 +1683,43 @@ formAjouter?.addEventListener("submit", async (e) => {
       clearTimeout(timeoutId);
     } catch (fetchErr) {
       clearTimeout(timeoutId);
+      window.removeEventListener("offline", _offlineDurantFetch);
+
+      // ── CONNEXION PERDUE PENDANT L'UPLOAD ────────────
+      if (_connexionCoupee || !navigator.onLine) {
+        chargementpub.style.display = "none";
+        showToast("info", "📵 Connexion instable. Publication annulée. Veuillez réessayer.");
+        _resetPublierBtn();
+        window.removeEventListener("offline", _surveillerConnexion);
+        return;
+      }
+
       chargementpub.style.display = "none";
       if (fetchErr.name === "AbortError") {
         showToast("info", "⚠️ Délai dépassé (2 min). Réduisez le nombre d'images ou vérifiez votre réseau.");
       } else {
         showToast("offline");
       }
+      _resetPublierBtn();
+      window.removeEventListener("offline", _surveillerConnexion);
       return;
     }
-    const annonceData = await annonceResponse.json();
-    if (!annonceResponse.ok) throw new Error(annonceData.message);
 
+    window.removeEventListener("offline", _offlineDurantFetch);
+
+    // ── 3. RÈGLE DE RÉUSSITE STRICTE ─────────────────────
+    if (!annonceResponse.ok) {
+      const annonceData = await annonceResponse.json().catch(() => ({}));
+      throw new Error(annonceData.message || "Erreur serveur");
+    }
+
+    const annonceData = await annonceResponse.json();
+    // Vérification confirmation backend
+    if (!annonceData.id && !annonceData.message?.toLowerCase().includes("succès")) {
+      throw new Error("Réponse backend invalide");
+    }
+
+    // ── SUCCÈS CONFIRMÉ ───────────────────────────────────
     chargementpub.style.display = "none";
     showToast("info", "✅ Annonce publiée avec succès ! Elle sera visible 90 jours.");
     resetFormulaire();
@@ -1614,8 +1727,19 @@ formAjouter?.addEventListener("submit", async (e) => {
     afficherAnnoncesParGroupes(villeSelectionnee);
 
   } catch (err) {
-    if (isNetworkError(err)) showToast("offline");
-    else showToast("loadFail");
+    chargementpub.style.display = "none";
+
+    if (err.message === "CONNEXION_PERDUE" || _connexionCoupee || !navigator.onLine) {
+      showToast("info", "📵 Connexion instable. Publication annulée. Veuillez réessayer.");
+    } else if (isNetworkError(err)) {
+      showToast("offline");
+    } else {
+      showToast("loadFail");
+    }
+  } finally {
+    // ── NETTOYAGE SYSTÉMATIQUE ────────────────────────────
+    window.removeEventListener("offline", _surveillerConnexion);
+    _resetPublierBtn();
     chargementpub.style.display = "none";
   }
 });
@@ -1746,8 +1870,7 @@ async function afficherDetailAnnonce() {
   const descEl = document.getElementById("detailDescription");
   if (descEl) descEl.textContent = annonce.description || "Aucune description fournie.";
 
-  /* BUG-2 FIX: Stats rapides adaptées selon le type de bien */
-  const isParcelle = ["parcelle", "terrain"].includes(annonce.type_annonce?.toLowerCase());
+  const isParcelle = ["boutique", "kiosque", "local commercial"].includes(annonce.type_annonce?.toLowerCase());
   const quickStats = document.getElementById("detailQuickStats");
   if (quickStats) {
     quickStats.innerHTML = "";
@@ -2758,8 +2881,6 @@ function ouvrirModaleAlerte(typeAlerte, modeModif = false) {
 }
 
 function actualisserTypeModale(typeAlerte) {
-  const isTerrain = typeAlerte === "terrain";
-  const isVente = typeAlerte === "vente" || isTerrain;
 
   // Onglets visuels dans la modale
   const locBtn = document.getElementById("alerteTypeLoc");
@@ -2779,8 +2900,7 @@ function actualisserTypeModale(typeAlerte) {
 
   if (champLoc) champLoc.style.display = isVente ? "none" : "block";
   if (champVente) champVente.style.display = isVente ? "block" : "none";
-  if (champTerrain) champTerrain.style.display = isTerrain ? "block" : "none";
-  if (terrainCb) terrainCb.style.display = isTerrain ? "flex" : "none";
+
 }
 
 // Clic sur les onglets de type dans la modale
@@ -3667,10 +3787,16 @@ window.addEventListener('popstate', (event) => {
   }
 
   const pageId = event.state?.page || 'home';
+  const targetId = pageId === 'accueil' ? 'home' : pageId;
+  const currentId = document.querySelector(".page.active")?.id;
+
+  // Ne rien faire si on est déjà sur la cible
+  if (currentId === targetId) return;
+
   afficherPage.skipHistory = true;
-  afficherPage(pageId === 'accueil' ? 'home' : pageId);
+  afficherPage(targetId);
   afficherPage.skipHistory = false;
-  if (pageId === 'alertes') chargerPageAlertes();
+  if (targetId === 'alertes') chargerPageAlertes();
 });
 
 /* ===================================================== */

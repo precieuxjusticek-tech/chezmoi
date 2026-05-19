@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chezmoi-cache-v1.1.0'; // version incrémentée
+const CACHE_NAME = 'chezmoi-cache-v1.1.2'; // version incrémentée
 const urlsToCache = [
   '/',
   '/index.html',
